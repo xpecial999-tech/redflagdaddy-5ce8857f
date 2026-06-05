@@ -186,7 +186,19 @@ export const completeAssessment = createServerFn({ method: "POST" })
       0,
     );
 
-    let safetyRaw = 0, compat = 0, red = 0, greenRaw = 0, exp = 0;
+    // Red Flags: weight encodes the risk-level multiplier
+    // (low=1, medium=2, high=4, critical=8) so Critical answers dominate the score.
+    const { data: redQs } = await supabaseAdmin
+      .from("questions")
+      .select("weight, question_categories!inner(name)")
+      .eq("active", true)
+      .eq("question_categories.name", "Red Flags");
+    const redMax = ((redQs ?? []) as any[]).reduce(
+      (s, q) => s + (Number(q.weight) || 1) * 10,
+      0,
+    );
+
+    let safetyRaw = 0, compat = 0, redRaw = 0, redLegacy = 0, greenRaw = 0, exp = 0;
     for (const row of (rows ?? []) as any[]) {
       const s = Number(row.score) || 0;
       const cat = row.questions?.question_categories?.name ?? "";
@@ -194,12 +206,20 @@ export const completeAssessment = createServerFn({ method: "POST" })
       if (cat === "Compatibility") compat += s;
       if (cat === "Experience") exp += s;
       if (cat === "Green Flags") greenRaw += s;
-      if (cat === "Red Flags" && s < 0) red += Math.abs(s);
+      if (cat === "Red Flags") {
+        if (s > 0) redRaw += s;
+        else if (s < 0) redLegacy += Math.abs(s); // backward-compat for older negative-scored items
+      }
     }
 
     const green = greenMax > 0 ? Math.max(0, Math.min(100, (greenRaw / greenMax) * 100)) : 0;
     // Safety Score: unsafe answers carry negative weights → can drag score below 0; floor at 0.
     const safety = safetyMax > 0 ? Math.max(0, Math.min(100, (safetyRaw / safetyMax) * 100)) : 0;
+    // Red Flag Score /100. Higher = more red flags. Critical-weighted (8×) items push the
+    // score sharply upward even from a small number of "Often"/"Always" answers.
+    const red = redMax > 0
+      ? Math.max(0, Math.min(100, (redRaw / redMax) * 100))
+      : Math.min(100, redLegacy);
 
     await supabaseAdmin
       .from("results")
