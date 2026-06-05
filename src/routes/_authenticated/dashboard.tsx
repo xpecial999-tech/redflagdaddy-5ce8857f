@@ -1,19 +1,25 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useServerFn } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Plus, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Plus, Clock, CheckCircle2, AlertTriangle, Compass } from "lucide-react";
+import { listJourneys } from "@/lib/journeys.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Dynamic Compass" }] }),
   component: Dashboard,
 });
 
-const journeys = [
-  { id: "1", title: "Negotiation with Alex", status: "Awaiting respondent", progress: 40, flag: "pending" },
-  { id: "2", title: "Compatibility — Sam", status: "Complete", progress: 100, flag: "ok" },
-  { id: "3", title: "Hard-limits check — Jamie", status: "2 red flags", progress: 100, flag: "warn" },
-];
-
 function Dashboard() {
+  const fetchJourneys = useServerFn(listJourneys);
+  const { data, isLoading } = useQuery({
+    queryKey: ["journeys"],
+    queryFn: () => fetchJourneys(),
+  });
+
+  const journeys = data?.journeys ?? [];
+  const active = journeys.filter((j) => j.status === "pending" || j.status === "in_progress").length;
+  const complete = journeys.filter((j) => j.status === "completed").length;
+
   return (
     <div className="space-y-6">
       <header className="flex items-end justify-between">
@@ -28,9 +34,9 @@ function Dashboard() {
 
       <section className="grid grid-cols-3 gap-3">
         {[
-          { label: "Active", value: 2 },
-          { label: "Complete", value: 5 },
-          { label: "Flags", value: 1 },
+          { label: "Active", value: active },
+          { label: "Complete", value: complete },
+          { label: "Total", value: journeys.length },
         ].map((s) => (
           <div key={s.label} className="glass rounded-2xl p-3 text-center">
             <div className="text-2xl font-display font-semibold">{s.value}</div>
@@ -39,36 +45,47 @@ function Dashboard() {
         ))}
       </section>
 
+      {isLoading && <div className="glass rounded-2xl p-6 text-center text-sm text-muted-foreground">Loading…</div>}
+
+      {!isLoading && journeys.length === 0 && (
+        <div className="glass-strong rounded-3xl p-8 text-center space-y-3">
+          <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-aurora-1/30 to-aurora-2/30 flex items-center justify-center">
+            <Compass className="w-6 h-6 text-primary" />
+          </div>
+          <h3 className="font-display text-lg">No journeys yet</h3>
+          <p className="text-sm text-muted-foreground">Create your first assessment to invite a respondent.</p>
+          <Link to="/create" className="inline-flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
+            <Plus className="w-4 h-4" /> Create journey
+          </Link>
+        </div>
+      )}
+
       <section className="space-y-3">
         {journeys.map((j, i) => (
-          <motion.div
-            key={j.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-          >
-            <Link to="/results/$id" params={{ id: j.id }} className="block glass rounded-2xl p-4 hover:bg-white/5 transition">
+          <motion.div key={j.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <div className="block glass rounded-2xl p-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h3 className="font-medium truncate">{j.title}</h3>
                   <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
-                    {j.flag === "ok" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-                    {j.flag === "warn" && <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />}
-                    {j.flag === "pending" && <Clock className="w-3.5 h-3.5 text-primary" />}
-                    {j.status}
+                    <StatusIcon status={j.status} />
+                    {j.status.replace("_", " ")}
+                    <span className="opacity-50">·</span>
+                    <span className="font-mono">{j.invite_code}</span>
                   </p>
                 </div>
+                <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-white/5 text-muted-foreground">{j.participant_type}</span>
               </div>
-              <div className="mt-3 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-aurora-1 to-aurora-2"
-                  style={{ width: `${j.progress}%` }}
-                />
-              </div>
-            </Link>
+            </div>
           </motion.div>
         ))}
       </section>
     </div>
   );
+}
+
+function StatusIcon({ status }: { status: string }) {
+  if (status === "completed") return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
+  if (status === "expired") return <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />;
+  return <Clock className="w-3.5 h-3.5 text-primary" />;
 }
