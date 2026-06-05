@@ -16,8 +16,10 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useMe } from "@/hooks/use-me";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
