@@ -13,6 +13,9 @@ import {
   ArrowDown,
   Loader2,
   AlertTriangle,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
