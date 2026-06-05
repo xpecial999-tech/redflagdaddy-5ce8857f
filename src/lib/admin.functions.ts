@@ -191,7 +191,7 @@ export const listJourneys = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        status: z.enum(["draft", "in_progress", "completed", "archived"]).optional(),
+        status: z.enum(["draft", "pending", "in_progress", "completed", "expired"]).optional(),
         limit: z.number().int().min(1).max(200).default(100),
       })
       .parse(d ?? {}),
