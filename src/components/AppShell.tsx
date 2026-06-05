@@ -12,6 +12,10 @@ const baseNavItems = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { me } = useMe();
+  const navItems = me?.isAdmin
+    ? [...baseNavItems, { to: "/admin", label: "Admin", icon: Shield }]
+    : baseNavItems;
   const hideNav =
     ["/", "/login", "/register", "/join"].includes(pathname) ||
     pathname.startsWith("/journey/") ||
