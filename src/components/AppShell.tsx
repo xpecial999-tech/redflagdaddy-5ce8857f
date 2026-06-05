@@ -2,12 +2,12 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Compass, LayoutDashboard, Plus, User, Shield, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { useMe } from "@/hooks/use-me";
 
-const navItems = [
+const baseNavItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
   { to: "/create", label: "Create", icon: Plus },
   { to: "/profile", label: "Profile", icon: User },
-  { to: "/admin", label: "Admin", icon: Shield },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
