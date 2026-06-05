@@ -79,7 +79,7 @@ function AssessmentPage() {
     setAnswers(initial);
   }, [data]);
 
-  const questions = useMemo(() => (data?.questions ?? []) as Question[], [data]);
+  const questions = useMemo(() => (data?.questions ?? []) as unknown as Question[], [data]);
 
   // Compute the visible ordered list with conditional branching applied.
   const visible = useMemo(() => {
