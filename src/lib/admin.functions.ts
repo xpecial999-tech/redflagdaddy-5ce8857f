@@ -50,6 +50,10 @@ export const listQuestions = createServerFn({ method: "POST" })
       .object({
         category_id: z.string().uuid().optional(),
         includeInactive: z.boolean().default(true),
+        risk_level: z.enum(["low", "medium", "high", "critical"]).optional(),
+        search: z.string().trim().max(200).optional(),
+        limit: z.number().int().min(1).max(1000).default(50),
+        offset: z.number().int().min(0).default(0),
       })
       .parse(d ?? {}),
   )
@@ -57,14 +61,17 @@ export const listQuestions = createServerFn({ method: "POST" })
     const sb = await assertAdmin(context.userId);
     let q = sb
       .from("questions")
-      .select("*")
+      .select("*", { count: "exact" })
       .order("order_index", { ascending: true })
       .order("created_at", { ascending: true });
     if (data.category_id) q = q.eq("category_id", data.category_id);
     if (!data.includeInactive) q = q.eq("active", true);
-    const { data: rows, error } = await q;
+    if (data.risk_level) q = q.eq("risk_level", data.risk_level);
+    if (data.search) q = q.ilike("question", `%${data.search}%`);
+    q = q.range(data.offset, data.offset + data.limit - 1);
+    const { data: rows, error, count } = await q;
     if (error) throw new Error(error.message);
-    return { questions: rows ?? [] };
+    return { questions: rows ?? [], total: count ?? 0 };
   });
 
 export const upsertQuestion = createServerFn({ method: "POST" })

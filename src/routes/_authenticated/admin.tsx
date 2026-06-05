@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -13,6 +13,9 @@ import {
   ArrowDown,
   Loader2,
   AlertTriangle,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -145,20 +148,39 @@ function QuestionsTab() {
   const reorderFn = useServerFn(reorderQuestions);
 
   const [selectedCat, setSelectedCat] = useState<string>("all");
+  const [risk, setRisk] = useState<string>("all");
+  const [activeOnly, setActiveOnly] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const pageSize = 50;
   const [editing, setEditing] = useState<QuestionRow | null>(null);
   const [open, setOpen] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   const cats = useQuery({
     queryKey: ["admin", "categories"],
     queryFn: () => catsFn({ data: undefined as never }),
   });
   const qs = useQuery({
-    queryKey: ["admin", "questions", selectedCat],
+    queryKey: ["admin", "questions", selectedCat, risk, activeOnly, search, page],
     queryFn: () =>
       listFn({
         data: {
-          includeInactive: true,
+          includeInactive: !activeOnly,
+          limit: pageSize,
+          offset: page * pageSize,
           ...(selectedCat !== "all" ? { category_id: selectedCat } : {}),
+          ...(risk !== "all" ? { risk_level: risk as RiskLevel } : {}),
+          ...(search ? { search } : {}),
         },
       }),
   });
@@ -187,6 +209,8 @@ function QuestionsTab() {
   });
 
   const questions = (qs.data?.questions ?? []) as unknown as QuestionRow[];
+  const total = qs.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const categories = (cats.data?.categories ?? []) as CategoryRow[];
 
   const move = (idx: number, dir: -1 | 1) => {
@@ -194,55 +218,93 @@ function QuestionsTab() {
     const target = idx + dir;
     if (target < 0 || target >= next.length) return;
     [next[idx], next[target]] = [next[target], next[idx]];
-    reorder.mutate(next.map((q, i) => ({ id: q.id, order_index: i })));
+    reorder.mutate(next.map((q, i) => ({ id: q.id, order_index: i + page * pageSize })));
+  };
+
+  const resetPage = <T,>(setter: (v: T) => void) => (v: T) => {
+    setter(v);
+    setPage(0);
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-        <Select value={selectedCat} onValueChange={setSelectedCat}>
-          <SelectTrigger className="w-full sm:w-72">
-            <SelectValue placeholder="Filter category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Dialog
-          open={open}
-          onOpenChange={(o) => {
-            setOpen(o);
-            if (!o) setEditing(null);
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button
-              onClick={() => {
-                setEditing(null);
-                setOpen(true);
-              }}
-              className="w-full sm:w-auto"
-            >
-              <Plus className="w-4 h-4 mr-1" /> New question
-            </Button>
-          </DialogTrigger>
-          <QuestionDialog
-            categories={categories}
-            initial={editing}
-            onSaved={() => {
-              setOpen(false);
-              setEditing(null);
-              invalidate();
-            }}
+      <div className="glass rounded-2xl p-3 space-y-2">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search question text…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="pl-9"
           />
-        </Dialog>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <Select value={selectedCat} onValueChange={resetPage(setSelectedCat)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={risk} onValueChange={resetPage(setRisk)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Risk" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All risk levels</SelectItem>
+              {(["low", "medium", "high", "critical"] as RiskLevel[]).map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center justify-between gap-2 px-3 rounded-md border border-input">
+            <Label className="text-xs">Active only</Label>
+            <Switch checked={activeOnly} onCheckedChange={resetPage(setActiveOnly)} />
+          </div>
+        </div>
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-xs text-muted-foreground">
+            {total} result{total === 1 ? "" : "s"}
+          </span>
+          <Dialog
+            open={open}
+            onOpenChange={(o) => {
+              setOpen(o);
+              if (!o) setEditing(null);
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditing(null);
+                  setOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-1" /> New question
+              </Button>
+            </DialogTrigger>
+            <QuestionDialog
+              categories={categories}
+              initial={editing}
+              onSaved={() => {
+                setOpen(false);
+                setEditing(null);
+                invalidate();
+              }}
+            />
+          </Dialog>
+        </div>
       </div>
+
 
       {qs.isLoading ? (
         <Loading />
@@ -290,8 +352,42 @@ function QuestionsTab() {
                         archived
                       </Badge>
                     )}
+                    <span className="text-[10px] text-muted-foreground ml-auto">
+                      {categories.find((c) => c.id === q.category_id)?.name ?? ""}
+                    </span>
                   </div>
                   <p className="text-sm break-words">{q.question}</p>
+                  {(() => {
+                    const bl = (q.branch_logic ?? {}) as {
+                      green_flag_indicators?: string[];
+                      red_flag_indicators?: string[];
+                    };
+                    const g = bl.green_flag_indicators ?? [];
+                    const r = bl.red_flag_indicators ?? [];
+                    if (g.length === 0 && r.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {g.map((t) => (
+                          <Badge
+                            key={`g-${t}`}
+                            variant="outline"
+                            className="bg-emerald-500/10 text-emerald-300 border-emerald-500/30 text-[10px]"
+                          >
+                            + {t}
+                          </Badge>
+                        ))}
+                        {r.map((t) => (
+                          <Badge
+                            key={`r-${t}`}
+                            variant="outline"
+                            className="bg-rose-500/10 text-rose-300 border-rose-500/30 text-[10px]"
+                          >
+                            ⚑ {t}
+                          </Badge>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               <div className="flex gap-2 mt-3 flex-wrap">
@@ -335,6 +431,30 @@ function QuestionsTab() {
           ))}
         </div>
       )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page === 0}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" /> Prev
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Page {page + 1} of {totalPages}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page + 1 >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -349,6 +469,11 @@ function QuestionDialog({
   onSaved: () => void;
 }) {
   const saveFn = useServerFn(upsertQuestion);
+  const initialBL = (initial?.branch_logic ?? {}) as {
+    green_flag_indicators?: string[];
+    red_flag_indicators?: string[];
+    [k: string]: unknown;
+  };
   const [form, setForm] = useState(() => ({
     id: initial?.id,
     category_id: initial?.category_id ?? categories[0]?.id ?? "",
@@ -362,6 +487,8 @@ function QuestionDialog({
       initial?.answer_options
         ?.map((o) => `${o.label}|${o.value}|${o.score ?? 0}`)
         .join("\n") ?? "",
+    greenText: (initialBL.green_flag_indicators ?? []).join("\n"),
+    redText: (initialBL.red_flag_indicators ?? []).join("\n"),
   }));
 
   const save = useMutation({
@@ -378,6 +505,16 @@ function QuestionDialog({
             score: score ? Number(score) : 0,
           };
         });
+      const splitLines = (s: string) =>
+        s
+          .split(/\r?\n|,/)
+          .map((x) => x.trim())
+          .filter(Boolean);
+      const branch_logic = {
+        ...initialBL,
+        green_flag_indicators: splitLines(form.greenText),
+        red_flag_indicators: splitLines(form.redText),
+      };
       return saveFn({
         data: {
           ...(form.id ? { id: form.id } : {}),
@@ -389,7 +526,7 @@ function QuestionDialog({
           risk_level: form.risk_level,
           active: form.active,
           order_index: Number(form.order_index),
-          branch_logic: {},
+          branch_logic,
         },
       });
     },
@@ -513,6 +650,26 @@ function QuestionDialog({
             value={form.optionsText}
             onChange={(e) => setForm((f) => ({ ...f, optionsText: e.target.value }))}
           />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <Label className="text-emerald-300">Green flag indicators</Label>
+            <Textarea
+              rows={3}
+              placeholder={"One per line, e.g.\nOpen communication"}
+              value={form.greenText}
+              onChange={(e) => setForm((f) => ({ ...f, greenText: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label className="text-rose-300">Red flag indicators</Label>
+            <Textarea
+              rows={3}
+              placeholder={"One per line, e.g.\nControlling behavior"}
+              value={form.redText}
+              onChange={(e) => setForm((f) => ({ ...f, redText: e.target.value }))}
+            />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Switch
