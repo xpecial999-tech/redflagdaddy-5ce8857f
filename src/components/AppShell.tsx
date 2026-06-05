@@ -12,7 +12,10 @@ const navItems = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const hideNav = ["/", "/login", "/register"].includes(pathname);
+  const hideNav =
+    ["/", "/login", "/register", "/join"].includes(pathname) ||
+    pathname.startsWith("/journey/") ||
+    pathname.startsWith("/assessment/");
 
   return (
     <div className="min-h-screen flex flex-col">
