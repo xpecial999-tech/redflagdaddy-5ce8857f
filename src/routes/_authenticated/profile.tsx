@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { LogOut, Shield, Bell, Lock, HelpCircle, Loader2 } from "lucide-react";
 import { useMe } from "@/hooks/use-me";
