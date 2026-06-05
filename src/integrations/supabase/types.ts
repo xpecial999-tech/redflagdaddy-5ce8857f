@@ -134,9 +134,11 @@ export type Database = {
         Row: {
           active: boolean
           answer_options: Json
+          branch_logic: Json
           category_id: string
           created_at: string
           id: string
+          order_index: number
           question: string
           question_type: Database["public"]["Enums"]["question_type"]
           risk_level: Database["public"]["Enums"]["risk_level"]
@@ -145,9 +147,11 @@ export type Database = {
         Insert: {
           active?: boolean
           answer_options?: Json
+          branch_logic?: Json
           category_id: string
           created_at?: string
           id?: string
+          order_index?: number
           question: string
           question_type?: Database["public"]["Enums"]["question_type"]
           risk_level?: Database["public"]["Enums"]["risk_level"]
@@ -156,9 +160,11 @@ export type Database = {
         Update: {
           active?: boolean
           answer_options?: Json
+          branch_logic?: Json
           category_id?: string
           created_at?: string
           id?: string
+          order_index?: number
           question?: string
           question_type?: Database["public"]["Enums"]["question_type"]
           risk_level?: Database["public"]["Enums"]["risk_level"]
@@ -311,6 +317,8 @@ export type Database = {
         | "scale"
         | "boolean"
         | "text"
+        | "slider"
+        | "scenario"
       risk_level: "low" | "medium" | "high" | "critical"
       user_role: "Dominant" | "submissive" | "switch"
     }
@@ -454,6 +462,8 @@ export const Constants = {
         "scale",
         "boolean",
         "text",
+        "slider",
+        "scenario",
       ],
       risk_level: ["low", "medium", "high", "critical"],
       user_role: ["Dominant", "submissive", "switch"],
