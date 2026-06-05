@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-white/5">
+      <header className="sticky top-0 z-40 bg-background border-b border-white/5">
         <div className="px-4 py-3 flex items-center justify-between max-w-3xl mx-auto">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-aurora-1 to-aurora-2 flex items-center justify-center">
