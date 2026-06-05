@@ -651,6 +651,26 @@ function QuestionDialog({
             onChange={(e) => setForm((f) => ({ ...f, optionsText: e.target.value }))}
           />
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <Label className="text-emerald-300">Green flag indicators</Label>
+            <Textarea
+              rows={3}
+              placeholder={"One per line, e.g.\nOpen communication"}
+              value={form.greenText}
+              onChange={(e) => setForm((f) => ({ ...f, greenText: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label className="text-rose-300">Red flag indicators</Label>
+            <Textarea
+              rows={3}
+              placeholder={"One per line, e.g.\nControlling behavior"}
+              value={form.redText}
+              onChange={(e) => setForm((f) => ({ ...f, redText: e.target.value }))}
+            />
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <Switch
             checked={form.active}
