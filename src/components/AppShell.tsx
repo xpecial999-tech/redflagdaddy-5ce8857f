@@ -17,9 +17,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? [...baseNavItems, { to: "/admin", label: "Admin", icon: Shield }]
     : baseNavItems;
   const hideNav =
-    ["/", "/login", "/register", "/join"].includes(pathname) ||
+    ["/", "/login", "/register", "/join", "/guest"].includes(pathname) ||
     pathname.startsWith("/journey/") ||
-    pathname.startsWith("/assessment/");
+    pathname.startsWith("/assessment/") ||
+    pathname.startsWith("/guest/");
+  const hideHeader = pathname === "/guest" || pathname.startsWith("/guest/");
 
   return (
     <div className="min-h-screen flex flex-col">
