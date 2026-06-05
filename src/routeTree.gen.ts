@@ -14,8 +14,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ResultsIdRouteImport } from './routes/results.$id'
 import { Route as JourneyCodeRouteImport } from './routes/journey.$code'
-import { Route as AssessmentIdRouteImport } from './routes/assessment.$id'
+import { Route as AssessmentCodeRouteImport } from './routes/assessment.$code'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
@@ -45,14 +46,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResultsIdRoute = ResultsIdRouteImport.update({
+  id: '/results/$id',
+  path: '/results/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JourneyCodeRoute = JourneyCodeRouteImport.update({
   id: '/journey/$code',
   path: '/journey/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AssessmentIdRoute = AssessmentIdRouteImport.update({
-  id: '/assessment/$id',
-  path: '/assessment/$id',
+const AssessmentCodeRoute = AssessmentCodeRouteImport.update({
+  id: '/assessment/$code',
+  path: '/assessment/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -85,8 +91,9 @@ export interface FileRoutesByFullPath {
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/assessment/$id': typeof AssessmentIdRoute
+  '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
+  '/results/$id': typeof ResultsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -97,8 +104,9 @@ export interface FileRoutesByTo {
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/assessment/$id': typeof AssessmentIdRoute
+  '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
+  '/results/$id': typeof ResultsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -111,8 +119,9 @@ export interface FileRoutesById {
   '/_authenticated/create': typeof AuthenticatedCreateRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/assessment/$id': typeof AssessmentIdRoute
+  '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
+  '/results/$id': typeof ResultsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -125,8 +134,9 @@ export interface FileRouteTypes {
     | '/create'
     | '/dashboard'
     | '/profile'
-    | '/assessment/$id'
+    | '/assessment/$code'
     | '/journey/$code'
+    | '/results/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -137,8 +147,9 @@ export interface FileRouteTypes {
     | '/create'
     | '/dashboard'
     | '/profile'
-    | '/assessment/$id'
+    | '/assessment/$code'
     | '/journey/$code'
+    | '/results/$id'
   id:
     | '__root__'
     | '/'
@@ -150,8 +161,9 @@ export interface FileRouteTypes {
     | '/_authenticated/create'
     | '/_authenticated/dashboard'
     | '/_authenticated/profile'
-    | '/assessment/$id'
+    | '/assessment/$code'
     | '/journey/$code'
+    | '/results/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -160,8 +172,9 @@ export interface RootRouteChildren {
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
-  AssessmentIdRoute: typeof AssessmentIdRoute
+  AssessmentCodeRoute: typeof AssessmentCodeRoute
   JourneyCodeRoute: typeof JourneyCodeRoute
+  ResultsIdRoute: typeof ResultsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/results/$id': {
+      id: '/results/$id'
+      path: '/results/$id'
+      fullPath: '/results/$id'
+      preLoaderRoute: typeof ResultsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/journey/$code': {
       id: '/journey/$code'
       path: '/journey/$code'
@@ -208,11 +228,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JourneyCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/assessment/$id': {
-      id: '/assessment/$id'
-      path: '/assessment/$id'
-      fullPath: '/assessment/$id'
-      preLoaderRoute: typeof AssessmentIdRouteImport
+    '/assessment/$code': {
+      id: '/assessment/$code'
+      path: '/assessment/$code'
+      fullPath: '/assessment/$code'
+      preLoaderRoute: typeof AssessmentCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/profile': {
@@ -269,8 +289,9 @@ const rootRouteChildren: RootRouteChildren = {
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
-  AssessmentIdRoute: AssessmentIdRoute,
+  AssessmentCodeRoute: AssessmentCodeRoute,
   JourneyCodeRoute: JourneyCodeRoute,
+  ResultsIdRoute: ResultsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
