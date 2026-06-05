@@ -16,8 +16,10 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useMe } from "@/hooks/use-me";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -102,6 +104,23 @@ const riskColors: Record<RiskLevel, string> = {
 };
 
 function AdminPanel() {
+  const { me, loading } = useMe();
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin" />
+      </div>
+    );
+  }
+  if (!me?.isAdmin) {
+    return (
+      <div className="glass-strong rounded-3xl p-8 text-center space-y-2">
+        <Shield className="w-8 h-8 mx-auto text-muted-foreground" />
+        <h1 className="text-xl font-display font-semibold">Admins only</h1>
+        <p className="text-sm text-muted-foreground">You don't have access to this area.</p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <header>
@@ -111,6 +130,7 @@ function AdminPanel() {
           Manage questions, categories, journeys, and analytics.
         </p>
       </header>
+
 
       <Tabs defaultValue="questions" className="w-full">
         <TabsList className="grid grid-cols-4 w-full h-auto">

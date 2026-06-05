@@ -2,16 +2,20 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Compass, LayoutDashboard, Plus, User, Shield, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { useMe } from "@/hooks/use-me";
 
-const navItems = [
+const baseNavItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
   { to: "/create", label: "Create", icon: Plus },
   { to: "/profile", label: "Profile", icon: User },
-  { to: "/admin", label: "Admin", icon: Shield },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { me } = useMe();
+  const navItems = me?.isAdmin
+    ? [...baseNavItems, { to: "/admin", label: "Admin", icon: Shield }]
+    : baseNavItems;
   const hideNav =
     ["/", "/login", "/register", "/join"].includes(pathname) ||
     pathname.startsWith("/journey/") ||

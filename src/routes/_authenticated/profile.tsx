@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { LogOut, Shield, Bell, Lock, HelpCircle } from "lucide-react";
+import { LogOut, Shield, Bell, Lock, HelpCircle, Loader2 } from "lucide-react";
+import { useMe } from "@/hooks/use-me";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — Dynamic Compass" }] }),
@@ -15,19 +17,35 @@ const settings = [
 ];
 
 function Profile() {
+  const { me, loading } = useMe();
+  const navigate = useNavigate();
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/login", replace: true });
+  };
+
+  if (loading || !me) {
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin" />
+      </div>
+    );
+  }
+
+  const displayName = me.name || me.email.split("@")[0];
+  const initial = displayName.charAt(0).toUpperCase();
+  const role = me.role || "member";
+
   return (
     <div className="space-y-6">
       <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="glass-strong rounded-3xl p-6 text-center">
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-aurora-1 to-aurora-2 mx-auto flex items-center justify-center text-2xl font-display font-semibold text-primary-foreground">
-          R
+          {initial}
         </div>
-        <h1 className="mt-3 text-xl font-display font-semibold">River</h1>
-        <p className="text-sm text-muted-foreground">switch · joined June 2026</p>
-        <div className="grid grid-cols-3 gap-3 mt-5">
-          <Stat label="Journeys" value="8" />
-          <Stat label="Complete" value="5" />
-          <Stat label="Avg score" value="82" />
-        </div>
+        <h1 className="mt-3 text-xl font-display font-semibold">{displayName}</h1>
+        <p className="text-sm text-muted-foreground">{role}{me.isAdmin ? " · admin" : ""}</p>
+        <p className="text-xs text-muted-foreground mt-1">{me.email}</p>
       </motion.section>
 
       <section className="space-y-2">
@@ -44,18 +62,9 @@ function Profile() {
         ))}
       </section>
 
-      <Link to="/" className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm text-muted-foreground hover:text-foreground transition">
+      <button onClick={signOut} className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm text-muted-foreground hover:text-foreground transition">
         <LogOut className="w-4 h-4" /> Sign out
-      </Link>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-white/5 py-3">
-      <div className="text-lg font-display font-semibold">{value}</div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      </button>
     </div>
   );
 }
