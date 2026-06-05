@@ -14,16 +14,305 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      invites: {
+        Row: {
+          code: string
+          completed_at: string | null
+          created_at: string
+          email: string | null
+          expires_at: string
+          id: string
+          journey_id: string
+        }
+        Insert: {
+          code?: string
+          completed_at?: string | null
+          created_at?: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          journey_id: string
+        }
+        Update: {
+          code?: string
+          completed_at?: string | null
+          created_at?: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          journey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "journeys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journeys: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          invite_code: string
+          invite_url: string | null
+          participant_type: Database["public"]["Enums"]["participant_type"]
+          recipient_email: string | null
+          status: Database["public"]["Enums"]["journey_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          invite_code?: string
+          invite_url?: string | null
+          participant_type?: Database["public"]["Enums"]["participant_type"]
+          recipient_email?: string | null
+          status?: Database["public"]["Enums"]["journey_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          invite_code?: string
+          invite_url?: string | null
+          participant_type?: Database["public"]["Enums"]["participant_type"]
+          recipient_email?: string | null
+          status?: Database["public"]["Enums"]["journey_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      question_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          active: boolean
+          answer_options: Json
+          category_id: string
+          created_at: string
+          id: string
+          question: string
+          question_type: Database["public"]["Enums"]["question_type"]
+          risk_level: Database["public"]["Enums"]["risk_level"]
+          weight: number
+        }
+        Insert: {
+          active?: boolean
+          answer_options?: Json
+          category_id: string
+          created_at?: string
+          id?: string
+          question: string
+          question_type?: Database["public"]["Enums"]["question_type"]
+          risk_level?: Database["public"]["Enums"]["risk_level"]
+          weight?: number
+        }
+        Update: {
+          active?: boolean
+          answer_options?: Json
+          category_id?: string
+          created_at?: string
+          id?: string
+          question?: string
+          question_type?: Database["public"]["Enums"]["question_type"]
+          risk_level?: Database["public"]["Enums"]["risk_level"]
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "question_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      responses: {
+        Row: {
+          answer: Json
+          created_at: string
+          id: string
+          journey_id: string
+          question_id: string
+          score: number | null
+        }
+        Insert: {
+          answer: Json
+          created_at?: string
+          id?: string
+          journey_id: string
+          question_id: string
+          score?: number | null
+        }
+        Update: {
+          answer?: Json
+          created_at?: string
+          id?: string
+          journey_id?: string
+          question_id?: string
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "responses_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "journeys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      results: {
+        Row: {
+          ai_summary: string | null
+          compatibility_score: number | null
+          created_at: string
+          experience_score: number | null
+          green_flag_score: number | null
+          id: string
+          journey_id: string
+          red_flag_score: number | null
+          safety_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          compatibility_score?: number | null
+          created_at?: string
+          experience_score?: number | null
+          green_flag_score?: number | null
+          id?: string
+          journey_id: string
+          red_flag_score?: number | null
+          safety_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ai_summary?: string | null
+          compatibility_score?: number | null
+          created_at?: string
+          experience_score?: number | null
+          green_flag_score?: number | null
+          id?: string
+          journey_id?: string
+          red_flag_score?: number | null
+          safety_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "results_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: true
+            referencedRelation: "journeys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      journey_status:
+        | "draft"
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "expired"
+      participant_type: "Dominant" | "submissive" | "switch" | "any"
+      question_type:
+        | "single_choice"
+        | "multi_choice"
+        | "scale"
+        | "boolean"
+        | "text"
+      risk_level: "low" | "medium" | "high" | "critical"
+      user_role: "Dominant" | "submissive" | "switch"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +439,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      journey_status: [
+        "draft",
+        "pending",
+        "in_progress",
+        "completed",
+        "expired",
+      ],
+      participant_type: ["Dominant", "submissive", "switch", "any"],
+      question_type: [
+        "single_choice",
+        "multi_choice",
+        "scale",
+        "boolean",
+        "text",
+      ],
+      risk_level: ["low", "medium", "high", "critical"],
+      user_role: ["Dominant", "submissive", "switch"],
+    },
   },
 } as const
