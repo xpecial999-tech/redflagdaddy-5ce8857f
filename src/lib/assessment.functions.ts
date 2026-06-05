@@ -158,27 +158,39 @@ export const completeAssessment = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code);
 
-    // Aggregate scores by category risk
+    // Aggregate scores by category
     const { data: rows, error } = await supabaseAdmin
       .from("responses")
-      .select("score, questions!inner(risk_level, category_id, question_categories(name))")
+      .select("score, questions!inner(risk_level, weight, category_id, question_categories(name))")
       .eq("journey_id", journey.id);
     if (error) throw new Error(error.message);
 
-    let safety = 0, compat = 0, red = 0, green = 0, exp = 0;
+    // Pull all Green Flag questions to compute the max possible (weight * 10 per question).
+    const { data: greenQs } = await supabaseAdmin
+      .from("questions")
+      .select("weight, question_categories!inner(name)")
+      .eq("active", true)
+      .eq("question_categories.name", "Green Flags");
+    const greenMax = ((greenQs ?? []) as any[]).reduce(
+      (s, q) => s + (Number(q.weight) || 1) * 10,
+      0,
+    );
+
+    let safety = 0, compat = 0, red = 0, greenRaw = 0, exp = 0;
     for (const row of (rows ?? []) as any[]) {
       const s = Number(row.score) || 0;
       const cat = row.questions?.question_categories?.name ?? "";
-      const risk = row.questions?.risk_level;
       if (cat === "Safety Practices") safety += s;
       if (cat === "Compatibility") compat += s;
       if (cat === "Experience") exp += s;
+      if (cat === "Green Flags") greenRaw += s;
       if (cat === "Red Flags") {
         if (s < 0) red += Math.abs(s);
-        else green += s;
       }
-      if (risk === "high" && s > 0) green += s * 0.25;
     }
+
+    // Normalize Green Flag score to /100
+    const green = greenMax > 0 ? Math.max(0, Math.min(100, (greenRaw / greenMax) * 100)) : 0;
 
     await supabaseAdmin
       .from("results")
