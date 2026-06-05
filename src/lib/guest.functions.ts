@@ -2,9 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const CreateGuestSchema = z.object({
-  title: z.string().trim().min(1).max(120),
-  participantType: z.enum(["Dominant", "submissive", "switch"]),
   guestEmail: z.string().trim().email().max(255),
+  partnerEmail: z
+    .string()
+    .trim()
+    .email()
+    .max(255)
+    .optional()
+    .or(z.literal("")),
+  partnerType: z.enum(["Dominant", "submissive", "switch"]),
 });
 
 function generateInviteCode() {
@@ -21,15 +27,16 @@ export const createGuestJourney = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const code = generateInviteCode();
+    const partnerEmail = data.partnerEmail && data.partnerEmail.length > 0 ? data.partnerEmail : null;
 
     const { data: journey, error } = await supabaseAdmin
       .from("journeys")
       .insert({
         creator_id: null,
-        title: data.title,
-        participant_type: data.participantType,
+        title: "Guest assessment",
+        participant_type: data.partnerType,
         invite_code: code,
-        recipient_email: null,
+        recipient_email: partnerEmail,
         guest_email: data.guestEmail,
         status: "pending",
       })
@@ -40,9 +47,9 @@ export const createGuestJourney = createServerFn({ method: "POST" })
     const { error: iErr } = await supabaseAdmin.from("invites").insert({
       journey_id: journey.id,
       code,
-      email: data.guestEmail,
+      email: partnerEmail,
     });
     if (iErr) throw new Error(iErr.message);
 
-    return { code };
+    return { code, hasPartnerEmail: Boolean(partnerEmail) };
   });
