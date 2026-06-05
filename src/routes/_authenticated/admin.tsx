@@ -158,7 +158,7 @@ function QuestionsTab() {
   const [open, setOpen] = useState(false);
 
   // Debounce search
-  useMemo(() => {
+  useEffect(() => {
     const t = setTimeout(() => {
       setSearch(searchInput.trim());
       setPage(0);
