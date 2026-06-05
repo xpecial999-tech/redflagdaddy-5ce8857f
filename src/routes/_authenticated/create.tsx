@@ -21,7 +21,6 @@ type Step = 1 | 2 | 3 | 4;
 type ParticipantType = (typeof participantTypes)[number]["value"];
 
 function Create() {
-  const navigate = useNavigate();
   const createFn = useServerFn(createJourney);
   const [step, setStep] = useState<Step>(1);
   const [title, setTitle] = useState("");
