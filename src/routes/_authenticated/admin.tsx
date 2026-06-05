@@ -352,8 +352,42 @@ function QuestionsTab() {
                         archived
                       </Badge>
                     )}
+                    <span className="text-[10px] text-muted-foreground ml-auto">
+                      {categories.find((c) => c.id === q.category_id)?.name ?? ""}
+                    </span>
                   </div>
                   <p className="text-sm break-words">{q.question}</p>
+                  {(() => {
+                    const bl = (q.branch_logic ?? {}) as {
+                      green_flag_indicators?: string[];
+                      red_flag_indicators?: string[];
+                    };
+                    const g = bl.green_flag_indicators ?? [];
+                    const r = bl.red_flag_indicators ?? [];
+                    if (g.length === 0 && r.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {g.map((t) => (
+                          <Badge
+                            key={`g-${t}`}
+                            variant="outline"
+                            className="bg-emerald-500/10 text-emerald-300 border-emerald-500/30 text-[10px]"
+                          >
+                            + {t}
+                          </Badge>
+                        ))}
+                        {r.map((t) => (
+                          <Badge
+                            key={`r-${t}`}
+                            variant="outline"
+                            className="bg-rose-500/10 text-rose-300 border-rose-500/30 text-[10px]"
+                          >
+                            ⚑ {t}
+                          </Badge>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               <div className="flex gap-2 mt-3 flex-wrap">
