@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Create account — Dynamic Compass" }] }),
@@ -12,66 +13,131 @@ const roles = ["Dominant", "submissive", "switch"] as const;
 
 function Register() {
   const navigate = useNavigate();
+  const [step, setStep] = useState<"form" | "otp">("form");
   const [role, setRole] = useState<typeof roles[number]>("switch");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
+    setInfo(null);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { name, role },
-      },
+      options: { data: { name, role } },
     });
     setLoading(false);
     if (error) return setError(error.message);
-    if (data.session) navigate({ to: "/dashboard" });
-    else setError("Check your email to confirm your account, then sign in.");
+    if (data.session) {
+      navigate({ to: "/dashboard" });
+      return;
+    }
+    setStep("otp");
+    setInfo(`We sent a 6-digit code to ${email}. Enter it below to finish.`);
+  };
+
+  const onVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) return setError("Enter the 6-digit code.");
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "email",
+    });
+    setLoading(false);
+    if (error) return setError(error.message);
+    navigate({ to: "/dashboard" });
+  };
+
+  const onResend = async () => {
+    setError(null);
+    setInfo(null);
+    const { error } = await supabase.auth.resend({ type: "signup", email });
+    if (error) return setError(error.message);
+    setInfo("Code resent. Check your inbox.");
   };
 
   return (
     <div className="max-w-sm mx-auto pt-8 space-y-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-strong rounded-3xl p-6">
-        <h1 className="text-2xl font-display font-semibold mb-1">Create your account</h1>
-        <p className="text-sm text-muted-foreground mb-6">18+ only. Consent-first by design.</p>
-        <form className="space-y-3" onSubmit={onSubmit}>
-          <Field label="Display name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Used on your journeys" />
-          <Field label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-          <Field label="Password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+        <AnimatePresence mode="wait">
+          {step === "form" ? (
+            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <h1 className="text-2xl font-display font-semibold mb-1">Create your account</h1>
+              <p className="text-sm text-muted-foreground mb-6">18+ only. Consent-first by design.</p>
+              <form className="space-y-3" onSubmit={onSubmit}>
+                <Field label="Display name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Used on your journeys" />
+                <Field label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+                <Field label="Password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
 
-          <div>
-            <span className="text-xs text-muted-foreground">Primary identity</span>
-            <div className="mt-1 grid grid-cols-3 gap-2">
-              {roles.map((r) => (
-                <button type="button" key={r} onClick={() => setRole(r)}
-                  className={`rounded-xl border px-2 py-2.5 text-xs font-medium transition ${role === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground"}`}>
-                  {r}
+                <div>
+                  <span className="text-xs text-muted-foreground">Primary identity</span>
+                  <div className="mt-1 grid grid-cols-3 gap-2">
+                    {roles.map((r) => (
+                      <button type="button" key={r} onClick={() => setRole(r)}
+                        className={`rounded-xl border px-2 py-2.5 text-xs font-medium transition ${role === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground"}`}>
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <label className="flex items-start gap-2 text-xs text-muted-foreground pt-2">
+                  <input type="checkbox" required className="mt-0.5 accent-primary" />
+                  I confirm I am 18+ and agree to the consent & safety guidelines.
+                </label>
+
+                {error && <p className="text-xs text-destructive">{error}</p>}
+
+                <button disabled={loading} className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60">
+                  {loading ? "Sending code…" : "Create account"}
                 </button>
-              ))}
-            </div>
-          </div>
+              </form>
+              <p className="text-xs text-muted-foreground text-center mt-6">
+                Already a member? <Link to="/login" className="text-primary">Sign in</Link>
+              </p>
+            </motion.div>
+          ) : (
+            <motion.div key="otp" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <h1 className="text-2xl font-display font-semibold mb-1">Enter your code</h1>
+              <p className="text-sm text-muted-foreground mb-6">{info ?? `We sent a 6-digit code to ${email}.`}</p>
+              <form className="space-y-4" onSubmit={onVerify}>
+                <div className="flex justify-center">
+                  <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                    <InputOTPGroup>
+                      {[0, 1, 2, 3, 4, 5].map((i) => (
+                        <InputOTPSlot key={i} index={i} className="h-12 w-12 text-lg" />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
 
-          <label className="flex items-start gap-2 text-xs text-muted-foreground pt-2">
-            <input type="checkbox" required className="mt-0.5 accent-primary" />
-            I confirm I am 18+ and agree to the consent & safety guidelines.
-          </label>
+                {error && <p className="text-xs text-destructive text-center">{error}</p>}
 
-          {error && <p className="text-xs text-destructive">{error}</p>}
-
-          <button disabled={loading} className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60">
-            {loading ? "Creating…" : "Create account"}
-          </button>
-        </form>
-        <p className="text-xs text-muted-foreground text-center mt-6">
-          Already a member? <Link to="/login" className="text-primary">Sign in</Link>
-        </p>
+                <button disabled={loading || otp.length !== 6} className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60">
+                  {loading ? "Verifying…" : "Verify & continue"}
+                </button>
+              </form>
+              <div className="flex items-center justify-between mt-6 text-xs text-muted-foreground">
+                <button type="button" onClick={() => setStep("form")} className="hover:text-foreground">
+                  ← Use a different email
+                </button>
+                <button type="button" onClick={onResend} className="text-primary">
+                  Resend code
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       <section className="glass-strong rounded-3xl p-6 text-center">

@@ -73,7 +73,8 @@ export type Database = {
       journeys: {
         Row: {
           created_at: string
-          creator_id: string
+          creator_id: string | null
+          guest_email: string | null
           id: string
           invite_code: string
           invite_url: string | null
@@ -85,7 +86,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          creator_id: string
+          creator_id?: string | null
+          guest_email?: string | null
           id?: string
           invite_code?: string
           invite_url?: string | null
@@ -97,7 +99,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          creator_id?: string
+          creator_id?: string | null
+          guest_email?: string | null
           id?: string
           invite_code?: string
           invite_url?: string | null
