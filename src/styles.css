@@ -97,9 +97,16 @@
 }
 
 @utility glass-strong {
-  background: color-mix(in oklab, var(--card) 85%, transparent);
-  backdrop-filter: blur(28px) saturate(160%);
-  border: 1px solid color-mix(in oklab, white 12%, transparent);
+  position: relative;
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--aurora-1) 8%, transparent), transparent 40%),
+    color-mix(in oklab, var(--card) 92%, transparent);
+  border: 1px solid color-mix(in oklab, white 8%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, white 8%, transparent) inset,
+    0 0 0 1px color-mix(in oklab, var(--aurora-2) 6%, transparent),
+    0 30px 80px -30px color-mix(in oklab, var(--aurora-1) 35%, transparent),
+    0 10px 40px -10px rgba(0, 0, 0, 0.6);
 }
 
 @utility text-gradient {
