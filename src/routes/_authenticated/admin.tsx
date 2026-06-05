@@ -186,7 +186,7 @@ function QuestionsTab() {
     onSuccess: () => invalidate(),
   });
 
-  const questions = (qs.data?.questions ?? []) as QuestionRow[];
+  const questions = (qs.data?.questions ?? []) as unknown as QuestionRow[];
   const categories = (cats.data?.categories ?? []) as CategoryRow[];
 
   const move = (idx: number, dir: -1 | 1) => {
