@@ -165,7 +165,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
       .eq("journey_id", journey.id);
     if (error) throw new Error(error.message);
 
-    // Pull all Green Flag questions to compute the max possible (weight * 10 per question).
+    // Max-possible per normalized category (Always/Yes path = score 10).
     const { data: greenQs } = await supabaseAdmin
       .from("questions")
       .select("weight, question_categories!inner(name)")
@@ -176,21 +176,30 @@ export const completeAssessment = createServerFn({ method: "POST" })
       0,
     );
 
-    let safety = 0, compat = 0, red = 0, greenRaw = 0, exp = 0;
+    const { data: safetyQs } = await supabaseAdmin
+      .from("questions")
+      .select("weight, question_categories!inner(name)")
+      .eq("active", true)
+      .eq("question_categories.name", "BDSM Safety");
+    const safetyMax = ((safetyQs ?? []) as any[]).reduce(
+      (s, q) => s + (Number(q.weight) || 1) * 10,
+      0,
+    );
+
+    let safetyRaw = 0, compat = 0, red = 0, greenRaw = 0, exp = 0;
     for (const row of (rows ?? []) as any[]) {
       const s = Number(row.score) || 0;
       const cat = row.questions?.question_categories?.name ?? "";
-      if (cat === "Safety Practices") safety += s;
+      if (cat === "BDSM Safety" || cat === "Safety Practices") safetyRaw += s;
       if (cat === "Compatibility") compat += s;
       if (cat === "Experience") exp += s;
       if (cat === "Green Flags") greenRaw += s;
-      if (cat === "Red Flags") {
-        if (s < 0) red += Math.abs(s);
-      }
+      if (cat === "Red Flags" && s < 0) red += Math.abs(s);
     }
 
-    // Normalize Green Flag score to /100
     const green = greenMax > 0 ? Math.max(0, Math.min(100, (greenRaw / greenMax) * 100)) : 0;
+    // Safety Score: unsafe answers carry negative weights → can drag score below 0; floor at 0.
+    const safety = safetyMax > 0 ? Math.max(0, Math.min(100, (safetyRaw / safetyMax) * 100)) : 0;
 
     await supabaseAdmin
       .from("results")
