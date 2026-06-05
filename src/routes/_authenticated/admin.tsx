@@ -469,6 +469,11 @@ function QuestionDialog({
   onSaved: () => void;
 }) {
   const saveFn = useServerFn(upsertQuestion);
+  const initialBL = (initial?.branch_logic ?? {}) as {
+    green_flag_indicators?: string[];
+    red_flag_indicators?: string[];
+    [k: string]: unknown;
+  };
   const [form, setForm] = useState(() => ({
     id: initial?.id,
     category_id: initial?.category_id ?? categories[0]?.id ?? "",
@@ -482,6 +487,8 @@ function QuestionDialog({
       initial?.answer_options
         ?.map((o) => `${o.label}|${o.value}|${o.score ?? 0}`)
         .join("\n") ?? "",
+    greenText: (initialBL.green_flag_indicators ?? []).join("\n"),
+    redText: (initialBL.red_flag_indicators ?? []).join("\n"),
   }));
 
   const save = useMutation({
@@ -498,6 +505,16 @@ function QuestionDialog({
             score: score ? Number(score) : 0,
           };
         });
+      const splitLines = (s: string) =>
+        s
+          .split(/\r?\n|,/)
+          .map((x) => x.trim())
+          .filter(Boolean);
+      const branch_logic = {
+        ...initialBL,
+        green_flag_indicators: splitLines(form.greenText),
+        red_flag_indicators: splitLines(form.redText),
+      };
       return saveFn({
         data: {
           ...(form.id ? { id: form.id } : {}),
@@ -509,7 +526,7 @@ function QuestionDialog({
           risk_level: form.risk_level,
           active: form.active,
           order_index: Number(form.order_index),
-          branch_logic: {},
+          branch_logic,
         },
       });
     },
