@@ -32,13 +32,12 @@ function Register() {
     });
     setLoading(false);
     if (error) return setError(error.message);
-    // If session is returned, user is signed in immediately
     if (data.session) navigate({ to: "/dashboard" });
     else setError("Check your email to confirm your account, then sign in.");
   };
 
   return (
-    <div className="max-w-sm mx-auto pt-8">
+    <div className="max-w-sm mx-auto pt-8 space-y-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-strong rounded-3xl p-6">
         <h1 className="text-2xl font-display font-semibold mb-1">Create your account</h1>
         <p className="text-sm text-muted-foreground mb-6">18+ only. Consent-first by design.</p>
@@ -74,6 +73,23 @@ function Register() {
           Already a member? <Link to="/login" className="text-primary">Sign in</Link>
         </p>
       </motion.div>
+
+      <section className="glass-strong rounded-3xl p-6 text-center">
+        <h2 className="text-2xl font-display font-semibold mb-2">How it works</h2>
+        <p className="text-sm text-muted-foreground mb-6">Three steps, fully consent-first.</p>
+        <ol className="space-y-4 text-left">
+          {[
+            "Create a journey and choose what to assess.",
+            "Invite the other person via a private, expiring link.",
+            "Review side-by-side compatibility, limits and red flags.",
+          ].map((s, i) => (
+            <li key={i} className="flex gap-3">
+              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center font-semibold">{i + 1}</span>
+              <span className="text-sm pt-0.5">{s}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
     </div>
   );
 }
