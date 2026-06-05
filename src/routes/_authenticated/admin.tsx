@@ -431,6 +431,30 @@ function QuestionsTab() {
           ))}
         </div>
       )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page === 0}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" /> Prev
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Page {page + 1} of {totalPages}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page + 1 >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
