@@ -17,30 +17,34 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? [...baseNavItems, { to: "/admin", label: "Admin", icon: Shield }]
     : baseNavItems;
   const hideNav =
-    ["/", "/login", "/register", "/join"].includes(pathname) ||
+    ["/", "/login", "/register", "/join", "/guest"].includes(pathname) ||
     pathname.startsWith("/journey/") ||
-    pathname.startsWith("/assessment/");
+    pathname.startsWith("/assessment/") ||
+    pathname.startsWith("/guest/");
+  const hideHeader = pathname === "/guest" || pathname.startsWith("/guest/");
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-40 bg-background border-b border-white/5">
-        <div className="px-4 py-3 flex items-center justify-between max-w-3xl mx-auto">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-aurora-1 to-aurora-2 flex items-center justify-center">
-              <Compass className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-display text-lg font-semibold tracking-tight">Dynamic Compass</span>
-          </Link>
-          {hideNav && (
-            <Link
-              to="/login"
-              className="text-sm flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5 transition"
-            >
-              <LogIn className="w-4 h-4" /> Sign in
+      {!hideHeader && (
+        <header className="sticky top-0 z-40 bg-background border-b border-white/5">
+          <div className="px-4 py-3 flex items-center justify-between max-w-3xl mx-auto">
+            <Link to="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-aurora-1 to-aurora-2 flex items-center justify-center">
+                <Compass className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="font-display text-lg font-semibold tracking-tight">Dynamic Compass</span>
             </Link>
-          )}
-        </div>
-      </header>
+            {hideNav && (
+              <Link
+                to="/login"
+                className="text-sm flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5 transition"
+              >
+                <LogIn className="w-4 h-4" /> Sign in
+              </Link>
+            )}
+          </div>
+        </header>
+      )}
 
       <main className="flex-1 px-4 pb-28 pt-6 max-w-3xl mx-auto w-full">
         <motion.div
