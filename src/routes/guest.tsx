@@ -270,38 +270,37 @@ function PartnerLinkView({
               <li>Copy the link above.</li>
               <li>Send it to your partner over a private channel (iMessage, Signal, WhatsApp, email).</li>
               <li>They open the link, confirm they're 18+, and complete the assessment.</li>
-              <li>Once they finish, we'll email the combined report to you.</li>
+              <li>
+                Once they finish, we'll email the combined report to you:{" "}
+                <span className="text-foreground">{guestEmail}</span>
+              </li>
             </ol>
           </div>
         </section>
 
-        <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-3">
-          <span className="text-xs uppercase tracking-wider text-muted-foreground">
-            Report delivery email
-          </span>
-          <div className="rounded-xl border border-border bg-input px-3 py-3 text-sm break-all">
-            {guestEmail}
-          </div>
-          {partnerEmail && (
-            <p className="text-xs text-muted-foreground">
-              We'll also notify <span className="text-foreground">{partnerEmail}</span> with the
-              invite.
-            </p>
-          )}
-          <button
-            onClick={() => setEmailConfirmed(true)}
-            disabled={emailConfirmed}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 text-primary py-3 text-sm font-medium disabled:opacity-70"
-          >
-            {emailConfirmed ? (
-              <>
-                <Check className="w-4 h-4" /> Email confirmed
-              </>
-            ) : (
-              "Confirm email address"
-            )}
-          </button>
-        </section>
+        {partnerEmail && (
+          <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-3">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+              Send invite to your partner
+            </span>
+            <div className="rounded-xl border border-border bg-input px-3 py-3 text-sm break-all">
+              {partnerEmail}
+            </div>
+            <button
+              onClick={() => setEmailConfirmed(true)}
+              disabled={emailConfirmed}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 text-primary py-3 text-sm font-medium disabled:opacity-70"
+            >
+              {emailConfirmed ? (
+                <>
+                  <Check className="w-4 h-4" /> Invite sent
+                </>
+              ) : (
+                "Send invite"
+              )}
+            </button>
+          </section>
+        )}
 
         <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-3">
           <h3 className="font-display text-lg font-semibold tracking-tight">
@@ -318,10 +317,8 @@ function PartnerLinkView({
             Start my assessment
             <ArrowRight className="w-4 h-4" />
           </button>
-          <Link to="/" className="block text-xs text-muted-foreground hover:text-foreground">
-            I'll do this later
-          </Link>
         </section>
+
       </motion.div>
     </main>
   );
