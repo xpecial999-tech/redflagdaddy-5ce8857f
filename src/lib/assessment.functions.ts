@@ -239,5 +239,13 @@ export const completeAssessment = createServerFn({ method: "POST" })
     await supabaseAdmin.from("invites").update({ completed_at: new Date().toISOString() }).eq("id", invite.id);
     await supabaseAdmin.from("journeys").update({ status: "completed" }).eq("id", journey.id);
 
+    // Best-effort AI analysis. Don't block completion on AI errors.
+    try {
+      const { runAnalysis } = await import("./analysis.functions");
+      await runAnalysis({ data: { journeyId: journey.id } });
+    } catch (e) {
+      console.error("AI analysis failed:", e);
+    }
+
     return { ok: true as const, journeyId: journey.id };
   });
