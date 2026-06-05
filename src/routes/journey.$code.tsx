@@ -45,8 +45,8 @@ function JourneyInvitePage() {
 
   const startMutation = useMutation({
     mutationFn: () => startFn({ data: { code } }),
-    onSuccess: (res) => {
-      navigate({ to: "/assessment/$id", params: { id: res.journeyId } });
+    onSuccess: () => {
+      navigate({ to: "/assessment/$code", params: { code } });
     },
   });
 

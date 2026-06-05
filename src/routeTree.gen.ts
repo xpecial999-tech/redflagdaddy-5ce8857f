@@ -15,7 +15,6 @@ import { Route as JoinRouteImport } from './routes/join'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JourneyCodeRouteImport } from './routes/journey.$code'
-import { Route as AssessmentIdRouteImport } from './routes/assessment.$id'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
@@ -50,11 +49,6 @@ const JourneyCodeRoute = JourneyCodeRouteImport.update({
   path: '/journey/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AssessmentIdRoute = AssessmentIdRouteImport.update({
-  id: '/assessment/$id',
-  path: '/assessment/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -85,7 +79,6 @@ export interface FileRoutesByFullPath {
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/assessment/$id': typeof AssessmentIdRoute
   '/journey/$code': typeof JourneyCodeRoute
 }
 export interface FileRoutesByTo {
@@ -97,7 +90,6 @@ export interface FileRoutesByTo {
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/assessment/$id': typeof AssessmentIdRoute
   '/journey/$code': typeof JourneyCodeRoute
 }
 export interface FileRoutesById {
@@ -111,7 +103,6 @@ export interface FileRoutesById {
   '/_authenticated/create': typeof AuthenticatedCreateRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/assessment/$id': typeof AssessmentIdRoute
   '/journey/$code': typeof JourneyCodeRoute
 }
 export interface FileRouteTypes {
@@ -125,7 +116,6 @@ export interface FileRouteTypes {
     | '/create'
     | '/dashboard'
     | '/profile'
-    | '/assessment/$id'
     | '/journey/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,7 +127,6 @@ export interface FileRouteTypes {
     | '/create'
     | '/dashboard'
     | '/profile'
-    | '/assessment/$id'
     | '/journey/$code'
   id:
     | '__root__'
@@ -150,7 +139,6 @@ export interface FileRouteTypes {
     | '/_authenticated/create'
     | '/_authenticated/dashboard'
     | '/_authenticated/profile'
-    | '/assessment/$id'
     | '/journey/$code'
   fileRoutesById: FileRoutesById
 }
@@ -160,7 +148,6 @@ export interface RootRouteChildren {
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
-  AssessmentIdRoute: typeof AssessmentIdRoute
   JourneyCodeRoute: typeof JourneyCodeRoute
 }
 
@@ -206,13 +193,6 @@ declare module '@tanstack/react-router' {
       path: '/journey/$code'
       fullPath: '/journey/$code'
       preLoaderRoute: typeof JourneyCodeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/assessment/$id': {
-      id: '/assessment/$id'
-      path: '/assessment/$id'
-      fullPath: '/assessment/$id'
-      preLoaderRoute: typeof AssessmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/profile': {
@@ -269,9 +249,18 @@ const rootRouteChildren: RootRouteChildren = {
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
-  AssessmentIdRoute: AssessmentIdRoute,
   JourneyCodeRoute: JourneyCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
