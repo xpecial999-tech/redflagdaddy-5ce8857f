@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMe } from "@/hooks/use-me";
@@ -58,6 +59,7 @@ import {
   deleteCategory,
   getAnalytics,
   bulkSetAppliesTo,
+  aiSuggestAndApplyAppliesTo,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -173,6 +175,7 @@ function QuestionsTab() {
   const arcFn = useServerFn(archiveQuestion);
   const reorderFn = useServerFn(reorderQuestions);
   const bulkAppliesFn = useServerFn(bulkSetAppliesTo);
+  const aiTagFn = useServerFn(aiSuggestAndApplyAppliesTo);
 
   const [selectedCat, setSelectedCat] = useState<string>("all");
   const [risk, setRisk] = useState<string>("all");
@@ -248,6 +251,17 @@ function QuestionsTab() {
       }),
     onSuccess: (res) => {
       toast.success(`Retagged ${res.updated} question${res.updated === 1 ? "" : "s"}`);
+      setSelectedIds(new Set());
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const aiTag = useMutation({
+    mutationFn: () =>
+      aiTagFn({ data: { ids: Array.from(selectedIds), apply: true } }),
+    onSuccess: (res) => {
+      toast.success(`AI retagged ${res.updated} of ${res.suggested} question${res.suggested === 1 ? "" : "s"}`);
       setSelectedIds(new Set());
       invalidate();
     },
@@ -402,9 +416,24 @@ function QuestionsTab() {
                 ? "Clear page"
                 : "Select all on page"}
             </button>
-            <span className="text-xs text-muted-foreground">
-              {selectedIds.size} selected
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {selectedIds.size} selected
+              </span>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={selectedIds.size === 0 || aiTag.isPending}
+                onClick={() => aiTag.mutate()}
+              >
+                {aiTag.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 mr-1" />
+                )}
+                Auto-tag with AI
+              </Button>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-muted-foreground">Set applies-to:</span>

@@ -99,6 +99,149 @@ export const bulkSetAppliesTo = createServerFn({ method: "POST" })
     return { ok: true as const, updated: data.ids.length };
   });
 
+// ---------- AI-assisted retag ----------
+
+const AI_SYSTEM_PROMPT = `You categorize BDSM / power-exchange assessment questions by which participant role they meaningfully apply to.
+
+Roles:
+- "Dominant" — the partner taking the leading / top / controlling role.
+- "submissive" — the partner taking the following / bottom / receiving role.
+- "switch" — a partner who fluidly takes either role.
+
+Rules:
+- Every question must be tagged with at least one role.
+- Tag "Dominant" when the question is about leading, controlling, giving instructions, enforcing limits, aftercare-from-the-top, or top-side experience.
+- Tag "submissive" when the question is about following, receiving, surrendering, using safewords, being cared for, or bottom-side experience.
+- Tag "switch" only when the question is genuinely role-neutral OR about switching itself.
+- If a question is fully role-neutral (e.g. general safety, consent, communication, hard limits negotiation between equals), tag ALL THREE roles.
+- Prefer fewer roles when one side clearly does the action and the other clearly does not.
+- Return ONLY the structured tool call.`;
+
+export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        ids: z.array(z.string().uuid()).min(1).max(200),
+        apply: z.boolean().default(true),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const sb = await assertAdmin(context.userId);
+    const { data: rows, error } = await sb
+      .from("questions")
+      .select("id, question, applies_to, question_categories(name)")
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    const items = (rows ?? []).map((r: any) => ({
+      id: r.id as string,
+      question: r.question as string,
+      category: r.question_categories?.name ?? null,
+      current: (r.applies_to ?? []) as string[],
+    }));
+
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("LOVABLE_API_KEY not configured");
+
+    const tool = {
+      type: "function",
+      function: {
+        name: "submit_tags",
+        description: "Submit role tags for each question.",
+        parameters: {
+          type: "object",
+          properties: {
+            results: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  applies_to: {
+                    type: "array",
+                    items: { type: "string", enum: ["Dominant", "submissive", "switch"] },
+                  },
+                },
+                required: ["id", "applies_to"],
+                additionalProperties: false,
+              },
+            },
+          },
+          required: ["results"],
+          additionalProperties: false,
+        },
+      },
+    };
+
+    // Chunk to keep prompt size reasonable
+    const chunks: typeof items[] = [];
+    const CHUNK = 40;
+    for (let i = 0; i < items.length; i += CHUNK) chunks.push(items.slice(i, i + CHUNK));
+
+    const suggestions = new Map<string, ("Dominant" | "submissive" | "switch")[]>();
+    for (const chunk of chunks) {
+      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { role: "system", content: AI_SYSTEM_PROMPT },
+            { role: "user", content: JSON.stringify({ questions: chunk }) },
+          ],
+          tools: [tool],
+          tool_choice: { type: "function", function: { name: "submit_tags" } },
+        }),
+      });
+      if (!resp.ok) {
+        const t = await resp.text();
+        if (resp.status === 429) throw new Error("Rate limits exceeded, try again shortly.");
+        if (resp.status === 402) throw new Error("AI credits exhausted. Add credits in your workspace.");
+        throw new Error(`AI gateway error (${resp.status}): ${t.slice(0, 200)}`);
+      }
+      const json = await resp.json();
+      const call = json?.choices?.[0]?.message?.tool_calls?.[0];
+      if (!call?.function?.arguments) throw new Error("AI did not return structured tags.");
+      const parsed = JSON.parse(call.function.arguments) as {
+        results: { id: string; applies_to: ("Dominant" | "submissive" | "switch")[] }[];
+      };
+      for (const r of parsed.results ?? []) {
+        const roles = Array.from(new Set(r.applies_to)).filter((x) =>
+          ["Dominant", "submissive", "switch"].includes(x),
+        ) as ("Dominant" | "submissive" | "switch")[];
+        if (roles.length > 0) suggestions.set(r.id, roles);
+      }
+    }
+
+    let updated = 0;
+    if (data.apply && suggestions.size > 0) {
+      // Group by identical role set to minimize update calls
+      const groups = new Map<string, string[]>();
+      for (const [id, roles] of suggestions) {
+        const k = [...roles].sort().join("|");
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k)!.push(id);
+      }
+      for (const [k, ids] of groups) {
+        const roles = k.split("|") as ("Dominant" | "submissive" | "switch")[];
+        const { error: uErr } = await sb
+          .from("questions")
+          .update({ applies_to: roles })
+          .in("id", ids);
+        if (uErr) throw new Error(uErr.message);
+        updated += ids.length;
+      }
+    }
+
+    return {
+      ok: true as const,
+      suggested: suggestions.size,
+      updated,
+      suggestions: Array.from(suggestions, ([id, applies_to]) => ({ id, applies_to })),
+    };
+  });
+
 export const upsertQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => QuestionSchema.parse(d))
