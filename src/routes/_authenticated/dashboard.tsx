@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Plus, Clock, CheckCircle2, AlertTriangle, Compass } from "lucide-react";
+import { Plus, Clock, CheckCircle2, AlertTriangle, Compass, FileText } from "lucide-react";
 import { listJourneys } from "@/lib/journeys.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -20,6 +20,8 @@ function Dashboard() {
   const journeys = data?.journeys ?? [];
   const active = journeys.filter((j) => j.status === "pending" || j.status === "in_progress").length;
   const complete = journeys.filter((j) => j.status === "completed").length;
+  const completedJourneys = journeys.filter((j) => j.status === "completed");
+  const activeJourneys = journeys.filter((j) => j.status !== "completed");
 
   return (
     <div className="space-y-6">
@@ -61,30 +63,61 @@ function Dashboard() {
         </div>
       )}
 
-      <section className="space-y-3">
-        {journeys.map((j, i) => (
-          <motion.div key={j.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <Link
-              to="/journeys/$id"
-              params={{ id: j.id }}
-              className="block glass rounded-2xl p-4 hover:bg-white/5 transition"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-medium truncate">{j.title}</h3>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
-                    <StatusIcon status={j.status} />
-                    {j.status.replace("_", " ")}
-                    <span className="opacity-50">·</span>
-                    <span className="font-mono">{j.invite_code}</span>
-                  </p>
+      {completedJourneys.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5" /> Reports
+          </h2>
+          {completedJourneys.map((j, i) => (
+            <motion.div key={j.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+              <Link
+                to="/results/$id"
+                params={{ id: j.id }}
+                className="block glass-strong rounded-2xl p-4 hover:bg-white/5 transition border border-emerald-500/20"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-medium truncate">{j.title}</h3>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      View report
+                    </p>
+                  </div>
+                  <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">{j.participant_type}</span>
                 </div>
-                <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-white/5 text-muted-foreground">{j.participant_type}</span>
-              </div>
-            </Link>
-          </motion.div>
-        ))}
-      </section>
+              </Link>
+            </motion.div>
+          ))}
+        </section>
+      )}
+
+      {activeJourneys.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-xs uppercase tracking-wider text-muted-foreground">In progress</h2>
+          {activeJourneys.map((j, i) => (
+            <motion.div key={j.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+              <Link
+                to="/journeys/$id"
+                params={{ id: j.id }}
+                className="block glass rounded-2xl p-4 hover:bg-white/5 transition"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-medium truncate">{j.title}</h3>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                      <StatusIcon status={j.status} />
+                      {j.status.replace("_", " ")}
+                      <span className="opacity-50">·</span>
+                      <span className="font-mono">{j.invite_code}</span>
+                    </p>
+                  </div>
+                  <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-white/5 text-muted-foreground">{j.participant_type}</span>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

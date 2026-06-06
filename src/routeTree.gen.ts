@@ -17,6 +17,7 @@ import { Route as DemoReportRouteImport } from './routes/demo-report'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReportTokenRouteImport } from './routes/report.$token'
 import { Route as JourneyCodeRouteImport } from './routes/journey.$code'
 import { Route as AssessmentCodeRouteImport } from './routes/assessment.$code'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -67,6 +68,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportTokenRoute = ReportTokenRouteImport.update({
+  id: '/report/$token',
+  path: '/report/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JourneyCodeRoute = JourneyCodeRouteImport.update({
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
+  '/report/$token': typeof ReportTokenRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/profile/help': typeof AuthenticatedProfileHelpRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
+  '/report/$token': typeof ReportTokenRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/profile/help': typeof AuthenticatedProfileHelpRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
+  '/report/$token': typeof ReportTokenRoute
   '/_authenticated/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/_authenticated/profile/help': typeof AuthenticatedProfileHelpRoute
   '/_authenticated/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/assessment/$code'
     | '/journey/$code'
+    | '/report/$token'
     | '/journeys/$id'
     | '/profile/help'
     | '/profile/notifications'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/assessment/$code'
     | '/journey/$code'
+    | '/report/$token'
     | '/journeys/$id'
     | '/profile/help'
     | '/profile/notifications'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/assessment/$code'
     | '/journey/$code'
+    | '/report/$token'
     | '/_authenticated/journeys/$id'
     | '/_authenticated/profile/help'
     | '/_authenticated/profile/notifications'
@@ -277,6 +289,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   AssessmentCodeRoute: typeof AssessmentCodeRoute
   JourneyCodeRoute: typeof JourneyCodeRoute
+  ReportTokenRoute: typeof ReportTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -335,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report/$token': {
+      id: '/report/$token'
+      path: '/report/$token'
+      fullPath: '/report/$token'
+      preLoaderRoute: typeof ReportTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/journey/$code': {
@@ -474,6 +494,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   AssessmentCodeRoute: AssessmentCodeRoute,
   JourneyCodeRoute: JourneyCodeRoute,
+  ReportTokenRoute: ReportTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

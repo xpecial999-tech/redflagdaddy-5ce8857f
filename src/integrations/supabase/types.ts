@@ -239,6 +239,8 @@ export type Database = {
           journey_id: string
           red_flag_score: number | null
           safety_score: number | null
+          share_enabled: boolean
+          share_token: string | null
           updated_at: string
         }
         Insert: {
@@ -251,6 +253,8 @@ export type Database = {
           journey_id: string
           red_flag_score?: number | null
           safety_score?: number | null
+          share_enabled?: boolean
+          share_token?: string | null
           updated_at?: string
         }
         Update: {
@@ -263,6 +267,8 @@ export type Database = {
           journey_id?: string
           red_flag_score?: number | null
           safety_score?: number | null
+          share_enabled?: boolean
+          share_token?: string | null
           updated_at?: string
         }
         Relationships: [
