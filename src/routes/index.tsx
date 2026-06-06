@@ -60,6 +60,20 @@ function Landing() {
             I have an account
           </Link>
         </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 2.4 }}
+          className="pt-4"
+        >
+          <Link
+            to="/about"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition"
+          >
+            Learn how it works <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </motion.div>
       </section>
     </div>
   );
