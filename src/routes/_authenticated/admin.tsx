@@ -435,16 +435,6 @@ function QuestionsTab() {
               </Button>
             </div>
           </div>
-              className="text-xs text-muted-foreground hover:text-foreground transition"
-            >
-              {questions.every((q) => selectedIds.has(q.id))
-                ? "Clear page"
-                : "Select all on page"}
-            </button>
-            <span className="text-xs text-muted-foreground">
-              {selectedIds.size} selected
-            </span>
-          </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-muted-foreground">Set applies-to:</span>
             {ALL_ROLES.map((r) => {
