@@ -23,6 +23,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedProfilePrivacyRouteImport } from './routes/_authenticated/profile.privacy'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -93,6 +94,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfilePrivacyRoute =
+  AuthenticatedProfilePrivacyRouteImport.update({
+    id: '/privacy',
+    path: '/privacy',
+    getParentRoute: () => AuthenticatedProfileRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -104,10 +111,11 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/profile': typeof AuthenticatedProfileRoute
+  '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/results/$id': typeof ResultsIdRoute
+  '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -119,10 +127,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/profile': typeof AuthenticatedProfileRoute
+  '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/results/$id': typeof ResultsIdRoute
+  '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -136,10 +145,11 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/create': typeof AuthenticatedCreateRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/results/$id': typeof ResultsIdRoute
+  '/_authenticated/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/assessment/$code'
     | '/journey/$code'
     | '/results/$id'
+    | '/profile/privacy'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/assessment/$code'
     | '/journey/$code'
     | '/results/$id'
+    | '/profile/privacy'
   id:
     | '__root__'
     | '/'
@@ -188,6 +200,7 @@ export interface FileRouteTypes {
     | '/assessment/$code'
     | '/journey/$code'
     | '/results/$id'
+    | '/_authenticated/profile/privacy'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -303,21 +316,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile/privacy': {
+      id: '/_authenticated/profile/privacy'
+      path: '/privacy'
+      fullPath: '/profile/privacy'
+      preLoaderRoute: typeof AuthenticatedProfilePrivacyRouteImport
+      parentRoute: typeof AuthenticatedProfileRoute
+    }
   }
 }
+
+interface AuthenticatedProfileRouteChildren {
+  AuthenticatedProfilePrivacyRoute: typeof AuthenticatedProfilePrivacyRoute
+}
+
+const AuthenticatedProfileRouteChildren: AuthenticatedProfileRouteChildren = {
+  AuthenticatedProfilePrivacyRoute: AuthenticatedProfilePrivacyRoute,
+}
+
+const AuthenticatedProfileRouteWithChildren =
+  AuthenticatedProfileRoute._addFileChildren(AuthenticatedProfileRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCreateRoute: typeof AuthenticatedCreateRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCreateRoute: AuthenticatedCreateRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -338,3 +369,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
