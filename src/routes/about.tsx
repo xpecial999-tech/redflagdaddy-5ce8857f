@@ -17,6 +17,13 @@ import {
   Workflow,
   Scale,
   ArrowRight,
+  Activity,
+  Settings,
+  Mail,
+  Shield,
+  Timer,
+  Monitor,
+  Bell,
 } from "lucide-react";
 
 export const Route = createFileRoute("/about")({
@@ -26,13 +33,13 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "How Dynamic Compass works: structured assessments for Dominants, submissives and switches with research-grounded questions, safety scoring and end-to-end privacy.",
+          "How Dynamic Compass works: structured assessments for Dominants, submissives and switches with research-grounded questions, safety scoring, real-time journey tracking and end-to-end privacy.",
       },
       { property: "og:title", content: "About — Dynamic Compass" },
       {
         property: "og:description",
         content:
-          "Research-grounded consent, compatibility and safety assessments for D/s dynamics.",
+          "Research-grounded consent, compatibility and safety assessments for D/s dynamics with real-time tracking and authenticated results.",
       },
     ],
   }),
@@ -51,13 +58,13 @@ const flow = [
     icon: ClipboardCheck,
     title: "Create a journey",
     body:
-      "Pick what you're assessing — compatibility, safety, red flags — and who it's for: Dominant, submissive, or switch.",
+      "A guided 3-step wizard: name your assessment, pick the respondent's role (Dominant, submissive or switch), and add optional recipient details.",
   },
   {
     icon: Users,
     title: "Invite a respondent",
     body:
-      "Share a single-use link. No account required for guests. They answer privately, on their own time.",
+      "Share a secure, single-use link or invite code. No account required for guests. They answer privately, on their own time.",
   },
   {
     icon: Brain,
@@ -69,7 +76,30 @@ const flow = [
     icon: Sparkles,
     title: "Structured results",
     body:
-      "We weight, score and summarise. You get a clear read on safety, alignment and green/red flags — not vibes.",
+      "We weight, score and summarise across five dimensions. You get a clear read on safety, alignment and green/red flags — not vibes.",
+  },
+];
+
+const tracking = [
+  {
+    icon: Activity,
+    title: "Real-time status",
+    body: "Your dashboard shows every journey's status at a glance: active, completed or expired. Click through for live detail.",
+  },
+  {
+    icon: Timer,
+    title: "Step-by-step progress",
+    body: "The journey tracker visualises exactly where a respondent is: invited, started or finished — with timestamps for every stage.",
+  },
+  {
+    icon: Monitor,
+    title: "Polls while active",
+    body: "The tracker automatically refreshes while a journey is open, so you see completions as they happen without reloading.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Authenticated results",
+    body: "Results live inside your authenticated account. Only the journey owner can view or regenerate an analysis.",
   },
 ];
 
@@ -86,6 +116,20 @@ const privacy = [
   { icon: EyeOff, title: "You control visibility", body: "Only you and your invited respondent ever see your results — never indexed, never sold." },
   { icon: KeyRound, title: "Row-level access control", body: "Every record is scoped to its owner at the database layer, not just the UI." },
   { icon: Database, title: "Minimal data, deletable", body: "We collect what's needed to score a journey. You can delete a journey and its responses at any time." },
+];
+
+const security = [
+  { icon: Mail, title: "Verified accounts only", body: "Email verification is required before sign-in. No anonymous sign-ups that bypass accountability." },
+  { icon: Shield, title: "Admin route guards", body: "Admin pages are protected by server-side role checks before any data ever reaches the client." },
+  { icon: KeyRound, title: "Service-to-service auth", body: "Analysis and result endpoints verify the caller's identity on every request, not just at login." },
+  { icon: Lock, title: "No public result leaks", body: "Result pages require authentication. Share links are for respondents to answer, not for anyone to browse outcomes." },
+];
+
+const controls = [
+  { icon: Settings, title: "Privacy & data", body: "Control what's stored, manage notification preferences, and review your active journeys from one place." },
+  { icon: ShieldCheck, title: "Safety center", body: "Access consent guides, safety resources and block-list features from your profile." },
+  { icon: Bell, title: "Notification settings", body: "Choose how and when you hear about journey updates." },
+  { icon: Activity, title: "Secure sign-out", body: "Sign out from your account at any time. Your session is cleared immediately." },
 ];
 
 function About() {
@@ -117,7 +161,7 @@ function About() {
         >
           Dynamic Compass replaces guesswork with structure. We help Dominants, submissives and
           switches assess consent, compatibility, safety and red flags — using a research-grounded
-          question library and transparent scoring.
+          question library, transparent scoring, and real-time journey tracking.
         </motion.p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto pt-4">
@@ -205,6 +249,69 @@ function About() {
         </div>
       </section>
 
+      {/* Journey tracking */}
+      <section className="space-y-6">
+        <SectionHeader
+          eyebrow="Journey tracking"
+          title="See progress as it happens"
+          sub="You don't send a link and hope. You track every stage with clarity."
+        />
+        <div className="grid md:grid-cols-2 gap-4">
+          {tracking.map((t, i) => (
+            <motion.div
+              key={t.title}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="glass rounded-2xl p-5"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-aurora-1/30 to-aurora-2/30 flex items-center justify-center shrink-0">
+                  <t.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg">{t.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{t.body}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Mock tracker */}
+        <div className="glass-strong rounded-3xl p-6 mt-6">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-4">
+            Example journey tracker
+          </div>
+          <div className="space-y-4">
+            {[
+              { label: "Journey created", done: true, time: "2 hours ago" },
+              { label: "Invite sent", done: true, time: "2 hours ago" },
+              { label: "Respondent started", done: true, time: "1 hour ago" },
+              { label: "Assessment completed", done: false, time: "Waiting…" },
+            ].map((step, i) => (
+              <div key={step.label} className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${step.done ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-muted-foreground"}`}>
+                  {step.done ? <CheckCircle2 className="w-4 h-4" /> : <Timer className="w-4 h-4" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm ${step.done ? "" : "text-muted-foreground"}`}>{step.label}</div>
+                </div>
+                <div className="text-xs text-muted-foreground">{step.time}</div>
+              </div>
+            ))}
+            <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+              <div className="h-full w-[75%] bg-gradient-to-r from-aurora-1 to-aurora-2" />
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>3 of 4 complete</span>
+              <span className="text-primary">In progress</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Scoring */}
       <section className="space-y-6">
         <SectionHeader
@@ -259,6 +366,68 @@ function About() {
         </div>
       </section>
 
+      {/* Security architecture */}
+      <section className="space-y-6">
+        <SectionHeader
+          eyebrow="Security architecture"
+          title="Engineered for accountability"
+          sub="We don't just claim security — we enforce it at every layer of the stack."
+        />
+        <div className="grid md:grid-cols-2 gap-3">
+          {security.map((s, i) => (
+            <motion.div
+              key={s.title}
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="glass rounded-2xl p-5"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-aurora-1/20 to-aurora-2/20 flex items-center justify-center shrink-0">
+                  <s.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-medium">{s.title}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{s.body}</div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Your control center */}
+      <section className="space-y-6">
+        <SectionHeader
+          eyebrow="Your account"
+          title="Everything under your control"
+          sub="A dashboard and profile system that puts you in charge of your data and your safety."
+        />
+        <div className="grid md:grid-cols-2 gap-3">
+          {controls.map((c, i) => (
+            <motion.div
+              key={c.title}
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="glass rounded-2xl p-5"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-aurora-1/20 to-aurora-2/20 flex items-center justify-center shrink-0">
+                  <c.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-medium">{c.title}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{c.body}</div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
       {/* Library brag */}
       <section className="glass-strong rounded-3xl p-8 text-center space-y-4">
         <Workflow className="w-8 h-8 text-primary mx-auto" />
@@ -268,7 +437,8 @@ function About() {
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
           Our library is informed by established consent frameworks, BDSM safety literature and
           community-vetted compatibility checklists — then tagged by role so Dominants,
-          submissives and switches only see what's relevant.
+          submissives and switches only see what's relevant. Admins can refine tagging with
+          AI-assisted suggestions to keep the library sharp.
         </p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
           {[
