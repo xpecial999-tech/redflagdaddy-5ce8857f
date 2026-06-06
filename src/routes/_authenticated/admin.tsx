@@ -307,7 +307,7 @@ function QuestionsTab() {
             className="pl-9"
           />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Select value={selectedCat} onValueChange={resetPage(setSelectedCat)}>
             <SelectTrigger>
               <SelectValue placeholder="Category" />
@@ -330,6 +330,19 @@ function QuestionsTab() {
               {(["low", "medium", "high", "critical"] as RiskLevel[]).map((r) => (
                 <SelectItem key={r} value={r}>
                   {r}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={roleFilter} onValueChange={resetPage(setRoleFilter)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All roles</SelectItem>
+              {ALL_ROLES.map((r) => (
+                <SelectItem key={r} value={r}>
+                  Applies to {r}
                 </SelectItem>
               ))}
             </SelectContent>
