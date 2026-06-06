@@ -1,7 +1,26 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 const IdSchema = z.object({ journeyId: z.string().uuid() });
+const ResultsAccessSchema = z
+  .object({
+    journeyId: z.string().uuid().optional(),
+    code: z.string().trim().min(4).max(64).optional(),
+  })
+  .refine((v) => Boolean(v.journeyId || v.code), {
+    message: "journeyId or code required",
+  });
+
+type AnswerDigestRow = {
+  answer: unknown;
+  score: number | null;
+  questions: {
+    question: string;
+    risk_level: string;
+    question_categories: { name: string } | null;
+  } | null;
+};
 
 export type AnalysisSection = {
   title: string;
