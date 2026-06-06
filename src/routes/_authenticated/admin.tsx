@@ -416,6 +416,31 @@ function QuestionsTab() {
                 ? "Clear page"
                 : "Select all on page"}
             </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {selectedIds.size} selected
+              </span>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={selectedIds.size === 0 || aiTag.isPending}
+                onClick={() => aiTag.mutate()}
+              >
+                {aiTag.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 mr-1" />
+                )}
+                Auto-tag with AI
+              </Button>
+            </div>
+          </div>
+              className="text-xs text-muted-foreground hover:text-foreground transition"
+            >
+              {questions.every((q) => selectedIds.has(q.id))
+                ? "Clear page"
+                : "Select all on page"}
+            </button>
             <span className="text-xs text-muted-foreground">
               {selectedIds.size} selected
             </span>
