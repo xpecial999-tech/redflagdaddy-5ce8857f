@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
+
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { createGuestJourney } from "@/lib/guest.functions";
@@ -21,14 +21,14 @@ export const Route = createFileRoute("/guest")({
   head: () => ({ meta: [{ title: "Continue as guest — Dynamic Compass" }] }),
   component: GuestPage,
   errorComponent: ({ error }) => (
-    <AppShell>
+    
       <p className="text-destructive">{error.message}</p>
-    </AppShell>
+    
   ),
   notFoundComponent: () => (
-    <AppShell>
+    
       <p>Not found.</p>
-    </AppShell>
+    
   ),
 });
 

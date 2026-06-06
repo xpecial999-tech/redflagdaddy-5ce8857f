@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
+
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -28,14 +28,14 @@ import {
 export const Route = createFileRoute("/assessment/$code")({
   component: AssessmentPage,
   errorComponent: ({ error }) => (
-    <AppShell>
+    
       <ErrorCard message={error.message} />
-    </AppShell>
+    
   ),
   notFoundComponent: () => (
-    <AppShell>
+    
       <ErrorCard message="Assessment not found." />
-    </AppShell>
+    
   ),
 });
 
@@ -142,25 +142,25 @@ function AssessmentPage() {
 
   if (isLoading) {
     return (
-      <AppShell>
+      
         <div className="glass rounded-2xl p-8 max-w-xl mx-auto text-center text-sm text-muted-foreground">
           Loading your assessment…
         </div>
-      </AppShell>
+      
     );
   }
   if (error) {
     return (
-      <AppShell>
+      
         <ErrorCard message={error.message} />
-      </AppShell>
+      
     );
   }
   if (!current) {
     return (
-      <AppShell>
+      
         <ErrorCard message="No questions available." />
-      </AppShell>
+      
     );
   }
 
@@ -168,7 +168,7 @@ function AssessmentPage() {
   const hasAnswer = answers[current.id] !== undefined && answers[current.id] !== "";
 
   return (
-    <AppShell>
+    
       <div className="max-w-2xl mx-auto">
         {/* Progress */}
         <div className="mb-5">
@@ -255,7 +255,7 @@ function AssessmentPage() {
           Your progress is saved automatically. You can close this page and return via your invite link.
         </p>
       </div>
-    </AppShell>
+    
   );
 }
 
