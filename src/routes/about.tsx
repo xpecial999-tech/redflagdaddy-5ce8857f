@@ -128,8 +128,8 @@ const security = [
 const controls = [
   { icon: Settings, title: "Privacy & data", body: "Control what's stored, manage notification preferences, and review your active journeys from one place." },
   { icon: ShieldCheck, title: "Safety center", body: "Access consent guides, safety resources and block-list features from your profile." },
-  { icon: Bell, title: "Notification settings", body: "Choose how and when you hear about journey updates. Preferences persist across sessions." },
-  { icon: Activity, title: "Global sign-out", body: "Sign out everywhere from your profile. Every active session is invalidated in one click." },
+  { icon: Bell, title: "Notification settings", body: "Choose how and when you hear about journey updates." },
+  { icon: Activity, title: "Secure sign-out", body: "Sign out from your account at any time. Your session is cleared immediately." },
 ];
 
 function About() {
