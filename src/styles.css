@@ -115,3 +115,13 @@
   background-clip: text;
   color: transparent;
 }
+
+@media print {
+  body { background: white !important; color: black !important; }
+  nav, header[data-app-header], .no-print, [data-no-print] { display: none !important; }
+  .report-printable { max-width: 100% !important; }
+  .report-printable * { color: black !important; box-shadow: none !important; }
+  .report-printable .text-muted-foreground { color: #444 !important; }
+  .report-printable .border { border-color: #ddd !important; }
+}
+
