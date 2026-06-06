@@ -384,6 +384,47 @@ export const listJourneys = createServerFn({ method: "POST" })
     return { journeys: journeys ?? [] };
   });
 
+export const adminResetJourneys = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        ids: z.array(z.string().uuid()).min(1).max(500),
+        mode: z.enum(["results_only", "delete_all"]),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const sb = await assertAdmin(context.userId);
+
+    // Always clear results + responses for the selected journeys
+    const { error: rErr } = await sb.from("results").delete().in("journey_id", data.ids);
+    if (rErr) throw new Error(rErr.message);
+    const { error: respErr } = await sb.from("responses").delete().in("journey_id", data.ids);
+    if (respErr) throw new Error(respErr.message);
+
+    if (data.mode === "delete_all") {
+      const { error: iErr } = await sb.from("invites").delete().in("journey_id", data.ids);
+      if (iErr) throw new Error(iErr.message);
+      const { error: jErr } = await sb.from("journeys").delete().in("id", data.ids);
+      if (jErr) throw new Error(jErr.message);
+    } else {
+      // Reset journey status back to draft + clear completion timestamps on invites
+      const { error: jErr } = await sb
+        .from("journeys")
+        .update({ status: "draft", updated_at: new Date().toISOString() })
+        .in("id", data.ids);
+      if (jErr) throw new Error(jErr.message);
+      const { error: iErr } = await sb
+        .from("invites")
+        .update({ completed_at: null })
+        .in("journey_id", data.ids);
+      if (iErr) throw new Error(iErr.message);
+    }
+
+    return { ok: true, count: data.ids.length, mode: data.mode };
+  });
+
 // ---------- Analytics ----------
 
 export const getAnalytics = createServerFn({ method: "POST" })
