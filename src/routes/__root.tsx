@@ -95,6 +95,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
+      <ScrollToTop />
       <AppShell>
         <Outlet />
       </AppShell>
