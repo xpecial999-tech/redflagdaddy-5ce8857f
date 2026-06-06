@@ -292,14 +292,19 @@ function QuestionInput({
         onValueChange={(v) => onChange(v)}
         className="space-y-2"
       >
-        {opts.map((o) => (
-          <label
+        {opts.map((o, i) => (
+          <motion.label
             key={o.value}
-            className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] cursor-pointer transition"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: i * 0.04, ease: "easeOut" }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] cursor-pointer transition-colors"
           >
             <RadioGroupItem value={o.value} id={`${question.id}-${o.value}`} />
             <span className="text-sm">{o.label}</span>
-          </label>
+          </motion.label>
         ))}
       </RadioGroup>
     );
@@ -309,12 +314,17 @@ function QuestionInput({
     const arr = Array.isArray(value) ? (value as string[]) : [];
     return (
       <div className="space-y-2">
-        {opts.map((o) => {
+        {opts.map((o, i) => {
           const checked = arr.includes(o.value);
           return (
-            <label
+            <motion.label
               key={o.value}
-              className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] cursor-pointer transition"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, delay: i * 0.04, ease: "easeOut" }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] cursor-pointer transition-colors"
             >
               <Checkbox
                 checked={checked}
@@ -324,7 +334,7 @@ function QuestionInput({
                 }}
               />
               <span className="text-sm">{o.label}</span>
-            </label>
+            </motion.label>
           );
         })}
       </div>
@@ -332,12 +342,20 @@ function QuestionInput({
   }
 
   if (type === "scale") {
-    const v = typeof value === "number" ? value : 5;
+    const v = typeof value === "number" && Number.isFinite(value) ? value : 5;
     return (
       <div>
         <div className="flex justify-between text-xs text-muted-foreground mb-3">
           <span>Not important</span>
-          <span className="text-foreground font-medium text-base">{v}</span>
+          <motion.span
+            key={v}
+            initial={{ scale: 0.85, opacity: 0.6 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="text-foreground font-medium text-base"
+          >
+            {v}
+          </motion.span>
           <span>Critical</span>
         </div>
         <Slider
@@ -345,7 +363,10 @@ function QuestionInput({
           max={10}
           step={1}
           value={[v]}
-          onValueChange={(arr) => onChange(arr[0])}
+          onValueChange={(arr) => {
+            const n = Number(arr[0]);
+            if (Number.isFinite(n)) onChange(n);
+          }}
         />
         <div className="flex justify-between text-[10px] text-muted-foreground mt-2 px-1">
           {Array.from({ length: 10 }, (_, i) => (
@@ -357,25 +378,47 @@ function QuestionInput({
   }
 
   if (type === "slider") {
-    const cfg = ((question.answer_options as unknown) as { min: number; max: number; step?: number }[])[0] ?? {
-      min: 0,
-      max: 100,
-      step: 5,
+    const rawCfg = Array.isArray(question.answer_options)
+      ? (question.answer_options[0] as { min?: unknown; max?: unknown; step?: unknown } | undefined)
+      : (question.answer_options as unknown as { min?: unknown; max?: unknown; step?: unknown } | undefined);
+    const toNum = (x: unknown, fallback: number) => {
+      const n = typeof x === "number" ? x : typeof x === "string" ? parseFloat(x) : NaN;
+      return Number.isFinite(n) ? n : fallback;
     };
-    const v = typeof value === "number" ? value : Math.round((cfg.min + cfg.max) / 2);
+    const min = toNum(rawCfg?.min, 0);
+    const max = toNum(rawCfg?.max, 100);
+    const step = toNum(rawCfg?.step, 1);
+    const mid = Math.round((min + max) / 2);
+    const v =
+      typeof value === "number" && Number.isFinite(value)
+        ? value
+        : typeof value === "string" && Number.isFinite(parseFloat(value))
+          ? parseFloat(value)
+          : mid;
     return (
       <div>
-        <div className="text-center text-2xl font-display font-semibold mb-4">{v}</div>
+        <motion.div
+          key={v}
+          initial={{ scale: 0.9, opacity: 0.5 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+          className="text-center text-2xl font-display font-semibold mb-4"
+        >
+          {v}
+        </motion.div>
         <Slider
-          min={cfg.min}
-          max={cfg.max}
-          step={cfg.step ?? 1}
+          min={min}
+          max={max}
+          step={step}
           value={[v]}
-          onValueChange={(arr) => onChange(arr[0])}
+          onValueChange={(arr) => {
+            const n = Number(arr[0]);
+            if (Number.isFinite(n)) onChange(n);
+          }}
         />
         <div className="flex justify-between text-xs text-muted-foreground mt-2">
-          <span>{cfg.min}</span>
-          <span>{cfg.max}</span>
+          <span>{min}</span>
+          <span>{max}</span>
         </div>
       </div>
     );
