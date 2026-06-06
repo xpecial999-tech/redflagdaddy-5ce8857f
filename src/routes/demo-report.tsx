@@ -27,7 +27,17 @@ export const Route = createFileRoute("/demo-report")({
   component: DemoReportPage,
 });
 
-const DEMO_ANALYSIS = {
+const DEMO_ANALYSIS: {
+  dynamic_readiness: DynamicReadiness;
+  safety: AnalysisSection;
+  compatibility: AnalysisSection;
+  red_flags: AnalysisSection;
+  green_flags: AnalysisSection;
+  communication: AnalysisSection;
+  consent: AnalysisSection;
+  overall_note: string;
+  generated_at: string;
+} = {
   dynamic_readiness: {
     score: 72,
     label: "Ready" as const,
