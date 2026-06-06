@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
+
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { validateInvite, startInvite } from "@/lib/invites.functions";
@@ -18,16 +18,16 @@ import {
 export const Route = createFileRoute("/journey/$code")({
   component: JourneyInvitePage,
   errorComponent: ({ error }) => (
-    <AppShell>
+    
       <div className="glass rounded-2xl p-6 max-w-md mx-auto">
         <p className="text-destructive">{error.message}</p>
       </div>
-    </AppShell>
+    
   ),
   notFoundComponent: () => (
-    <AppShell>
+    
       <p>Not found.</p>
-    </AppShell>
+    
   ),
 });
 
@@ -52,23 +52,23 @@ function JourneyInvitePage() {
 
   if (isLoading) {
     return (
-      <AppShell>
+      
         <div className="glass rounded-2xl p-8 max-w-md mx-auto text-center">
           <Compass className="w-6 h-6 mx-auto animate-pulse text-muted-foreground" />
           <p className="text-sm text-muted-foreground mt-3">Validating your invite…</p>
         </div>
-      </AppShell>
+      
     );
   }
 
   if (error) {
     return (
-      <AppShell>
+      
         <InvalidState
           title="We couldn't validate this invite"
           description={error.message}
         />
-      </AppShell>
+      
     );
   }
 
@@ -89,9 +89,9 @@ function JourneyInvitePage() {
     };
     const m = messages[data?.reason ?? "not_found"] ?? messages.not_found;
     return (
-      <AppShell>
+      
         <InvalidState title={m.title} description={m.desc} />
-      </AppShell>
+      
     );
   }
 
@@ -105,7 +105,7 @@ function JourneyInvitePage() {
     : null;
 
   return (
-    <AppShell>
+    
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -174,7 +174,7 @@ function JourneyInvitePage() {
           By continuing you confirm you are 18+ and consenting freely.
         </p>
       </motion.div>
-    </AppShell>
+    
   );
 }
 

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AppShell } from "@/components/AppShell";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,14 +12,14 @@ import { getResults, runAnalysis, type AnalysisSection, type AnalysisPayload } f
 export const Route = createFileRoute("/results/$id")({
   component: ResultsPage,
   errorComponent: ({ error }) => (
-    <AppShell>
+    
       <p className="text-destructive">{error.message}</p>
-    </AppShell>
+    
   ),
   notFoundComponent: () => (
-    <AppShell>
+    
       <p>Not found.</p>
-    </AppShell>
+    
   ),
 });
 
@@ -50,13 +50,13 @@ function ResultsPage() {
 
   if (q.isLoading) {
     return (
-      <AppShell>
+      
         <div className="flex items-center justify-center p-12"><Loader2 className="animate-spin" /></div>
-      </AppShell>
+      
     );
   }
   if (q.error) {
-    return <AppShell><p className="text-destructive">{(q.error as Error).message}</p></AppShell>;
+    return <p className="text-destructive">{(q.error as Error).message}</p>;
   }
 
   const { result, analysis, journey } = q.data!;
@@ -69,7 +69,7 @@ function ResultsPage() {
   };
 
   return (
-    <AppShell>
+    
       <div className="max-w-5xl mx-auto space-y-6">
         <header className="text-center space-y-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">Assessment Results</h1>
@@ -134,7 +134,7 @@ function ResultsPage() {
           </>
         )}
       </div>
-    </AppShell>
+    
   );
 }
 

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,14 +9,14 @@ import { KeyRound, ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/join")({
   component: JoinPage,
   errorComponent: ({ error }) => (
-    <AppShell>
+    
       <p className="text-destructive">{error.message}</p>
-    </AppShell>
+    
   ),
   notFoundComponent: () => (
-    <AppShell>
+    
       <p>Not found.</p>
-    </AppShell>
+    
   ),
 });
 
@@ -37,7 +37,7 @@ function JoinPage() {
   }
 
   return (
-    <AppShell>
+    
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -73,6 +73,6 @@ function JoinPage() {
           </p>
         </div>
       </motion.div>
-    </AppShell>
+    
   );
 }

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
+
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { createGuestJourney } from "@/lib/guest.functions";
@@ -21,14 +21,14 @@ export const Route = createFileRoute("/guest")({
   head: () => ({ meta: [{ title: "Continue as guest — Dynamic Compass" }] }),
   component: GuestPage,
   errorComponent: ({ error }) => (
-    <AppShell>
+    
       <p className="text-destructive">{error.message}</p>
-    </AppShell>
+    
   ),
   notFoundComponent: () => (
-    <AppShell>
+    
       <p>Not found.</p>
-    </AppShell>
+    
   ),
 });
 
@@ -71,7 +71,7 @@ function GuestPage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:py-12">
+    <div className="py-2 sm:py-6">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -173,7 +173,7 @@ function GuestPage() {
           </p>
         </section>
       </motion.div>
-    </main>
+    </div>
   );
 }
 
@@ -187,7 +187,24 @@ function PartnerLinkView({
   partnerType: string;
 }) {
   const navigate = useNavigate();
+  const createFn = useServerFn(createGuestJourney);
   const [copied, setCopied] = useState(false);
+
+  const opposite: typeof partnerRoles[number] | "" =
+    partnerType === "Dominant"
+      ? "submissive"
+      : partnerType === "submissive"
+        ? "Dominant"
+        : "";
+  const [selfType, setSelfType] = useState<typeof partnerRoles[number] | "">(opposite);
+
+  const selfMutation = useMutation({
+    mutationFn: () =>
+      createFn({ data: { guestEmail, partnerEmail: "", partnerType: selfType as typeof partnerRoles[number] } }),
+    onSuccess: (res) => {
+      navigate({ to: "/journey/$code", params: { code: res.code } });
+    },
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -220,7 +237,7 @@ function PartnerLinkView({
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:py-12">
+    <div className="py-2 sm:py-6">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -302,25 +319,45 @@ function PartnerLinkView({
           </div>
         </section>
 
-        <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-3">
+        <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-4">
           <h3 className="font-display text-lg font-semibold tracking-tight">
             Want to take your own assessment too?
           </h3>
           <p className="text-sm text-muted-foreground">
-            Follow the journey from your side and we'll compare both perspectives in the final
-            report.
+            Pick your own dynamic — we'll compare both perspectives in the final report.
           </p>
+          <div>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+              I am a…
+            </span>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {partnerRoles.map((r) => (
+                <button
+                  type="button"
+                  key={r}
+                  onClick={() => setSelfType(r)}
+                  className={`rounded-xl border px-2 py-3 text-xs font-medium transition ${selfType === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+          {selfMutation.error && (
+            <p className="text-xs text-destructive">{(selfMutation.error as Error).message}</p>
+          )}
           <button
-            onClick={() => navigate({ to: "/journey/$code", params: { code } })}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30"
+            onClick={() => selfMutation.mutate()}
+            disabled={!selfType || selfMutation.isPending}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
           >
-            Start my assessment
+            {selfMutation.isPending ? "Preparing…" : "Start my assessment"}
             <ArrowRight className="w-4 h-4" />
           </button>
         </section>
 
       </motion.div>
-    </main>
+    </div>
   );
 }
 
