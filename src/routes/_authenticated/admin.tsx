@@ -1070,8 +1070,12 @@ function CategoriesTab() {
 /* ============================ JOURNEYS ============================ */
 
 function JourneysTab() {
+  const qc = useQueryClient();
   const listFn = useServerFn(listJourneys);
+  const resetFn = useServerFn(adminResetJourneys);
   const [status, setStatus] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirm, setConfirm] = useState<null | "results_only" | "delete_all">(null);
 
   const q = useQuery({
     queryKey: ["admin", "journeys", status],
@@ -1086,6 +1090,36 @@ function JourneysTab() {
 
   const journeys = q.data?.journeys ?? [];
 
+  const reset = useMutation({
+    mutationFn: (mode: "results_only" | "delete_all") =>
+      resetFn({ data: { ids: Array.from(selected), mode } }),
+    onSuccess: (res) => {
+      toast.success(
+        res.mode === "delete_all"
+          ? `Deleted ${res.count} journey${res.count === 1 ? "" : "s"}`
+          : `Reset ${res.count} journey${res.count === 1 ? "" : "s"}`,
+      );
+      setSelected(new Set());
+      setConfirm(null);
+      qc.invalidateQueries({ queryKey: ["admin", "journeys"] });
+      qc.invalidateQueries({ queryKey: ["admin", "analytics"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const toggleAll = () =>
+    setSelected((prev) => {
+      const all = journeys.every((j) => prev.has(j.id));
+      if (all) return new Set();
+      return new Set(journeys.map((j) => j.id));
+    });
+
   const statusColors: Record<string, string> = {
     draft: "bg-white/10 text-muted-foreground",
     pending: "bg-amber-500/15 text-amber-300",
@@ -1096,19 +1130,52 @@ function JourneysTab() {
 
   return (
     <div className="space-y-4">
-      <Select value={status} onValueChange={setStatus}>
-        <SelectTrigger className="w-full sm:w-72">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          {["draft", "pending", "in_progress", "completed", "expired"].map((s) => (
-            <SelectItem key={s} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex items-center gap-2 flex-wrap">
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="w-full sm:w-72">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {["draft", "pending", "in_progress", "completed", "expired"].map((s) => (
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {journeys.length > 0 && (
+        <div className="glass rounded-2xl p-3 flex items-center justify-between gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            {journeys.every((j) => selected.has(j.id)) ? "Clear all" : "Select all"}
+          </button>
+          <span className="text-xs text-muted-foreground">{selected.size} selected</span>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={selected.size === 0 || reset.isPending}
+              onClick={() => setConfirm("results_only")}
+            >
+              Reset results
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={selected.size === 0 || reset.isPending}
+              onClick={() => setConfirm("delete_all")}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete journeys
+            </Button>
+          </div>
+        </div>
+      )}
 
       {q.isLoading ? (
         <Loading />
@@ -1117,14 +1184,25 @@ function JourneysTab() {
       ) : (
         <div className="space-y-2">
           {journeys.map((j) => (
-            <div key={j.id} className="glass rounded-2xl p-4">
+            <div
+              key={j.id}
+              className={`glass rounded-2xl p-4 ${selected.has(j.id) ? "ring-1 ring-primary/60" : ""}`}
+            >
               <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="min-w-0">
-                  <h3 className="font-display font-semibold break-words">{j.title}</h3>
-                  <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                    {j.recipient_email && <div>{j.recipient_email}</div>}
-                    <div className="font-mono">{j.invite_code}</div>
-                    <div>{new Date(j.created_at).toLocaleString()}</div>
+                <div className="flex items-start gap-3 min-w-0">
+                  <Checkbox
+                    checked={selected.has(j.id)}
+                    onCheckedChange={() => toggle(j.id)}
+                    aria-label="Select journey"
+                    className="mt-1"
+                  />
+                  <div className="min-w-0">
+                    <h3 className="font-display font-semibold break-words">{j.title}</h3>
+                    <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                      {j.recipient_email && <div>{j.recipient_email}</div>}
+                      <div className="font-mono">{j.invite_code}</div>
+                      <div>{new Date(j.created_at).toLocaleString()}</div>
+                    </div>
                   </div>
                 </div>
                 <span
@@ -1137,6 +1215,37 @@ function JourneysTab() {
           ))}
         </div>
       )}
+
+      <AlertDialog open={confirm !== null} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirm === "delete_all"
+                ? `Delete ${selected.size} journey${selected.size === 1 ? "" : "s"}?`
+                : `Reset results for ${selected.size} journey${selected.size === 1 ? "" : "s"}?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirm === "delete_all"
+                ? "This permanently removes the selected journeys along with their invites, responses, and results. This cannot be undone."
+                : "This clears all responses and computed results for the selected journeys and sets them back to draft. The journeys and invite codes are kept."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reset.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirm) reset.mutate(confirm);
+              }}
+              disabled={reset.isPending}
+              className={confirm === "delete_all" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+            >
+              {reset.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
+              {confirm === "delete_all" ? "Delete" : "Reset"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
