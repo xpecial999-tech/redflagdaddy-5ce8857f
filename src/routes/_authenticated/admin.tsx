@@ -56,6 +56,7 @@ import {
   upsertCategory,
   deleteCategory,
   getAnalytics,
+  bulkSetAppliesTo,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
