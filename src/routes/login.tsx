@@ -18,10 +18,19 @@ function Login() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true); setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setLoading(false); return setError(error.message); }
+    let isAdmin = false;
+    if (data.user) {
+      const { data: adminRow } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      isAdmin = !!adminRow;
+    }
     setLoading(false);
-    if (error) return setError(error.message);
-    navigate({ to: "/dashboard" });
+    navigate({ to: isAdmin ? "/admin" : "/dashboard" });
   };
 
   return (
