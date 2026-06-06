@@ -12,6 +12,7 @@ const CreateGuestSchema = z.object({
     .optional()
     .or(z.literal("")),
   partnerType: z.enum(["Dominant", "submissive", "switch"]),
+  isSelf: z.boolean().optional(),
 });
 
 export const createGuestJourney = createServerFn({ method: "POST" })
