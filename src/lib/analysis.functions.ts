@@ -280,5 +280,79 @@ export const getResults = createServerFn({ method: "POST" })
       },
       result: result ?? null,
       analysis,
+      share: {
+        enabled: Boolean(result?.share_enabled),
+        token: (result?.share_token as string | null) ?? null,
+      },
     };
   });
+
+const ShareSchema = z.object({
+  journeyId: z.string().uuid(),
+  enabled: z.boolean(),
+});
+
+export const toggleShareReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => ShareSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await assertJourneyOwner(context.userId, data.journeyId);
+
+    const { data: existing } = await supabaseAdmin
+      .from("results")
+      .select("id, share_token")
+      .eq("journey_id", data.journeyId)
+      .maybeSingle();
+    if (!existing) throw new Error("No report exists for this journey yet.");
+
+    let token = existing.share_token as string | null;
+    if (data.enabled && !token) {
+      const bytes = new Uint8Array(18);
+      crypto.getRandomValues(bytes);
+      token = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    const { error } = await supabaseAdmin
+      .from("results")
+      .update({ share_enabled: data.enabled, share_token: token })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+
+    return { enabled: data.enabled, token: data.enabled ? token : null };
+  });
+
+const TokenSchema = z.object({ token: z.string().trim().min(8).max(128) });
+
+export const getSharedReport = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => TokenSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: result, error } = await supabaseAdmin
+      .from("results")
+      .select("*, journeys!inner(title, participant_type)")
+      .eq("share_token", data.token)
+      .eq("share_enabled", true)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!result) throw new Error("This shared report is unavailable.");
+
+    let analysis: AnalysisPayload | null = null;
+    if (result.ai_summary) {
+      try { analysis = JSON.parse(result.ai_summary as string); } catch { analysis = null; }
+    }
+
+    const j = (result as { journeys: { title: string; participant_type: string } }).journeys;
+    return {
+      journey: { title: j.title, participant_type: j.participant_type },
+      result: {
+        safety_score: result.safety_score,
+        compatibility_score: result.compatibility_score,
+        red_flag_score: result.red_flag_score,
+        green_flag_score: result.green_flag_score,
+        experience_score: result.experience_score,
+      },
+      analysis,
+    };
+  });
+
