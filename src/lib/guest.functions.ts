@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { generateInviteCode } from "./utils.server";
 
 const CreateGuestSchema = z.object({
   guestEmail: z.string().trim().email().max(255),
@@ -12,15 +13,6 @@ const CreateGuestSchema = z.object({
     .or(z.literal("")),
   partnerType: z.enum(["Dominant", "submissive", "switch"]),
 });
-
-function generateInviteCode() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  const bytes = new Uint8Array(8);
-  crypto.getRandomValues(bytes);
-  for (let i = 0; i < bytes.length; i++) code += alphabet[bytes[i] % alphabet.length];
-  return code;
-}
 
 export const createGuestJourney = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => CreateGuestSchema.parse(d))
