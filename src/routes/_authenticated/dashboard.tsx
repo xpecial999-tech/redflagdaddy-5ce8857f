@@ -6,7 +6,7 @@ import { Plus, Clock, CheckCircle2, AlertTriangle, Compass } from "lucide-react"
 import { listJourneys } from "@/lib/journeys.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — RedFlagDaddy" }] }),
   component: Dashboard,
 });
 

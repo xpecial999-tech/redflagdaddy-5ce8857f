@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-aurora-1 to-aurora-2 flex items-center justify-center">
                 <Compass className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-display text-lg font-semibold tracking-tight">Dynamic Compass</span>
+              <span className="font-display text-lg font-semibold tracking-tight">RedFlagDaddy</span>
             </Link>
             {hideNav && (
               <Link

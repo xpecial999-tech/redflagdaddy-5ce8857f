@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dynamic Compass — Consent, Compatibility & Safety" },
+      { title: "RedFlagDaddy — Consent, Compatibility & Safety" },
       { name: "description", content: "Structured assessments for Dominants, submissives and switches." },
     ],
   }),
@@ -31,7 +31,7 @@ function Landing() {
           transition={{ duration: 1, delay: 1 }}
           className="text-muted-foreground max-w-md mx-auto"
         >
-          Dynamic Compass helps Dominants, submissives and switches assess consent,
+          RedFlagDaddy helps Dominants, submissives and switches assess consent,
           compatibility, safety and red flags — with structure, not guesswork.
         </motion.p>
 

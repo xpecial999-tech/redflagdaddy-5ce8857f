@@ -23,7 +23,7 @@ import {
 import { getJourneyStatus, deleteJourney } from "@/lib/journeys.functions";
 
 export const Route = createFileRoute("/_authenticated/journeys/$id")({
-  head: () => ({ meta: [{ title: "Journey — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Journey — RedFlagDaddy" }] }),
   component: JourneyTracker,
 });
 
@@ -277,8 +277,8 @@ function ShareCard({
     setTimeout(() => setCopied(null), 1500);
   };
   const mailto = email
-    ? `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`Dynamic Compass invite: ${title}`)}&body=${encodeURIComponent(`You've been invited to complete an assessment.\n\nOpen: ${url}\nOr enter code: ${code}\n\nThis link expires in 7 days.`)}`
-    : `mailto:?subject=${encodeURIComponent(`Dynamic Compass invite: ${title}`)}&body=${encodeURIComponent(`Open: ${url}\nOr enter code: ${code}`)}`;
+    ? `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`RedFlagDaddy invite: ${title}`)}&body=${encodeURIComponent(`You've been invited to complete an assessment.\n\nOpen: ${url}\nOr enter code: ${code}\n\nThis link expires in 7 days.`)}`
+    : `mailto:?subject=${encodeURIComponent(`RedFlagDaddy invite: ${title}`)}&body=${encodeURIComponent(`Open: ${url}\nOr enter code: ${code}`)}`;
 
   return (
     <div className="glass rounded-2xl p-4 space-y-3">

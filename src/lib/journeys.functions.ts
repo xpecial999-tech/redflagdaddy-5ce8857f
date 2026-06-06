@@ -12,7 +12,7 @@ const CreateJourneySchema = z.object({
 });
 
 function originFromRequest(): string {
-  return process.env.PUBLIC_APP_URL ?? "https://app.dynamiccompass.app";
+  return process.env.PUBLIC_APP_URL ?? "https://redflagdaddy.com";
 }
 
 export const createJourney = createServerFn({ method: "POST" })

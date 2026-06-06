@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isCurrentUserAdmin } from "@/lib/admin-auth.functions";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Sign in — RedFlagDaddy" }] }),
   component: Login,
 });
 

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 export const Route = createFileRoute("/register")({
-  head: () => ({ meta: [{ title: "Create account — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Create account — RedFlagDaddy" }] }),
   component: Register,
 });
 
