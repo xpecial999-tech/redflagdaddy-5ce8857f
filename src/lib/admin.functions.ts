@@ -99,6 +99,44 @@ export const bulkSetAppliesTo = createServerFn({ method: "POST" })
     return { ok: true as const, updated: data.ids.length };
   });
 
+// ---------- AI-assisted retag ----------
+
+const AI_SYSTEM_PROMPT = `You categorize BDSM / power-exchange assessment questions by which participant role they meaningfully apply to.
+
+Roles:
+- "Dominant" — the partner taking the leading / top / controlling role.
+- "submissive" — the partner taking the following / bottom / receiving role.
+- "switch" — a partner who fluidly takes either role.
+
+Rules:
+- Every question must be tagged with at least one role.
+- Tag "Dominant" when the question is about leading, controlling, giving instructions, enforcing limits, aftercare-from-the-top, or top-side experience.
+- Tag "submissive" when the question is about following, receiving, surrendering, using safewords, being cared for, or bottom-side experience.
+- Tag "switch" only when the question is genuinely role-neutral OR about switching itself.
+- If a question is fully role-neutral (e.g. general safety, consent, communication, hard limits negotiation between equals), tag ALL THREE roles.
+- Prefer fewer roles when one side clearly does the action and the other clearly does not.
+- Return ONLY the structured tool call.`;
+
+export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        ids: z.array(z.string().uuid()).min(1).max(200),
+        apply: z.boolean().default(true),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const sb = await assertAdmin(context.userId);
+    const { error } = await sb
+      .from("questions")
+      .update({ applies_to: data.applies_to })
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true as const, updated: data.ids.length };
+  });
+
 export const upsertQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => QuestionSchema.parse(d))
