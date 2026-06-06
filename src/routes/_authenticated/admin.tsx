@@ -73,8 +73,25 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import { isCurrentUserAdmin } from "@/lib/admin-auth.functions";
+import { redirect } from "@tanstack/react-router";
+
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin — Dynamic Compass" }] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Dynamic Compass" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
+  beforeLoad: async () => {
+    try {
+      const res = await isCurrentUserAdmin();
+      if (!res?.isAdmin) throw redirect({ to: "/dashboard" });
+    } catch (e) {
+      if ((e as { isRedirect?: boolean })?.isRedirect) throw e;
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   component: AdminPanel,
 });
 
