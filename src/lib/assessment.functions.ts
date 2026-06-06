@@ -76,8 +76,9 @@ export const getAssessment = createServerFn({ method: "POST" })
 
     const { data: questions, error: qErr } = await supabaseAdmin
       .from("questions")
-      .select("id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic")
+      .select("id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic, applies_to")
       .eq("active", true)
+      .contains("applies_to", [journey.participant_type])
       .order("order_index", { ascending: true });
     if (qErr) throw new Error(qErr.message);
 
