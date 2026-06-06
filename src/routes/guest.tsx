@@ -4,16 +4,17 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { createGuestJourney } from "@/lib/guest.functions";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   UserCircle2,
   Mail,
-  UserPlus,
   ClipboardList,
   Copy,
   Check,
   CheckCircle2,
+  MessageCircle,
+  MessageSquare,
 } from "lucide-react";
 
 export const Route = createFileRoute("/guest")({
@@ -40,11 +41,6 @@ const steps = [
     body: "We'll email your completed compatibility, safety and red-flag report to you when the assessment is done.",
   },
   {
-    icon: UserPlus,
-    title: "Invite your partner (optional)",
-    body: "Add their email and we'll send them an invite. Skip it and we'll give you a unique link & code to share yourself.",
-  },
-  {
     icon: ClipboardList,
     title: "Pick the dynamic you're assessing",
     body: "Is your partner a Dominant, submissive, or switch? This shapes the questions they will answer.",
@@ -55,13 +51,12 @@ function GuestPage() {
   const createFn = useServerFn(createGuestJourney);
 
   const [email, setEmail] = useState("");
-  const [partnerEmail, setPartnerEmail] = useState("");
   const [partnerType, setPartnerType] = useState<typeof partnerRoles[number]>("switch");
 
   const mutation = useMutation({
     mutationFn: () =>
       createFn({
-        data: { guestEmail: email, partnerEmail: partnerEmail || "", partnerType },
+        data: { guestEmail: email, partnerEmail: "", partnerType },
       }),
   });
 
@@ -70,7 +65,6 @@ function GuestPage() {
       <PartnerLinkView
         code={mutation.data.code}
         guestEmail={email}
-        partnerEmail={partnerEmail}
         partnerType={partnerType}
       />
     );
@@ -136,15 +130,6 @@ function GuestPage() {
               placeholder="you@example.com"
             />
 
-            <Field
-              label="Your partner's email"
-              hint="Optional — leave blank to get a unique link & code to share yourself."
-              type="email"
-              value={partnerEmail}
-              onChange={(e) => setPartnerEmail(e.target.value)}
-              placeholder="partner@example.com"
-            />
-
             <div>
               <span className="text-sm font-medium">Which assessment do you want to do?</span>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -195,22 +180,31 @@ function GuestPage() {
 function PartnerLinkView({
   code,
   guestEmail,
-  partnerEmail,
   partnerType,
 }: {
   code: string;
   guestEmail: string;
-  partnerEmail: string;
   partnerType: string;
 }) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
-  const [emailConfirmed, setEmailConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    }
+  }, []);
 
   const link = useMemo(() => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     return `${origin}/journey/${code}`;
   }, [code]);
+
+  const shareMessage = useMemo(
+    () =>
+      `Hey — I'd like us to take a private compatibility & consent assessment together on Dynamic Compass. Open this link to take your ${partnerType} assessment: ${link}`,
+    [link, partnerType],
+  );
 
   const copy = async () => {
     try {
@@ -221,6 +215,9 @@ function PartnerLinkView({
       /* noop */
     }
   };
+
+  const smsHref = `sms:?&body=${encodeURIComponent(shareMessage)}`;
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
   return (
     <main className="min-h-screen px-4 py-8 sm:py-12">
@@ -267,8 +264,7 @@ function PartnerLinkView({
           <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
             <h3 className="text-sm font-medium">How to send it to your partner</h3>
             <ol className="mt-2 space-y-1.5 text-xs text-muted-foreground list-decimal pl-4">
-              <li>Copy the link above.</li>
-              <li>Send it to your partner over a private channel (iMessage, Signal, WhatsApp, email).</li>
+              <li>Share the link using one of the buttons below — your contacts stay on your device.</li>
               <li>They open the link, confirm they're 18+, and complete the assessment.</li>
               <li>
                 Once they finish, we'll email the combined report to you:{" "}
@@ -278,29 +274,33 @@ function PartnerLinkView({
           </div>
         </section>
 
-        {partnerEmail && (
-          <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-3">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">
-              Send invite to your partner
-            </span>
-            <div className="rounded-xl border border-border bg-input px-3 py-3 text-sm break-all">
-              {partnerEmail}
-            </div>
-            <button
-              onClick={() => setEmailConfirmed(true)}
-              disabled={emailConfirmed}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 text-primary py-3 text-sm font-medium disabled:opacity-70"
+        <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-3">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">
+            Send the invite
+          </span>
+          <p className="text-xs text-muted-foreground">
+            Open your messaging app with the invite pre-filled. Pick the contact yourself —
+            nothing is sent until you hit send.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={smsHref}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium hover:bg-white/5 transition"
             >
-              {emailConfirmed ? (
-                <>
-                  <Check className="w-4 h-4" /> Invite sent
-                </>
-              ) : (
-                "Send invite"
-              )}
-            </button>
-          </section>
-        )}
+              <MessageSquare className="w-4 h-4" />
+              SMS
+            </a>
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium hover:bg-white/5 transition"
+            >
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp
+            </a>
+          </div>
+        </section>
 
         <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-3">
           <h3 className="font-display text-lg font-semibold tracking-tight">
