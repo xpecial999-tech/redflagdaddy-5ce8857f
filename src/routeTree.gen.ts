@@ -27,6 +27,7 @@ import { Route as AuthenticatedProfileSafetyRouteImport } from './routes/_authen
 import { Route as AuthenticatedProfilePrivacyRouteImport } from './routes/_authenticated/profile.privacy'
 import { Route as AuthenticatedProfileNotificationsRouteImport } from './routes/_authenticated/profile.notifications'
 import { Route as AuthenticatedProfileHelpRouteImport } from './routes/_authenticated/profile.help'
+import { Route as AuthenticatedJourneysIdRouteImport } from './routes/_authenticated/journeys.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -121,6 +122,11 @@ const AuthenticatedProfileHelpRoute =
     path: '/help',
     getParentRoute: () => AuthenticatedProfileRoute,
   } as any)
+const AuthenticatedJourneysIdRoute = AuthenticatedJourneysIdRouteImport.update({
+  id: '/journeys/$id',
+  path: '/journeys/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/results/$id': typeof ResultsIdRoute
+  '/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/profile/help': typeof AuthenticatedProfileHelpRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/results/$id': typeof ResultsIdRoute
+  '/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/profile/help': typeof AuthenticatedProfileHelpRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/results/$id': typeof ResultsIdRoute
+  '/_authenticated/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/_authenticated/profile/help': typeof AuthenticatedProfileHelpRoute
   '/_authenticated/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/_authenticated/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/assessment/$code'
     | '/journey/$code'
     | '/results/$id'
+    | '/journeys/$id'
     | '/profile/help'
     | '/profile/notifications'
     | '/profile/privacy'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/assessment/$code'
     | '/journey/$code'
     | '/results/$id'
+    | '/journeys/$id'
     | '/profile/help'
     | '/profile/notifications'
     | '/profile/privacy'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/assessment/$code'
     | '/journey/$code'
     | '/results/$id'
+    | '/_authenticated/journeys/$id'
     | '/_authenticated/profile/help'
     | '/_authenticated/profile/notifications'
     | '/_authenticated/profile/privacy'
@@ -383,6 +395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileHelpRouteImport
       parentRoute: typeof AuthenticatedProfileRoute
     }
+    '/_authenticated/journeys/$id': {
+      id: '/_authenticated/journeys/$id'
+      path: '/journeys/$id'
+      fullPath: '/journeys/$id'
+      preLoaderRoute: typeof AuthenticatedJourneysIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -409,6 +428,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCreateRoute: typeof AuthenticatedCreateRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRouteWithChildren
+  AuthenticatedJourneysIdRoute: typeof AuthenticatedJourneysIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -416,6 +436,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCreateRoute: AuthenticatedCreateRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRouteWithChildren,
+  AuthenticatedJourneysIdRoute: AuthenticatedJourneysIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
