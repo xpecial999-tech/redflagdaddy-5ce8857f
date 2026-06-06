@@ -389,6 +389,57 @@ function QuestionsTab() {
       </div>
 
 
+      {/* Bulk action bar */}
+      {questions.length > 0 && (
+        <div className="glass rounded-2xl p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={selectAllOnPage}
+              className="text-xs text-muted-foreground hover:text-foreground transition"
+            >
+              {questions.every((q) => selectedIds.has(q.id))
+                ? "Clear page"
+                : "Select all on page"}
+            </button>
+            <span className="text-xs text-muted-foreground">
+              {selectedIds.size} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">Set applies-to:</span>
+            {ALL_ROLES.map((r) => {
+              const on = bulkRoles.has(r);
+              return (
+                <button
+                  type="button"
+                  key={r}
+                  onClick={() => toggleBulkRole(r)}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
+                >
+                  {r}
+                </button>
+              );
+            })}
+            <Button
+              size="sm"
+              className="ml-auto"
+              disabled={
+                selectedIds.size === 0 ||
+                bulkRoles.size === 0 ||
+                bulkApplies.isPending
+              }
+              onClick={() => bulkApplies.mutate()}
+            >
+              {bulkApplies.isPending && (
+                <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+              )}
+              Apply to {selectedIds.size}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {qs.isLoading ? (
         <Loading />
       ) : questions.length === 0 ? (
@@ -400,9 +451,16 @@ function QuestionsTab() {
               key={q.id}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`glass rounded-2xl p-4 ${q.active ? "" : "opacity-60"}`}
+              className={`glass rounded-2xl p-4 ${q.active ? "" : "opacity-60"} ${selectedIds.has(q.id) ? "ring-1 ring-primary/60" : ""}`}
             >
               <div className="flex items-start gap-3">
+                <div className="pt-1">
+                  <Checkbox
+                    checked={selectedIds.has(q.id)}
+                    onCheckedChange={() => toggleSelected(q.id)}
+                    aria-label="Select question"
+                  />
+                </div>
                 <div className="flex flex-col gap-1 pt-1">
                   <button
                     onClick={() => move(i, -1)}
@@ -430,6 +488,15 @@ function QuestionsTab() {
                     <span className="text-[10px] text-muted-foreground">
                       weight {q.weight}
                     </span>
+                    {(q.applies_to ?? []).map((r) => (
+                      <Badge
+                        key={`role-${r}`}
+                        variant="outline"
+                        className="text-[10px] bg-aurora-1/10 text-aurora-1 border-aurora-1/30"
+                      >
+                        {r}
+                      </Badge>
+                    ))}
                     {!q.active && (
                       <Badge variant="outline" className="text-[10px]">
                         archived
