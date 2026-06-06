@@ -22,12 +22,8 @@ function Login() {
     if (error) { setLoading(false); return setError(error.message); }
     let isAdmin = false;
     if (data.user) {
-      const { data: adminRow } = await supabase
-        .from("admin_users")
-        .select("user_id")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-      isAdmin = !!adminRow;
+      const { data: adminStatus } = await supabase.rpc("is_admin", { _user_id: data.user.id });
+      isAdmin = !!adminStatus;
     }
     setLoading(false);
     navigate({ to: isAdmin ? "/admin" : "/dashboard" });
