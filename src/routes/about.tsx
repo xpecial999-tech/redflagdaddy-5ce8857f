@@ -23,6 +23,7 @@ import {
   Shield,
   Timer,
   Monitor,
+  Bell,
 } from "lucide-react";
 
 export const Route = createFileRoute("/about")({
