@@ -171,9 +171,11 @@ function QuestionsTab() {
   const delFn = useServerFn(deleteQuestion);
   const arcFn = useServerFn(archiveQuestion);
   const reorderFn = useServerFn(reorderQuestions);
+  const bulkAppliesFn = useServerFn(bulkSetAppliesTo);
 
   const [selectedCat, setSelectedCat] = useState<string>("all");
   const [risk, setRisk] = useState<string>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   const [activeOnly, setActiveOnly] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -181,6 +183,10 @@ function QuestionsTab() {
   const pageSize = 50;
   const [editing, setEditing] = useState<QuestionRow | null>(null);
   const [open, setOpen] = useState(false);
+
+  // Multi-select state for bulk operations
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkRoles, setBulkRoles] = useState<Set<Role>>(new Set(ALL_ROLES));
 
   // Debounce search
   useEffect(() => {
@@ -196,7 +202,7 @@ function QuestionsTab() {
     queryFn: () => catsFn({ data: undefined as never }),
   });
   const qs = useQuery({
-    queryKey: ["admin", "questions", selectedCat, risk, activeOnly, search, page],
+    queryKey: ["admin", "questions", selectedCat, risk, roleFilter, activeOnly, search, page],
     queryFn: () =>
       listFn({
         data: {
@@ -205,6 +211,7 @@ function QuestionsTab() {
           offset: page * pageSize,
           ...(selectedCat !== "all" ? { category_id: selectedCat } : {}),
           ...(risk !== "all" ? { risk_level: risk as RiskLevel } : {}),
+          ...(roleFilter !== "all" ? { applies_to: roleFilter as Role } : {}),
           ...(search ? { search } : {}),
         },
       }),
@@ -233,10 +240,47 @@ function QuestionsTab() {
     onSuccess: () => invalidate(),
   });
 
+  const bulkApplies = useMutation({
+    mutationFn: () =>
+      bulkAppliesFn({
+        data: { ids: Array.from(selectedIds), applies_to: Array.from(bulkRoles) },
+      }),
+    onSuccess: (res) => {
+      toast.success(`Retagged ${res.updated} question${res.updated === 1 ? "" : "s"}`);
+      setSelectedIds(new Set());
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const questions = (qs.data?.questions ?? []) as unknown as QuestionRow[];
   const total = qs.data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const categories = (cats.data?.categories ?? []) as CategoryRow[];
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+  const selectAllOnPage = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      const allOn = questions.every((q) => next.has(q.id));
+      if (allOn) questions.forEach((q) => next.delete(q.id));
+      else questions.forEach((q) => next.add(q.id));
+      return next;
+    });
+  };
+  const toggleBulkRole = (r: Role) => {
+    setBulkRoles((prev) => {
+      const next = new Set(prev);
+      next.has(r) ? next.delete(r) : next.add(r);
+      return next;
+    });
+  };
 
   const move = (idx: number, dir: -1 | 1) => {
     const next = [...questions];
