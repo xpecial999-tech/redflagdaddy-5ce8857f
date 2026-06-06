@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isCurrentUserAdmin } from "@/lib/admin-auth.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Dynamic Compass" }] }),
@@ -10,6 +12,7 @@ export const Route = createFileRoute("/login")({
 
 function Login() {
   const navigate = useNavigate();
+  const checkAdmin = useServerFn(isCurrentUserAdmin);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -22,11 +25,11 @@ function Login() {
     if (error) { setLoading(false); return setError(error.message); }
     let isAdmin = false;
     if (data.user) {
-      const { data: adminStatus } = await supabase.rpc("is_admin", { _user_id: data.user.id });
-      isAdmin = !!adminStatus;
+      const adminStatus = await checkAdmin().catch(() => ({ isAdmin: false }));
+      isAdmin = adminStatus.isAdmin;
     }
     setLoading(false);
-    navigate({ to: isAdmin ? "/admin" : "/dashboard" });
+    navigate({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
   };
 
   return (
