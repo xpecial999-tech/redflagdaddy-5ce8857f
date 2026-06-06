@@ -22,6 +22,8 @@ const OptionSchema = z.object({
   score: z.number().optional(),
 });
 
+const RoleSchema = z.enum(["Dominant", "submissive", "switch"]);
+
 const QuestionSchema = z.object({
   id: z.string().uuid().optional(),
   category_id: z.string().uuid(),
@@ -41,6 +43,7 @@ const QuestionSchema = z.object({
   active: z.boolean().default(true),
   order_index: z.number().int().default(0),
   branch_logic: z.record(z.string(), z.any()).default({}),
+  applies_to: z.array(RoleSchema).min(1).max(3).default(["Dominant", "submissive", "switch"]),
 });
 
 export const listQuestions = createServerFn({ method: "POST" })
