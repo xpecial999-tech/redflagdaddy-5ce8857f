@@ -26,9 +26,9 @@ export function useMe() {
         }
         return;
       }
-      const [{ data: profile }, { data: adminRow }] = await Promise.all([
+      const [{ data: profile }, { data: isAdmin }] = await Promise.all([
         supabase.from("users").select("id, email, name, role").eq("id", user.id).maybeSingle(),
-        supabase.from("admin_users").select("user_id").eq("user_id", user.id).maybeSingle(),
+        supabase.rpc("is_admin", { _user_id: user.id }),
       ]);
       if (cancelled) return;
       setMe({
@@ -36,7 +36,7 @@ export function useMe() {
         email: profile?.email ?? user.email ?? "",
         name: profile?.name ?? (user.user_metadata?.name as string) ?? null,
         role: (profile?.role as string) ?? null,
-        isAdmin: !!adminRow,
+        isAdmin: !!isAdmin,
       });
       setLoading(false);
     }
