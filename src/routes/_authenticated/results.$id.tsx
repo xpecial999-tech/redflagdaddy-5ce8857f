@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Loader2, Shield, Heart, AlertTriangle, Sparkles, MessageSquare, HandHeart, Gauge } from "lucide-react";
 import { getResults, runAnalysis, type AnalysisSection, type AnalysisPayload } from "@/lib/analysis.functions";
 
-export const Route = createFileRoute("/results/$id")({
+export const Route = createFileRoute("/_authenticated/results/$id")({
   component: ResultsPage,
   errorComponent: ({ error }) => (
     
