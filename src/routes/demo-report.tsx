@@ -4,6 +4,25 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Shield, Heart, AlertTriangle, Sparkles, MessageSquare, HandHeart, Gauge } from "lucide-react";
 
+type AnalysisSection = {
+  title: string;
+  summary: string;
+  strengths: string[];
+  risks: string[];
+  missing_information: string[];
+  concerns: string[];
+};
+
+type DynamicReadiness = {
+  score: number;
+  label: "Not ready" | "Early stage" | "Developing" | "Ready" | "Strongly ready";
+  rationale: string;
+  strengths: string[];
+  risks: string[];
+  missing_information: string[];
+  concerns: string[];
+};
+
 export const Route = createFileRoute("/demo-report")({
   component: DemoReportPage,
 });
