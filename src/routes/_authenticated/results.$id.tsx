@@ -9,17 +9,17 @@ import { Progress } from "@/components/ui/progress";
 import { Loader2, Shield, Heart, AlertTriangle, Sparkles, MessageSquare, HandHeart, Gauge } from "lucide-react";
 import { getResults, runAnalysis, type AnalysisSection, type AnalysisPayload } from "@/lib/analysis.functions";
 
-export const Route = createFileRoute("/results/$id")({
+export const Route = createFileRoute("/_authenticated/results/$id")({
   component: ResultsPage,
   errorComponent: ({ error }) => (
-    
+    <div className="max-w-md mx-auto glass rounded-2xl p-6 text-center">
       <p className="text-destructive">{error.message}</p>
-    
+    </div>
   ),
   notFoundComponent: () => (
-    
+    <div className="max-w-md mx-auto glass rounded-2xl p-6 text-center">
       <p>Not found.</p>
-    
+    </div>
   ),
 });
 

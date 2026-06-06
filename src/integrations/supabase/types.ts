@@ -275,6 +275,51 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          anonymous_analytics: boolean
+          created_at: string
+          discoverable_profile: boolean
+          email_invite_accepted: boolean
+          email_journey_complete: boolean
+          email_red_flag: boolean
+          email_weekly_digest: boolean
+          in_app_mentions: boolean
+          in_app_messages: boolean
+          share_results_with_respondents: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anonymous_analytics?: boolean
+          created_at?: string
+          discoverable_profile?: boolean
+          email_invite_accepted?: boolean
+          email_journey_complete?: boolean
+          email_red_flag?: boolean
+          email_weekly_digest?: boolean
+          in_app_mentions?: boolean
+          in_app_messages?: boolean
+          share_results_with_respondents?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anonymous_analytics?: boolean
+          created_at?: string
+          discoverable_profile?: boolean
+          email_invite_accepted?: boolean
+          email_journey_complete?: boolean
+          email_red_flag?: boolean
+          email_weekly_digest?: boolean
+          in_app_mentions?: boolean
+          in_app_messages?: boolean
+          share_results_with_respondents?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string

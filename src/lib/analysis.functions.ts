@@ -1,7 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 const IdSchema = z.object({ journeyId: z.string().uuid() });
+
+type AnswerDigestRow = {
+  answer: unknown;
+  score: number | null;
+  questions: {
+    question: string;
+    risk_level: string;
+    question_categories: { name: string } | null;
+  } | null;
+};
 
 export type AnalysisSection = {
   title: string;
@@ -53,25 +64,31 @@ type ScoreBundle = {
   experience_score: number;
 };
 
-async function buildAnswerDigest(supabaseAdmin: any, journeyId: string) {
+async function buildAnswerDigest(
+  supabaseAdmin: import("@supabase/supabase-js").SupabaseClient,
+  journeyId: string,
+) {
   const { data: rows } = await supabaseAdmin
     .from("responses")
     .select("answer, score, questions!inner(question, risk_level, question_categories!inner(name))")
     .eq("journey_id", journeyId);
 
   const byCat: Record<string, { total: number; topRisk: Array<{ q: string; a: unknown; risk: string; score: number }> }> = {};
-  for (const r of (rows ?? []) as any[]) {
+  for (const r of ((rows ?? []) as unknown as AnswerDigestRow[])) {
     const cat = r.questions?.question_categories?.name ?? "Other";
     if (!byCat[cat]) byCat[cat] = { total: 0, topRisk: [] };
     byCat[cat].total += 1;
     const score = Number(r.score) || 0;
     const risk = r.questions?.risk_level ?? "low";
-    // Track answers that contributed risk (positive score for red flags, or critical/high level)
     if (Math.abs(score) >= 3 || risk === "critical" || risk === "high") {
-      byCat[cat].topRisk.push({ q: r.questions.question, a: r.answer, risk, score });
+      byCat[cat].topRisk.push({
+        q: r.questions?.question ?? "",
+        a: r.answer,
+        risk,
+        score,
+      });
     }
   }
-  // Truncate per category to keep prompt size bounded
   for (const k of Object.keys(byCat)) {
     byCat[k].topRisk.sort((a, b) => Math.abs(b.score) - Math.abs(a.score));
     byCat[k].topRisk = byCat[k].topRisk.slice(0, 6);
@@ -174,49 +191,75 @@ async function callGateway(scores: ScoreBundle, digest: unknown): Promise<Analys
   return { ...parsed, generated_at: new Date().toISOString() };
 }
 
-export const runAnalysis = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => IdSchema.parse(d))
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+/**
+ * Internal helper — not exposed as RPC. Use from trusted server contexts only
+ * (e.g. completeAssessment which validates the invite code).
+ */
+export async function runAnalysisInternal(journeyId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: result, error: rErr } = await supabaseAdmin
-      .from("results")
-      .select("*")
-      .eq("journey_id", data.journeyId)
+  const { data: result, error: rErr } = await supabaseAdmin
+    .from("results")
+    .select("*")
+    .eq("journey_id", journeyId)
+    .maybeSingle();
+  if (rErr) throw new Error(rErr.message);
+  if (!result) throw new Error("No results yet for this journey.");
+
+  const scores: ScoreBundle = {
+    safety_score: Number(result.safety_score) || 0,
+    compatibility_score: Number(result.compatibility_score) || 0,
+    red_flag_score: Number(result.red_flag_score) || 0,
+    green_flag_score: Number(result.green_flag_score) || 0,
+    experience_score: Number(result.experience_score) || 0,
+  };
+
+  const digest = await buildAnswerDigest(supabaseAdmin, journeyId);
+  const analysis = await callGateway(scores, digest);
+
+  await supabaseAdmin
+    .from("results")
+    .update({ ai_summary: JSON.stringify(analysis) })
+    .eq("journey_id", journeyId);
+
+  return { ok: true as const, analysis };
+}
+
+async function assertJourneyOwner(userId: string, journeyId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: journey, error } = await supabaseAdmin
+    .from("journeys")
+    .select("id, title, participant_type, status, creator_id")
+    .eq("id", journeyId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!journey) throw new Error("Journey not found.");
+
+  if (journey.creator_id !== userId) {
+    // Allow admins to view
+    const { data: admin } = await supabaseAdmin
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", userId)
       .maybeSingle();
-    if (rErr) throw new Error(rErr.message);
-    if (!result) throw new Error("No results yet for this journey.");
+    if (!admin) throw new Error("Not authorized.");
+  }
+  return { supabaseAdmin, journey };
+}
 
-    const scores: ScoreBundle = {
-      safety_score: Number(result.safety_score) || 0,
-      compatibility_score: Number(result.compatibility_score) || 0,
-      red_flag_score: Number(result.red_flag_score) || 0,
-      green_flag_score: Number(result.green_flag_score) || 0,
-      experience_score: Number(result.experience_score) || 0,
-    };
-
-    const digest = await buildAnswerDigest(supabaseAdmin, data.journeyId);
-    const analysis = await callGateway(scores, digest);
-
-    await supabaseAdmin
-      .from("results")
-      .update({ ai_summary: JSON.stringify(analysis) })
-      .eq("journey_id", data.journeyId);
-
-    return { ok: true as const, analysis };
+export const runAnalysis = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => IdSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertJourneyOwner(context.userId, data.journeyId);
+    return runAnalysisInternal(data.journeyId);
   });
 
 export const getResults = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => IdSchema.parse(d))
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: journey } = await supabaseAdmin
-      .from("journeys")
-      .select("id, title, participant_type, status")
-      .eq("id", data.journeyId)
-      .maybeSingle();
-    if (!journey) throw new Error("Journey not found.");
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin, journey } = await assertJourneyOwner(context.userId, data.journeyId);
 
     const { data: result } = await supabaseAdmin
       .from("results")
@@ -228,5 +271,14 @@ export const getResults = createServerFn({ method: "POST" })
     if (result?.ai_summary) {
       try { analysis = JSON.parse(result.ai_summary as string); } catch { analysis = null; }
     }
-    return { journey, result: result ?? null, analysis };
+    return {
+      journey: {
+        id: journey.id,
+        title: journey.title,
+        participant_type: journey.participant_type,
+        status: journey.status,
+      },
+      result: result ?? null,
+      analysis,
+    };
   });

@@ -16,13 +16,13 @@ import { Route as GuestRouteImport } from './routes/guest'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ResultsIdRouteImport } from './routes/results.$id'
 import { Route as JourneyCodeRouteImport } from './routes/journey.$code'
 import { Route as AssessmentCodeRouteImport } from './routes/assessment.$code'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedResultsIdRouteImport } from './routes/_authenticated/results.$id'
 import { Route as AuthenticatedProfileSafetyRouteImport } from './routes/_authenticated/profile.safety'
 import { Route as AuthenticatedProfilePrivacyRouteImport } from './routes/_authenticated/profile.privacy'
 import { Route as AuthenticatedProfileNotificationsRouteImport } from './routes/_authenticated/profile.notifications'
@@ -63,11 +63,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResultsIdRoute = ResultsIdRouteImport.update({
-  id: '/results/$id',
-  path: '/results/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const JourneyCodeRoute = JourneyCodeRouteImport.update({
   id: '/journey/$code',
   path: '/journey/$code',
@@ -96,6 +91,11 @@ const AuthenticatedCreateRoute = AuthenticatedCreateRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedResultsIdRoute = AuthenticatedResultsIdRouteImport.update({
+  id: '/results/$id',
+  path: '/results/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileSafetyRoute =
@@ -141,12 +141,12 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
-  '/results/$id': typeof ResultsIdRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/profile/help': typeof AuthenticatedProfileHelpRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
+  '/results/$id': typeof AuthenticatedResultsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -161,12 +161,12 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
-  '/results/$id': typeof ResultsIdRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/profile/help': typeof AuthenticatedProfileHelpRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
+  '/results/$id': typeof AuthenticatedResultsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -183,12 +183,12 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
-  '/results/$id': typeof ResultsIdRoute
   '/_authenticated/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/_authenticated/profile/help': typeof AuthenticatedProfileHelpRoute
   '/_authenticated/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/_authenticated/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/_authenticated/profile/safety': typeof AuthenticatedProfileSafetyRoute
+  '/_authenticated/results/$id': typeof AuthenticatedResultsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -205,12 +205,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/assessment/$code'
     | '/journey/$code'
-    | '/results/$id'
     | '/journeys/$id'
     | '/profile/help'
     | '/profile/notifications'
     | '/profile/privacy'
     | '/profile/safety'
+    | '/results/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -225,12 +225,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/assessment/$code'
     | '/journey/$code'
-    | '/results/$id'
     | '/journeys/$id'
     | '/profile/help'
     | '/profile/notifications'
     | '/profile/privacy'
     | '/profile/safety'
+    | '/results/$id'
   id:
     | '__root__'
     | '/'
@@ -246,12 +246,12 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/assessment/$code'
     | '/journey/$code'
-    | '/results/$id'
     | '/_authenticated/journeys/$id'
     | '/_authenticated/profile/help'
     | '/_authenticated/profile/notifications'
     | '/_authenticated/profile/privacy'
     | '/_authenticated/profile/safety'
+    | '/_authenticated/results/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -264,7 +264,6 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   AssessmentCodeRoute: typeof AssessmentCodeRoute
   JourneyCodeRoute: typeof JourneyCodeRoute
-  ResultsIdRoute: typeof ResultsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -318,13 +317,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/results/$id': {
-      id: '/results/$id'
-      path: '/results/$id'
-      fullPath: '/results/$id'
-      preLoaderRoute: typeof ResultsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/journey/$code': {
       id: '/journey/$code'
       path: '/journey/$code'
@@ -365,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/results/$id': {
+      id: '/_authenticated/results/$id'
+      path: '/results/$id'
+      fullPath: '/results/$id'
+      preLoaderRoute: typeof AuthenticatedResultsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile/safety': {
@@ -429,6 +428,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRouteWithChildren
   AuthenticatedJourneysIdRoute: typeof AuthenticatedJourneysIdRoute
+  AuthenticatedResultsIdRoute: typeof AuthenticatedResultsIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -437,6 +437,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRouteWithChildren,
   AuthenticatedJourneysIdRoute: AuthenticatedJourneysIdRoute,
+  AuthenticatedResultsIdRoute: AuthenticatedResultsIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -452,7 +453,6 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   AssessmentCodeRoute: AssessmentCodeRoute,
   JourneyCodeRoute: JourneyCodeRoute,
-  ResultsIdRoute: ResultsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
