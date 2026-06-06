@@ -72,25 +72,31 @@ type ScoreBundle = {
   experience_score: number;
 };
 
-async function buildAnswerDigest(supabaseAdmin: any, journeyId: string) {
+async function buildAnswerDigest(
+  supabaseAdmin: import("@supabase/supabase-js").SupabaseClient,
+  journeyId: string,
+) {
   const { data: rows } = await supabaseAdmin
     .from("responses")
     .select("answer, score, questions!inner(question, risk_level, question_categories!inner(name))")
     .eq("journey_id", journeyId);
 
   const byCat: Record<string, { total: number; topRisk: Array<{ q: string; a: unknown; risk: string; score: number }> }> = {};
-  for (const r of (rows ?? []) as any[]) {
+  for (const r of ((rows ?? []) as unknown as AnswerDigestRow[])) {
     const cat = r.questions?.question_categories?.name ?? "Other";
     if (!byCat[cat]) byCat[cat] = { total: 0, topRisk: [] };
     byCat[cat].total += 1;
     const score = Number(r.score) || 0;
     const risk = r.questions?.risk_level ?? "low";
-    // Track answers that contributed risk (positive score for red flags, or critical/high level)
     if (Math.abs(score) >= 3 || risk === "critical" || risk === "high") {
-      byCat[cat].topRisk.push({ q: r.questions.question, a: r.answer, risk, score });
+      byCat[cat].topRisk.push({
+        q: r.questions?.question ?? "",
+        a: r.answer,
+        risk,
+        score,
+      });
     }
   }
-  // Truncate per category to keep prompt size bounded
   for (const k of Object.keys(byCat)) {
     byCat[k].topRisk.sort((a, b) => Math.abs(b.score) - Math.abs(a.score));
     byCat[k].topRisk = byCat[k].topRisk.slice(0, 6);
