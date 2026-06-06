@@ -257,6 +257,17 @@ function QuestionsTab() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const aiTag = useMutation({
+    mutationFn: () =>
+      aiTagFn({ data: { ids: Array.from(selectedIds), apply: true } }),
+    onSuccess: (res) => {
+      toast.success(`AI retagged ${res.updated} of ${res.suggested} question${res.suggested === 1 ? "" : "s"}`);
+      setSelectedIds(new Set());
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const questions = (qs.data?.questions ?? []) as unknown as QuestionRow[];
   const total = qs.data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
