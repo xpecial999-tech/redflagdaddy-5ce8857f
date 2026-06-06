@@ -60,7 +60,18 @@ import {
   getAnalytics,
   bulkSetAppliesTo,
   aiSuggestAndApplyAppliesTo,
+  adminResetJourneys,
 } from "@/lib/admin.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Dynamic Compass" }] }),
