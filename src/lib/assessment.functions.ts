@@ -159,48 +159,41 @@ export const completeAssessment = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code);
 
-    // Aggregate scores by category
+    // Aggregate scores by category — recorded responses
     const { data: rows, error } = await supabaseAdmin
       .from("responses")
       .select("score, questions!inner(risk_level, weight, category_id, question_categories(name))")
       .eq("journey_id", journey.id);
     if (error) throw new Error(error.message);
 
-    // Max-possible per normalized category (Always/Yes path = score 10).
-    const { data: greenQs } = await supabaseAdmin
+    // Single grouped query for max-possible per relevant category.
+    // Each "perfect" answer = 10, weighted. Red Flags weight encodes severity (low=1, med=2, high=4, crit=8).
+    const RELEVANT = ["Green Flags", "BDSM Safety", "Red Flags"];
+    const { data: maxRows, error: maxErr } = await supabaseAdmin
       .from("questions")
       .select("weight, question_categories!inner(name)")
       .eq("active", true)
-      .eq("question_categories.name", "Green Flags");
-    const greenMax = ((greenQs ?? []) as any[]).reduce(
-      (s, q) => s + (Number(q.weight) || 1) * 10,
-      0,
-    );
+      .in("question_categories.name", RELEVANT);
+    if (maxErr) throw new Error(maxErr.message);
 
-    const { data: safetyQs } = await supabaseAdmin
-      .from("questions")
-      .select("weight, question_categories!inner(name)")
-      .eq("active", true)
-      .eq("question_categories.name", "BDSM Safety");
-    const safetyMax = ((safetyQs ?? []) as any[]).reduce(
-      (s, q) => s + (Number(q.weight) || 1) * 10,
-      0,
-    );
-
-    // Red Flags: weight encodes the risk-level multiplier
-    // (low=1, medium=2, high=4, critical=8) so Critical answers dominate the score.
-    const { data: redQs } = await supabaseAdmin
-      .from("questions")
-      .select("weight, question_categories!inner(name)")
-      .eq("active", true)
-      .eq("question_categories.name", "Red Flags");
-    const redMax = ((redQs ?? []) as any[]).reduce(
-      (s, q) => s + (Number(q.weight) || 1) * 10,
-      0,
-    );
+    const maxes: Record<string, number> = { "Green Flags": 0, "BDSM Safety": 0, "Red Flags": 0 };
+    for (const q of (maxRows ?? []) as Array<{
+      weight: number | string;
+      question_categories: { name: string } | null;
+    }>) {
+      const name = q.question_categories?.name;
+      if (!name || !(name in maxes)) continue;
+      maxes[name] += (Number(q.weight) || 1) * 10;
+    }
+    const greenMax = maxes["Green Flags"];
+    const safetyMax = maxes["BDSM Safety"];
+    const redMax = maxes["Red Flags"];
 
     let safetyRaw = 0, compat = 0, redRaw = 0, redLegacy = 0, greenRaw = 0, exp = 0;
-    for (const row of (rows ?? []) as any[]) {
+    for (const row of (rows ?? []) as Array<{
+      score: number | string | null;
+      questions: { question_categories: { name: string } | null } | null;
+    }>) {
       const s = Number(row.score) || 0;
       const cat = row.questions?.question_categories?.name ?? "";
       if (cat === "BDSM Safety" || cat === "Safety Practices") safetyRaw += s;
@@ -209,15 +202,12 @@ export const completeAssessment = createServerFn({ method: "POST" })
       if (cat === "Green Flags") greenRaw += s;
       if (cat === "Red Flags") {
         if (s > 0) redRaw += s;
-        else if (s < 0) redLegacy += Math.abs(s); // backward-compat for older negative-scored items
+        else if (s < 0) redLegacy += Math.abs(s);
       }
     }
 
     const green = greenMax > 0 ? Math.max(0, Math.min(100, (greenRaw / greenMax) * 100)) : 0;
-    // Safety Score: unsafe answers carry negative weights → can drag score below 0; floor at 0.
     const safety = safetyMax > 0 ? Math.max(0, Math.min(100, (safetyRaw / safetyMax) * 100)) : 0;
-    // Red Flag Score /100. Higher = more red flags. Critical-weighted (8×) items push the
-    // score sharply upward even from a small number of "Often"/"Always" answers.
     const red = redMax > 0
       ? Math.max(0, Math.min(100, (redRaw / redMax) * 100))
       : Math.min(100, redLegacy);
@@ -242,8 +232,8 @@ export const completeAssessment = createServerFn({ method: "POST" })
 
     // Best-effort AI analysis. Don't block completion on AI errors.
     try {
-      const { runAnalysis } = await import("./analysis.functions");
-      await runAnalysis({ data: { journeyId: journey.id } });
+      const { runAnalysisInternal } = await import("./analysis.functions");
+      await runAnalysisInternal(journey.id);
     } catch (e) {
       console.error("AI analysis failed:", e);
     }
