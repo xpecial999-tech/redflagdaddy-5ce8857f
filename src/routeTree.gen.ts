@@ -13,6 +13,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as GuestRouteImport } from './routes/guest'
+import { Route as DemoReportRouteImport } from './routes/demo-report'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -47,6 +48,11 @@ const JoinRoute = JoinRouteImport.update({
 const GuestRoute = GuestRouteImport.update({
   id: '/guest',
   path: '/guest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoReportRoute = DemoReportRouteImport.update({
+  id: '/demo-report',
+  path: '/demo-report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -131,6 +137,7 @@ const AuthenticatedJourneysIdRoute = AuthenticatedJourneysIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/demo-report': typeof DemoReportRoute
   '/guest': typeof GuestRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/demo-report': typeof DemoReportRoute
   '/guest': typeof GuestRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/demo-report': typeof DemoReportRoute
   '/guest': typeof GuestRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/demo-report'
     | '/guest'
     | '/join'
     | '/login'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/demo-report'
     | '/guest'
     | '/join'
     | '/login'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/demo-report'
     | '/guest'
     | '/join'
     | '/login'
@@ -258,6 +270,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  DemoReportRoute: typeof DemoReportRoute
   GuestRoute: typeof GuestRoute
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: '/guest'
       fullPath: '/guest'
       preLoaderRoute: typeof GuestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo-report': {
+      id: '/demo-report'
+      path: '/demo-report'
+      fullPath: '/demo-report'
+      preLoaderRoute: typeof DemoReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -447,6 +467,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  DemoReportRoute: DemoReportRoute,
   GuestRoute: GuestRoute,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
@@ -457,13 +478,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
