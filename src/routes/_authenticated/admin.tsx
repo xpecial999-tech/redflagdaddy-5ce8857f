@@ -830,6 +830,27 @@ function QuestionDialog({
             />
           </div>
         </div>
+        <div>
+          <Label>Applies to</Label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {ALL_ROLES.map((r) => {
+              const on = form.applies_to.includes(r);
+              return (
+                <button
+                  type="button"
+                  key={r}
+                  onClick={() => toggleRole(r)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
+                >
+                  {r}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            At least one role required.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Switch
             checked={form.active}
