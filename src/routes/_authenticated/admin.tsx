@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
@@ -56,6 +57,7 @@ import {
   upsertCategory,
   deleteCategory,
   getAnalytics,
+  bulkSetAppliesTo,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -78,6 +80,9 @@ interface Option {
   value: string;
   score?: number;
 }
+type Role = "Dominant" | "submissive" | "switch";
+const ALL_ROLES: Role[] = ["Dominant", "submissive", "switch"];
+
 interface QuestionRow {
   id: string;
   category_id: string;
@@ -89,6 +94,7 @@ interface QuestionRow {
   active: boolean;
   order_index: number;
   branch_logic: Record<string, unknown>;
+  applies_to: Role[];
 }
 interface CategoryRow {
   id: string;
@@ -166,9 +172,11 @@ function QuestionsTab() {
   const delFn = useServerFn(deleteQuestion);
   const arcFn = useServerFn(archiveQuestion);
   const reorderFn = useServerFn(reorderQuestions);
+  const bulkAppliesFn = useServerFn(bulkSetAppliesTo);
 
   const [selectedCat, setSelectedCat] = useState<string>("all");
   const [risk, setRisk] = useState<string>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   const [activeOnly, setActiveOnly] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -176,6 +184,10 @@ function QuestionsTab() {
   const pageSize = 50;
   const [editing, setEditing] = useState<QuestionRow | null>(null);
   const [open, setOpen] = useState(false);
+
+  // Multi-select state for bulk operations
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkRoles, setBulkRoles] = useState<Set<Role>>(new Set(ALL_ROLES));
 
   // Debounce search
   useEffect(() => {
@@ -191,7 +203,7 @@ function QuestionsTab() {
     queryFn: () => catsFn({ data: undefined as never }),
   });
   const qs = useQuery({
-    queryKey: ["admin", "questions", selectedCat, risk, activeOnly, search, page],
+    queryKey: ["admin", "questions", selectedCat, risk, roleFilter, activeOnly, search, page],
     queryFn: () =>
       listFn({
         data: {
@@ -200,6 +212,7 @@ function QuestionsTab() {
           offset: page * pageSize,
           ...(selectedCat !== "all" ? { category_id: selectedCat } : {}),
           ...(risk !== "all" ? { risk_level: risk as RiskLevel } : {}),
+          ...(roleFilter !== "all" ? { applies_to: roleFilter as Role } : {}),
           ...(search ? { search } : {}),
         },
       }),
@@ -228,10 +241,47 @@ function QuestionsTab() {
     onSuccess: () => invalidate(),
   });
 
+  const bulkApplies = useMutation({
+    mutationFn: () =>
+      bulkAppliesFn({
+        data: { ids: Array.from(selectedIds), applies_to: Array.from(bulkRoles) },
+      }),
+    onSuccess: (res) => {
+      toast.success(`Retagged ${res.updated} question${res.updated === 1 ? "" : "s"}`);
+      setSelectedIds(new Set());
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const questions = (qs.data?.questions ?? []) as unknown as QuestionRow[];
   const total = qs.data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const categories = (cats.data?.categories ?? []) as CategoryRow[];
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+  const selectAllOnPage = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      const allOn = questions.every((q) => next.has(q.id));
+      if (allOn) questions.forEach((q) => next.delete(q.id));
+      else questions.forEach((q) => next.add(q.id));
+      return next;
+    });
+  };
+  const toggleBulkRole = (r: Role) => {
+    setBulkRoles((prev) => {
+      const next = new Set(prev);
+      next.has(r) ? next.delete(r) : next.add(r);
+      return next;
+    });
+  };
 
   const move = (idx: number, dir: -1 | 1) => {
     const next = [...questions];
@@ -258,7 +308,7 @@ function QuestionsTab() {
             className="pl-9"
           />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Select value={selectedCat} onValueChange={resetPage(setSelectedCat)}>
             <SelectTrigger>
               <SelectValue placeholder="Category" />
@@ -281,6 +331,19 @@ function QuestionsTab() {
               {(["low", "medium", "high", "critical"] as RiskLevel[]).map((r) => (
                 <SelectItem key={r} value={r}>
                   {r}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={roleFilter} onValueChange={resetPage(setRoleFilter)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All roles</SelectItem>
+              {ALL_ROLES.map((r) => (
+                <SelectItem key={r} value={r}>
+                  Applies to {r}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -326,6 +389,57 @@ function QuestionsTab() {
       </div>
 
 
+      {/* Bulk action bar */}
+      {questions.length > 0 && (
+        <div className="glass rounded-2xl p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={selectAllOnPage}
+              className="text-xs text-muted-foreground hover:text-foreground transition"
+            >
+              {questions.every((q) => selectedIds.has(q.id))
+                ? "Clear page"
+                : "Select all on page"}
+            </button>
+            <span className="text-xs text-muted-foreground">
+              {selectedIds.size} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">Set applies-to:</span>
+            {ALL_ROLES.map((r) => {
+              const on = bulkRoles.has(r);
+              return (
+                <button
+                  type="button"
+                  key={r}
+                  onClick={() => toggleBulkRole(r)}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
+                >
+                  {r}
+                </button>
+              );
+            })}
+            <Button
+              size="sm"
+              className="ml-auto"
+              disabled={
+                selectedIds.size === 0 ||
+                bulkRoles.size === 0 ||
+                bulkApplies.isPending
+              }
+              onClick={() => bulkApplies.mutate()}
+            >
+              {bulkApplies.isPending && (
+                <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+              )}
+              Apply to {selectedIds.size}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {qs.isLoading ? (
         <Loading />
       ) : questions.length === 0 ? (
@@ -337,9 +451,16 @@ function QuestionsTab() {
               key={q.id}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`glass rounded-2xl p-4 ${q.active ? "" : "opacity-60"}`}
+              className={`glass rounded-2xl p-4 ${q.active ? "" : "opacity-60"} ${selectedIds.has(q.id) ? "ring-1 ring-primary/60" : ""}`}
             >
               <div className="flex items-start gap-3">
+                <div className="pt-1">
+                  <Checkbox
+                    checked={selectedIds.has(q.id)}
+                    onCheckedChange={() => toggleSelected(q.id)}
+                    aria-label="Select question"
+                  />
+                </div>
                 <div className="flex flex-col gap-1 pt-1">
                   <button
                     onClick={() => move(i, -1)}
@@ -367,6 +488,15 @@ function QuestionsTab() {
                     <span className="text-[10px] text-muted-foreground">
                       weight {q.weight}
                     </span>
+                    {(q.applies_to ?? []).map((r) => (
+                      <Badge
+                        key={`role-${r}`}
+                        variant="outline"
+                        className="text-[10px] bg-aurora-1/10 text-aurora-1 border-aurora-1/30"
+                      >
+                        {r}
+                      </Badge>
+                    ))}
                     {!q.active && (
                       <Badge variant="outline" className="text-[10px]">
                         archived
@@ -503,6 +633,7 @@ function QuestionDialog({
     risk_level: (initial?.risk_level ?? "low") as RiskLevel,
     active: initial?.active ?? true,
     order_index: initial?.order_index ?? 0,
+    applies_to: (initial?.applies_to ?? ALL_ROLES) as Role[],
     optionsText:
       initial?.answer_options
         ?.map((o) => `${o.label}|${o.value}|${o.score ?? 0}`)
@@ -510,6 +641,13 @@ function QuestionDialog({
     greenText: (initialBL.green_flag_indicators ?? []).join("\n"),
     redText: (initialBL.red_flag_indicators ?? []).join("\n"),
   }));
+
+  const toggleRole = (r: Role) =>
+    setForm((f) => {
+      const has = f.applies_to.includes(r);
+      const next = has ? f.applies_to.filter((x) => x !== r) : [...f.applies_to, r];
+      return { ...f, applies_to: next.length === 0 ? f.applies_to : next };
+    });
 
   const save = useMutation({
     mutationFn: () => {
@@ -547,6 +685,7 @@ function QuestionDialog({
           active: form.active,
           order_index: Number(form.order_index),
           branch_logic,
+          applies_to: form.applies_to,
         },
       });
     },
@@ -690,6 +829,27 @@ function QuestionDialog({
               onChange={(e) => setForm((f) => ({ ...f, redText: e.target.value }))}
             />
           </div>
+        </div>
+        <div>
+          <Label>Applies to</Label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {ALL_ROLES.map((r) => {
+              const on = form.applies_to.includes(r);
+              return (
+                <button
+                  type="button"
+                  key={r}
+                  onClick={() => toggleRole(r)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
+                >
+                  {r}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            At least one role required.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Switch
