@@ -12,14 +12,14 @@ import { getResults, runAnalysis, type AnalysisSection, type AnalysisPayload } f
 export const Route = createFileRoute("/_authenticated/results/$id")({
   component: ResultsPage,
   errorComponent: ({ error }) => (
-    
+    <div className="max-w-md mx-auto glass rounded-2xl p-6 text-center">
       <p className="text-destructive">{error.message}</p>
-    
+    </div>
   ),
   notFoundComponent: () => (
-    
+    <div className="max-w-md mx-auto glass rounded-2xl p-6 text-center">
       <p>Not found.</p>
-    
+    </div>
   ),
 });
 
