@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { generateInviteCode } from "./utils.server";
 
 const CreateJourneySchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -9,15 +10,6 @@ const CreateJourneySchema = z.object({
   recipientEmail: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
   notes: z.string().trim().max(2000).optional().nullable(),
 });
-
-function generateInviteCode() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  const bytes = new Uint8Array(8);
-  crypto.getRandomValues(bytes);
-  for (let i = 0; i < bytes.length; i++) code += alphabet[bytes[i] % alphabet.length];
-  return code;
-}
 
 function originFromRequest(): string {
   return process.env.PUBLIC_APP_URL ?? "https://app.dynamiccompass.app";
