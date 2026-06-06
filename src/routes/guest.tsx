@@ -71,7 +71,7 @@ function GuestPage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:py-12">
+    <div className="py-2 sm:py-6">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -173,7 +173,7 @@ function GuestPage() {
           </p>
         </section>
       </motion.div>
-    </main>
+    </div>
   );
 }
 
@@ -220,7 +220,7 @@ function PartnerLinkView({
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:py-12">
+    <div className="py-2 sm:py-6">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -320,7 +320,7 @@ function PartnerLinkView({
         </section>
 
       </motion.div>
-    </main>
+    </div>
   );
 }
 
