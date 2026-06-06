@@ -64,7 +64,11 @@ function Dashboard() {
       <section className="space-y-3">
         {journeys.map((j, i) => (
           <motion.div key={j.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <div className="block glass rounded-2xl p-4">
+            <Link
+              to="/journeys/$id"
+              params={{ id: j.id }}
+              className="block glass rounded-2xl p-4 hover:bg-white/5 transition"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <h3 className="font-medium truncate">{j.title}</h3>
@@ -77,7 +81,7 @@ function Dashboard() {
                 </div>
                 <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-white/5 text-muted-foreground">{j.participant_type}</span>
               </div>
-            </div>
+            </Link>
           </motion.div>
         ))}
       </section>
