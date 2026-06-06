@@ -633,6 +633,7 @@ function QuestionDialog({
     risk_level: (initial?.risk_level ?? "low") as RiskLevel,
     active: initial?.active ?? true,
     order_index: initial?.order_index ?? 0,
+    applies_to: (initial?.applies_to ?? ALL_ROLES) as Role[],
     optionsText:
       initial?.answer_options
         ?.map((o) => `${o.label}|${o.value}|${o.score ?? 0}`)
@@ -640,6 +641,13 @@ function QuestionDialog({
     greenText: (initialBL.green_flag_indicators ?? []).join("\n"),
     redText: (initialBL.red_flag_indicators ?? []).join("\n"),
   }));
+
+  const toggleRole = (r: Role) =>
+    setForm((f) => {
+      const has = f.applies_to.includes(r);
+      const next = has ? f.applies_to.filter((x) => x !== r) : [...f.applies_to, r];
+      return { ...f, applies_to: next.length === 0 ? f.applies_to : next };
+    });
 
   const save = useMutation({
     mutationFn: () => {
