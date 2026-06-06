@@ -58,6 +58,7 @@ import {
   deleteCategory,
   getAnalytics,
   bulkSetAppliesTo,
+  aiSuggestAndApplyAppliesTo,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
