@@ -200,7 +200,7 @@ function PartnerLinkView({
 
   const selfMutation = useMutation({
     mutationFn: () =>
-      createFn({ data: { guestEmail, partnerEmail: "", partnerType: selfType as typeof partnerRoles[number] } }),
+      createFn({ data: { guestEmail, partnerEmail: "", partnerType: selfType as typeof partnerRoles[number], isSelf: true } }),
     onSuccess: (res) => {
       navigate({ to: "/journey/$code", params: { code: res.code } });
     },

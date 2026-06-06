@@ -12,6 +12,7 @@ const CreateGuestSchema = z.object({
     .optional()
     .or(z.literal("")),
   partnerType: z.enum(["Dominant", "submissive", "switch"]),
+  isSelf: z.boolean().optional(),
 });
 
 export const createGuestJourney = createServerFn({ method: "POST" })
@@ -25,7 +26,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
       .from("journeys")
       .insert({
         creator_id: null,
-        title: "Guest assessment",
+        title: data.isSelf ? "Self-assessment" : "Guest assessment",
         participant_type: data.partnerType,
         invite_code: code,
         recipient_email: partnerEmail,
