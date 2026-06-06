@@ -37,7 +37,10 @@ function JourneyTracker() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["journey", id],
     queryFn: () => fetchStatus({ data: { id } }),
-    refetchInterval: 15000,
+    refetchInterval: (q) => {
+      const s = q.state.data?.journey?.status;
+      return s === "completed" || s === "expired" ? false : 15000;
+    },
   });
 
   const remove = useMutation({
