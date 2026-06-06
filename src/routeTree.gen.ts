@@ -26,6 +26,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedProfileSafetyRouteImport } from './routes/_authenticated/profile.safety'
 import { Route as AuthenticatedProfilePrivacyRouteImport } from './routes/_authenticated/profile.privacy'
 import { Route as AuthenticatedProfileNotificationsRouteImport } from './routes/_authenticated/profile.notifications'
+import { Route as AuthenticatedProfileHelpRouteImport } from './routes/_authenticated/profile.help'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -114,6 +115,12 @@ const AuthenticatedProfileNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedProfileRoute,
   } as any)
+const AuthenticatedProfileHelpRoute =
+  AuthenticatedProfileHelpRouteImport.update({
+    id: '/help',
+    path: '/help',
+    getParentRoute: () => AuthenticatedProfileRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/results/$id': typeof ResultsIdRoute
+  '/profile/help': typeof AuthenticatedProfileHelpRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
@@ -147,6 +155,7 @@ export interface FileRoutesByTo {
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/results/$id': typeof ResultsIdRoute
+  '/profile/help': typeof AuthenticatedProfileHelpRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
@@ -167,6 +176,7 @@ export interface FileRoutesById {
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/results/$id': typeof ResultsIdRoute
+  '/_authenticated/profile/help': typeof AuthenticatedProfileHelpRoute
   '/_authenticated/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/_authenticated/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/_authenticated/profile/safety': typeof AuthenticatedProfileSafetyRoute
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/assessment/$code'
     | '/journey/$code'
     | '/results/$id'
+    | '/profile/help'
     | '/profile/notifications'
     | '/profile/privacy'
     | '/profile/safety'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/assessment/$code'
     | '/journey/$code'
     | '/results/$id'
+    | '/profile/help'
     | '/profile/notifications'
     | '/profile/privacy'
     | '/profile/safety'
@@ -224,6 +236,7 @@ export interface FileRouteTypes {
     | '/assessment/$code'
     | '/journey/$code'
     | '/results/$id'
+    | '/_authenticated/profile/help'
     | '/_authenticated/profile/notifications'
     | '/_authenticated/profile/privacy'
     | '/_authenticated/profile/safety'
@@ -363,16 +376,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileNotificationsRouteImport
       parentRoute: typeof AuthenticatedProfileRoute
     }
+    '/_authenticated/profile/help': {
+      id: '/_authenticated/profile/help'
+      path: '/help'
+      fullPath: '/profile/help'
+      preLoaderRoute: typeof AuthenticatedProfileHelpRouteImport
+      parentRoute: typeof AuthenticatedProfileRoute
+    }
   }
 }
 
 interface AuthenticatedProfileRouteChildren {
+  AuthenticatedProfileHelpRoute: typeof AuthenticatedProfileHelpRoute
   AuthenticatedProfileNotificationsRoute: typeof AuthenticatedProfileNotificationsRoute
   AuthenticatedProfilePrivacyRoute: typeof AuthenticatedProfilePrivacyRoute
   AuthenticatedProfileSafetyRoute: typeof AuthenticatedProfileSafetyRoute
 }
 
 const AuthenticatedProfileRouteChildren: AuthenticatedProfileRouteChildren = {
+  AuthenticatedProfileHelpRoute: AuthenticatedProfileHelpRoute,
   AuthenticatedProfileNotificationsRoute:
     AuthenticatedProfileNotificationsRoute,
   AuthenticatedProfilePrivacyRoute: AuthenticatedProfilePrivacyRoute,
