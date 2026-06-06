@@ -159,7 +159,7 @@ function GuestPage() {
             )}
 
             <button
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || !partnerType}
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
             >
               {mutation.isPending ? "Creating…" : "Generate partner link"}
