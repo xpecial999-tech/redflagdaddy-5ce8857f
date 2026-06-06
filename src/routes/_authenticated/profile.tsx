@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "Profile — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Profile — RedFlagDaddy" }] }),
   component: Profile,
 });
 

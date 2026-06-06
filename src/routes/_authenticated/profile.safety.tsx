@@ -4,7 +4,7 @@ import { useState } from "react";
 import { SubpageHeader, Toggle, ActionRow } from "./profile.privacy";
 
 export const Route = createFileRoute("/_authenticated/profile/safety")({
-  head: () => ({ meta: [{ title: "Safety center — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Safety center — RedFlagDaddy" }] }),
   component: Safety,
 });
 
@@ -70,7 +70,7 @@ function Safety() {
           <div>
             <h3 className="font-medium">In immediate danger?</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Dynamic Compass is not an emergency service. Contact local emergency services or a
+              RedFlagDaddy is not an emergency service. Contact local emergency services or a
               trusted crisis line right away.
             </p>
           </div>

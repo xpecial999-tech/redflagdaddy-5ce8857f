@@ -7,7 +7,7 @@ import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2 } fro
 import { createJourney } from "@/lib/journeys.functions";
 
 export const Route = createFileRoute("/_authenticated/create")({
-  head: () => ({ meta: [{ title: "Create journey — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
   component: Create,
 });
 
@@ -213,8 +213,8 @@ function SuccessScreen({ url, code, email, title }: { url: string; code: string;
     setTimeout(() => setCopied(null), 1500);
   };
   const mailto = email
-    ? `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`Dynamic Compass invite: ${title}`)}&body=${encodeURIComponent(`You've been invited to complete an assessment.\n\nOpen: ${url}\nOr enter code: ${code}\n\nThis link expires in 7 days.`)}`
-    : `mailto:?subject=${encodeURIComponent(`Dynamic Compass invite: ${title}`)}&body=${encodeURIComponent(`Open: ${url}\nOr enter code: ${code}`)}`;
+    ? `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`RedFlagDaddy invite: ${title}`)}&body=${encodeURIComponent(`You've been invited to complete an assessment.\n\nOpen: ${url}\nOr enter code: ${code}\n\nThis link expires in 7 days.`)}`
+    : `mailto:?subject=${encodeURIComponent(`RedFlagDaddy invite: ${title}`)}&body=${encodeURIComponent(`Open: ${url}\nOr enter code: ${code}`)}`;
 
   return (
     <motion.div

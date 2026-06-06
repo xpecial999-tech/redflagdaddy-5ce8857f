@@ -3,7 +3,7 @@ import { HelpCircle, BookOpen, MessageSquare, ShieldCheck, Compass, ExternalLink
 import { SubpageHeader } from "./profile.privacy";
 
 export const Route = createFileRoute("/_authenticated/profile/help")({
-  head: () => ({ meta: [{ title: "Help & consent guides — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Help & consent guides — RedFlagDaddy" }] }),
   component: Help,
 });
 
@@ -49,7 +49,7 @@ const faqs = [
   },
   {
     q: "Is this a replacement for professional support?",
-    a: "No. Dynamic Compass is a structured self-assessment tool. It does not replace therapy, medical advice or emergency services.",
+    a: "No. RedFlagDaddy is a structured self-assessment tool. It does not replace therapy, medical advice or emergency services.",
   },
 ];
 
@@ -61,7 +61,7 @@ function Help() {
       <section className="glass-strong rounded-2xl p-5 flex items-start gap-3">
         <Compass className="w-5 h-5 text-primary shrink-0 mt-0.5" />
         <div>
-          <h2 className="font-display text-lg">New to Dynamic Compass?</h2>
+          <h2 className="font-display text-lg">New to RedFlagDaddy?</h2>
           <p className="text-sm text-muted-foreground">
             Read the full overview of how the tool works, the question library, and our privacy
             posture.
@@ -112,8 +112,8 @@ function Help() {
           <h2 className="font-display text-lg">Still need help?</h2>
           <p className="text-sm text-muted-foreground">
             Our support team responds within 24 hours. Reach us at{" "}
-            <a href="mailto:support@dynamiccompass.app" className="text-primary">
-              support@dynamiccompass.app
+            <a href="mailto:support@redflagdaddy.com" className="text-primary">
+              support@redflagdaddy.com
             </a>
             .
           </p>

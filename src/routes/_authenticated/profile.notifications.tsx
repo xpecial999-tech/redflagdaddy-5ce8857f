@@ -4,7 +4,7 @@ import { useState } from "react";
 import { SubpageHeader, Toggle } from "./profile.privacy";
 
 export const Route = createFileRoute("/_authenticated/profile/notifications")({
-  head: () => ({ meta: [{ title: "Notifications — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Notifications — RedFlagDaddy" }] }),
   component: Notifications,
 });
 
@@ -23,7 +23,7 @@ function Notifications() {
       <section className="glass-strong rounded-2xl p-5 space-y-1">
         <h2 className="font-display text-lg">Stay in the loop</h2>
         <p className="text-sm text-muted-foreground">
-          Choose how Dynamic Compass reaches you when something needs attention.
+          Choose how RedFlagDaddy reaches you when something needs attention.
         </p>
       </section>
 

@@ -29,13 +29,13 @@ import {
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — Dynamic Compass" },
+      { title: "About — RedFlagDaddy" },
       {
         name: "description",
         content:
-          "How Dynamic Compass works: structured assessments for Dominants, submissives and switches with research-grounded questions, safety scoring, real-time journey tracking and end-to-end privacy.",
+          "How RedFlagDaddy works: structured assessments for Dominants, submissives and switches with research-grounded questions, safety scoring, real-time journey tracking and end-to-end privacy.",
       },
-      { property: "og:title", content: "About — Dynamic Compass" },
+      { property: "og:title", content: "About — RedFlagDaddy" },
       {
         property: "og:description",
         content:
@@ -143,7 +143,7 @@ function About() {
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs text-muted-foreground"
         >
           <Compass className="w-3.5 h-3.5 text-primary" />
-          About Dynamic Compass
+          About RedFlagDaddy
         </motion.div>
         <motion.h1
           initial={{ opacity: 0, y: 12 }}
@@ -159,7 +159,7 @@ function About() {
           transition={{ delay: 0.2 }}
           className="text-muted-foreground max-w-xl mx-auto"
         >
-          Dynamic Compass replaces guesswork with structure. We help Dominants, submissives and
+          RedFlagDaddy replaces guesswork with structure. We help Dominants, submissives and
           switches assess consent, compatibility, safety and red flags — using a research-grounded
           question library, transparent scoring, and real-time journey tracking.
         </motion.p>

@@ -79,7 +79,7 @@ import { redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Admin — Dynamic Compass" },
+      { title: "Admin — RedFlagDaddy" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),

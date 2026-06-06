@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/guest")({
-  head: () => ({ meta: [{ title: "Continue as guest — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Continue as guest — RedFlagDaddy" }] }),
   component: GuestPage,
   errorComponent: ({ error }) => (
     
@@ -219,7 +219,7 @@ function PartnerLinkView({
 
   const shareMessage = useMemo(
     () =>
-      `Hey — I'd like us to take a private compatibility & consent assessment together on Dynamic Compass. Open this link to take your ${partnerType} assessment: ${link}`,
+      `Hey — I'd like us to take a private compatibility & consent assessment together on RedFlagDaddy. Open this link to take your ${partnerType} assessment: ${link}`,
     [link, partnerType],
   );
 

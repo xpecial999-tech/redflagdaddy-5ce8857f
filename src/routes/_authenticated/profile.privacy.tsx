@@ -3,7 +3,7 @@ import { ArrowLeft, Lock, Download, Trash2, Eye, ShieldCheck } from "lucide-reac
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/profile/privacy")({
-  head: () => ({ meta: [{ title: "Privacy & data — Dynamic Compass" }] }),
+  head: () => ({ meta: [{ title: "Privacy & data — RedFlagDaddy" }] }),
   component: Privacy,
 });
 
