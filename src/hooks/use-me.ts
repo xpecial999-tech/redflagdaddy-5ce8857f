@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { isCurrentUserAdmin } from "@/lib/admin-auth.functions";
 
 export type Me = {
   id: string;
@@ -10,6 +12,7 @@ export type Me = {
 };
 
 export function useMe() {
+  const checkAdmin = useServerFn(isCurrentUserAdmin);
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -26,9 +29,9 @@ export function useMe() {
         }
         return;
       }
-      const [{ data: profile }, { data: isAdmin }] = await Promise.all([
+      const [{ data: profile }, adminStatus] = await Promise.all([
         supabase.from("users").select("id, email, name, role").eq("id", user.id).maybeSingle(),
-        supabase.rpc("is_admin", { _user_id: user.id }),
+        checkAdmin().catch(() => ({ isAdmin: false })),
       ]);
       if (cancelled) return;
       setMe({
@@ -36,7 +39,7 @@ export function useMe() {
         email: profile?.email ?? user.email ?? "",
         name: profile?.name ?? (user.user_metadata?.name as string) ?? null,
         role: (profile?.role as string) ?? null,
-        isAdmin: !!isAdmin,
+        isAdmin: !!adminStatus.isAdmin,
       });
       setLoading(false);
     }
@@ -48,7 +51,7 @@ export function useMe() {
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [checkAdmin]);
 
   return { me, loading };
 }
