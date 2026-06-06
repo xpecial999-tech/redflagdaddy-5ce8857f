@@ -137,6 +137,7 @@ export type Database = {
         Row: {
           active: boolean
           answer_options: Json
+          applies_to: string[]
           branch_logic: Json
           category_id: string
           created_at: string
@@ -150,6 +151,7 @@ export type Database = {
         Insert: {
           active?: boolean
           answer_options?: Json
+          applies_to?: string[]
           branch_logic?: Json
           category_id: string
           created_at?: string
@@ -163,6 +165,7 @@ export type Database = {
         Update: {
           active?: boolean
           answer_options?: Json
+          applies_to?: string[]
           branch_logic?: Json
           category_id?: string
           created_at?: string
