@@ -23,6 +23,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedProfileSafetyRouteImport } from './routes/_authenticated/profile.safety'
 import { Route as AuthenticatedProfilePrivacyRouteImport } from './routes/_authenticated/profile.privacy'
 import { Route as AuthenticatedProfileNotificationsRouteImport } from './routes/_authenticated/profile.notifications'
 
@@ -95,6 +96,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfileSafetyRoute =
+  AuthenticatedProfileSafetyRouteImport.update({
+    id: '/safety',
+    path: '/safety',
+    getParentRoute: () => AuthenticatedProfileRoute,
+  } as any)
 const AuthenticatedProfilePrivacyRoute =
   AuthenticatedProfilePrivacyRouteImport.update({
     id: '/privacy',
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/results/$id': typeof ResultsIdRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
+  '/profile/safety': typeof AuthenticatedProfileSafetyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +149,7 @@ export interface FileRoutesByTo {
   '/results/$id': typeof ResultsIdRoute
   '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
+  '/profile/safety': typeof AuthenticatedProfileSafetyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   '/results/$id': typeof ResultsIdRoute
   '/_authenticated/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/_authenticated/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
+  '/_authenticated/profile/safety': typeof AuthenticatedProfileSafetyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/results/$id'
     | '/profile/notifications'
     | '/profile/privacy'
+    | '/profile/safety'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/results/$id'
     | '/profile/notifications'
     | '/profile/privacy'
+    | '/profile/safety'
   id:
     | '__root__'
     | '/'
@@ -214,6 +226,7 @@ export interface FileRouteTypes {
     | '/results/$id'
     | '/_authenticated/profile/notifications'
     | '/_authenticated/profile/privacy'
+    | '/_authenticated/profile/safety'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -329,6 +342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile/safety': {
+      id: '/_authenticated/profile/safety'
+      path: '/safety'
+      fullPath: '/profile/safety'
+      preLoaderRoute: typeof AuthenticatedProfileSafetyRouteImport
+      parentRoute: typeof AuthenticatedProfileRoute
+    }
     '/_authenticated/profile/privacy': {
       id: '/_authenticated/profile/privacy'
       path: '/privacy'
@@ -349,12 +369,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedProfileRouteChildren {
   AuthenticatedProfileNotificationsRoute: typeof AuthenticatedProfileNotificationsRoute
   AuthenticatedProfilePrivacyRoute: typeof AuthenticatedProfilePrivacyRoute
+  AuthenticatedProfileSafetyRoute: typeof AuthenticatedProfileSafetyRoute
 }
 
 const AuthenticatedProfileRouteChildren: AuthenticatedProfileRouteChildren = {
   AuthenticatedProfileNotificationsRoute:
     AuthenticatedProfileNotificationsRoute,
   AuthenticatedProfilePrivacyRoute: AuthenticatedProfilePrivacyRoute,
+  AuthenticatedProfileSafetyRoute: AuthenticatedProfileSafetyRoute,
 }
 
 const AuthenticatedProfileRouteWithChildren =
