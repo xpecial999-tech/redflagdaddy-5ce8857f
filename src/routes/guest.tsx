@@ -319,19 +319,39 @@ function PartnerLinkView({
           </div>
         </section>
 
-        <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-3">
+        <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-4">
           <h3 className="font-display text-lg font-semibold tracking-tight">
             Want to take your own assessment too?
           </h3>
           <p className="text-sm text-muted-foreground">
-            Follow the journey from your side and we'll compare both perspectives in the final
-            report.
+            Pick your own dynamic — we'll compare both perspectives in the final report.
           </p>
+          <div>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+              I am a…
+            </span>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {partnerRoles.map((r) => (
+                <button
+                  type="button"
+                  key={r}
+                  onClick={() => setSelfType(r)}
+                  className={`rounded-xl border px-2 py-3 text-xs font-medium transition ${selfType === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+          {selfMutation.error && (
+            <p className="text-xs text-destructive">{(selfMutation.error as Error).message}</p>
+          )}
           <button
-            onClick={() => navigate({ to: "/journey/$code", params: { code } })}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30"
+            onClick={() => selfMutation.mutate()}
+            disabled={!selfType || selfMutation.isPending}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
           >
-            Start my assessment
+            {selfMutation.isPending ? "Preparing…" : "Start my assessment"}
             <ArrowRight className="w-4 h-4" />
           </button>
         </section>
