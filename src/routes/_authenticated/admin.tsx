@@ -79,6 +79,9 @@ interface Option {
   value: string;
   score?: number;
 }
+type Role = "Dominant" | "submissive" | "switch";
+const ALL_ROLES: Role[] = ["Dominant", "submissive", "switch"];
+
 interface QuestionRow {
   id: string;
   category_id: string;
@@ -90,6 +93,7 @@ interface QuestionRow {
   active: boolean;
   order_index: number;
   branch_logic: Record<string, unknown>;
+  applies_to: Role[];
 }
 interface CategoryRow {
   id: string;
