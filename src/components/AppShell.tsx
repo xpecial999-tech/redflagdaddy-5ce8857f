@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     : baseNavItems;
   const hideNav =
     ["/", "/login", "/register", "/join", "/guest"].includes(pathname) ||
-    pathname.startsWith("/journey/") ||
+    /^\/journey\/[^/]+/.test(pathname) ||
     pathname.startsWith("/assessment/") ||
     pathname.startsWith("/guest/");
   const hideHeader = pathname === "/guest" || pathname.startsWith("/guest/");

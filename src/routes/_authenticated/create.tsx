@@ -164,12 +164,18 @@ function Create() {
         </div>
       )}
 
-      {step === 4 && (
+      {step === 4 && mutation.data && (
         <div className="flex gap-3">
-          <Link to="/dashboard" className="flex-1 text-center rounded-xl glass py-3 text-sm font-medium">Dashboard</Link>
-          <button onClick={() => { setStep(1); setTitle(""); setNotes(""); setRecipientEmail(""); setRecipientName(""); mutation.reset(); }} className="flex-1 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium">
+          <button onClick={() => { setStep(1); setTitle(""); setNotes(""); setRecipientEmail(""); setRecipientName(""); mutation.reset(); }} className="flex-1 rounded-xl glass py-3 text-sm font-medium">
             Create another
           </button>
+          <Link
+            to="/journeys/$id"
+            params={{ id: mutation.data.journey.id }}
+            className="flex-1 text-center rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 inline-flex items-center justify-center gap-1.5"
+          >
+            Track journey <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       )}
     </div>

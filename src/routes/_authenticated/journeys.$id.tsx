@@ -1,0 +1,388 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import {
+  ArrowLeft,
+  Check,
+  Clock,
+  Copy,
+  Link2,
+  KeyRound,
+  Mail,
+  Send,
+  Loader2,
+  CheckCircle2,
+  AlertTriangle,
+  Trash2,
+  RefreshCw,
+  Sparkles,
+  PlayCircle,
+} from "lucide-react";
+import { getJourneyStatus, deleteJourney } from "@/lib/journeys.functions";
+
+export const Route = createFileRoute("/_authenticated/journeys/$id")({
+  head: () => ({ meta: [{ title: "Journey — Dynamic Compass" }] }),
+  component: JourneyTracker,
+});
+
+function JourneyTracker() {
+  const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const fetchStatus = useServerFn(getJourneyStatus);
+  const removeFn = useServerFn(deleteJourney);
+
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+    queryKey: ["journey", id],
+    queryFn: () => fetchStatus({ data: { id } }),
+    refetchInterval: 15000,
+  });
+
+  const remove = useMutation({
+    mutationFn: () => removeFn({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["journeys"] });
+      navigate({ to: "/dashboard", replace: true });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="glass-strong rounded-3xl p-8 text-center space-y-3">
+        <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto" />
+        <h2 className="font-display text-lg">We couldn't load that journey</h2>
+        <p className="text-sm text-muted-foreground">It may have been deleted or you don't have access.</p>
+        <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-primary mt-2">
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to dashboard
+        </Link>
+      </div>
+    );
+  }
+
+  const { journey, invite, progress, isExpired } = data;
+  const effectiveStatus = isExpired && journey.status !== "completed" ? "expired" : journey.status;
+  const url = journey.invite_url ?? "";
+  const code = journey.invite_code;
+  const recipient = journey.recipient_email;
+
+  const steps = buildSteps({
+    createdAt: journey.created_at,
+    sentAt: recipient ? journey.created_at : null,
+    startedAt: progress.answered > 0 ? journey.updated_at : null,
+    completedAt: invite?.completed_at ?? null,
+    status: effectiveStatus,
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition"
+        >
+          <ArrowLeft className="w-4 h-4" /> Dashboard
+        </Link>
+        <button
+          onClick={() => refetch()}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} /> Refresh
+        </button>
+      </div>
+
+      {/* Hero */}
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-strong rounded-3xl p-6 space-y-4"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {journey.participant_type} · journey
+            </p>
+            <h1 className="text-2xl font-display font-semibold truncate">{journey.title}</h1>
+          </div>
+          <StatusPill status={effectiveStatus} />
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Respondent progress</span>
+            <span>
+              {progress.answered} / {progress.total} answered
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-aurora-1 to-aurora-2"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress.percent}%` }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Timeline */}
+      <section className="space-y-3">
+        <SectionLabel>Status timeline</SectionLabel>
+        <div className="glass rounded-2xl p-4 space-y-0">
+          {steps.map((s, i) => (
+            <TimelineRow key={s.label} step={s} last={i === steps.length - 1} />
+          ))}
+        </div>
+      </section>
+
+      {/* Share & send */}
+      <section className="space-y-3">
+        <SectionLabel>Send to respondent</SectionLabel>
+        <ShareCard url={url} code={code} email={recipient} title={journey.title} />
+      </section>
+
+      {/* View results / continue actions */}
+      <section className="space-y-2">
+        {effectiveStatus === "completed" && (
+          <Link
+            to="/results/$id"
+            params={{ id: journey.id }}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30"
+          >
+            <Sparkles className="w-4 h-4" /> View results
+          </Link>
+        )}
+        <button
+          onClick={() => {
+            if (confirm("Delete this journey and all responses? This cannot be undone.")) {
+              remove.mutate();
+            }
+          }}
+          disabled={remove.isPending}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-destructive/30 text-destructive py-3 text-sm font-medium hover:bg-destructive/10 transition disabled:opacity-50"
+        >
+          {remove.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Trash2 className="w-4 h-4" /> Delete journey
+            </>
+          )}
+        </button>
+      </section>
+    </div>
+  );
+}
+
+type StepState = "done" | "active" | "pending" | "blocked";
+type Step = { label: string; desc: string; state: StepState; at?: string | null };
+
+function buildSteps(p: {
+  createdAt: string;
+  sentAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  status: string;
+}): Step[] {
+  const expired = p.status === "expired";
+  return [
+    { label: "Journey created", desc: "You set the title, role and details.", state: "done", at: p.createdAt },
+    {
+      label: "Invite sent",
+      desc: p.sentAt ? "Invite link delivered." : "Share the link or email it below.",
+      state: p.sentAt ? "done" : "active",
+      at: p.sentAt,
+    },
+    {
+      label: "Respondent started",
+      desc: p.startedAt ? "They opened the assessment." : "Waiting for them to begin.",
+      state: p.startedAt ? "done" : expired ? "blocked" : "pending",
+      at: p.startedAt,
+    },
+    {
+      label: "Responses complete",
+      desc: p.completedAt
+        ? "All questions answered."
+        : expired
+          ? "Invite expired before completion."
+          : "In progress.",
+      state: p.completedAt ? "done" : expired ? "blocked" : "pending",
+      at: p.completedAt,
+    },
+    {
+      label: "Results ready",
+      desc: p.status === "completed" ? "Scores and summary available." : "Will appear after completion.",
+      state: p.status === "completed" ? "done" : expired ? "blocked" : "pending",
+    },
+  ];
+}
+
+function TimelineRow({ step, last }: { step: Step; last: boolean }) {
+  const colors = {
+    done: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+    active: "bg-primary/20 text-primary border-primary/40 animate-pulse",
+    pending: "bg-white/5 text-muted-foreground border-white/10",
+    blocked: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+  }[step.state];
+  const Icon = step.state === "done" ? Check : step.state === "blocked" ? AlertTriangle : Clock;
+
+  return (
+    <div className="flex gap-3 pb-4 last:pb-0">
+      <div className="flex flex-col items-center">
+        <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 ${colors}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+        {!last && <div className="w-px flex-1 bg-white/10 mt-1" />}
+      </div>
+      <div className="flex-1 min-w-0 -mt-0.5">
+        <div className="flex items-baseline justify-between gap-2">
+          <div className="font-medium text-sm">{step.label}</div>
+          {step.at && (
+            <div className="text-[10px] text-muted-foreground shrink-0">{formatDate(step.at)}</div>
+          )}
+        </div>
+        <div className="text-xs text-muted-foreground mt-0.5">{step.desc}</div>
+      </div>
+    </div>
+  );
+}
+
+function ShareCard({
+  url,
+  code,
+  email,
+  title,
+}: {
+  url: string;
+  code: string;
+  email: string | null;
+  title: string;
+}) {
+  const [copied, setCopied] = useState<"url" | "code" | null>(null);
+  const copy = (val: string, kind: "url" | "code") => {
+    navigator.clipboard.writeText(val);
+    setCopied(kind);
+    setTimeout(() => setCopied(null), 1500);
+  };
+  const mailto = email
+    ? `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`Dynamic Compass invite: ${title}`)}&body=${encodeURIComponent(`You've been invited to complete an assessment.\n\nOpen: ${url}\nOr enter code: ${code}\n\nThis link expires in 7 days.`)}`
+    : `mailto:?subject=${encodeURIComponent(`Dynamic Compass invite: ${title}`)}&body=${encodeURIComponent(`Open: ${url}\nOr enter code: ${code}`)}`;
+
+  return (
+    <div className="glass rounded-2xl p-4 space-y-3">
+      <div>
+        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+          <Link2 className="w-3.5 h-3.5" /> Invite URL
+        </div>
+        <div className="flex gap-2">
+          <input
+            readOnly
+            value={url}
+            className="flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-xs font-mono truncate"
+          />
+          <button
+            onClick={() => copy(url, "url")}
+            className="rounded-xl bg-primary/15 text-primary px-3 text-xs font-medium inline-flex items-center gap-1.5 min-w-[88px] justify-center"
+          >
+            {copied === "url" ? (
+              <>
+                <Check className="w-3.5 h-3.5" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" /> Copy
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+      <div>
+        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+          <KeyRound className="w-3.5 h-3.5" /> Invite code
+        </div>
+        <div className="flex gap-2">
+          <input
+            readOnly
+            value={code}
+            className="flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-sm font-mono tracking-[0.3em] text-center"
+          />
+          <button
+            onClick={() => copy(code, "code")}
+            className="rounded-xl bg-primary/15 text-primary px-3 text-xs font-medium inline-flex items-center gap-1.5 min-w-[88px] justify-center"
+          >
+            {copied === "code" ? (
+              <>
+                <Check className="w-3.5 h-3.5" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" /> Copy
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+      <a
+        href={mailto}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30"
+      >
+        <Send className="w-4 h-4" /> {email ? `Email ${email}` : "Send by email"}
+      </a>
+    </div>
+  );
+}
+
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, { label: string; cls: string; Icon: typeof Clock }> = {
+    pending: { label: "Awaiting respondent", cls: "bg-primary/15 text-primary border-primary/30", Icon: Clock },
+    in_progress: {
+      label: "In progress",
+      cls: "bg-aurora-1/20 text-aurora-1 border-aurora-1/40",
+      Icon: PlayCircle,
+    },
+    completed: {
+      label: "Completed",
+      cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/40",
+      Icon: CheckCircle2,
+    },
+    expired: { label: "Expired", cls: "bg-amber-500/15 text-amber-400 border-amber-500/40", Icon: AlertTriangle },
+    draft: { label: "Draft", cls: "bg-white/5 text-muted-foreground border-white/10", Icon: Clock },
+  };
+  const v = map[status] ?? map.pending;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full border ${v.cls}`}
+    >
+      <v.Icon className="w-3 h-3" /> {v.label}
+    </span>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-[10px] uppercase tracking-wider text-muted-foreground px-1">{children}</div>
+  );
+}
+
+function formatDate(iso: string) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
