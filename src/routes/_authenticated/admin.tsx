@@ -685,6 +685,7 @@ function QuestionDialog({
           active: form.active,
           order_index: Number(form.order_index),
           branch_logic,
+          applies_to: form.applies_to,
         },
       });
     },
