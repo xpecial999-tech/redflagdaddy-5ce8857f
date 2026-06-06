@@ -54,6 +54,7 @@ export const listQuestions = createServerFn({ method: "POST" })
         category_id: z.string().uuid().optional(),
         includeInactive: z.boolean().default(true),
         risk_level: z.enum(["low", "medium", "high", "critical"]).optional(),
+        applies_to: RoleSchema.optional(),
         search: z.string().trim().max(200).optional(),
         limit: z.number().int().min(1).max(1000).default(50),
         offset: z.number().int().min(0).default(0),
@@ -70,11 +71,32 @@ export const listQuestions = createServerFn({ method: "POST" })
     if (data.category_id) q = q.eq("category_id", data.category_id);
     if (!data.includeInactive) q = q.eq("active", true);
     if (data.risk_level) q = q.eq("risk_level", data.risk_level);
+    if (data.applies_to) q = q.contains("applies_to", [data.applies_to]);
     if (data.search) q = q.ilike("question", `%${data.search}%`);
     q = q.range(data.offset, data.offset + data.limit - 1);
     const { data: rows, error, count } = await q;
     if (error) throw new Error(error.message);
     return { questions: rows ?? [], total: count ?? 0 };
+  });
+
+export const bulkSetAppliesTo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        ids: z.array(z.string().uuid()).min(1).max(2000),
+        applies_to: z.array(RoleSchema).min(1).max(3),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const sb = await assertAdmin(context.userId);
+    const { error } = await sb
+      .from("questions")
+      .update({ applies_to: data.applies_to })
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true as const, updated: data.ids.length };
   });
 
 export const upsertQuestion = createServerFn({ method: "POST" })
