@@ -187,7 +187,24 @@ function PartnerLinkView({
   partnerType: string;
 }) {
   const navigate = useNavigate();
+  const createFn = useServerFn(createGuestJourney);
   const [copied, setCopied] = useState(false);
+
+  const opposite: typeof partnerRoles[number] | "" =
+    partnerType === "Dominant"
+      ? "submissive"
+      : partnerType === "submissive"
+        ? "Dominant"
+        : "";
+  const [selfType, setSelfType] = useState<typeof partnerRoles[number] | "">(opposite);
+
+  const selfMutation = useMutation({
+    mutationFn: () =>
+      createFn({ data: { guestEmail, partnerEmail: "", partnerType: selfType as typeof partnerRoles[number] } }),
+    onSuccess: (res) => {
+      navigate({ to: "/journey/$code", params: { code: res.code } });
+    },
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
