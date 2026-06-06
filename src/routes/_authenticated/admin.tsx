@@ -175,6 +175,7 @@ function QuestionsTab() {
   const arcFn = useServerFn(archiveQuestion);
   const reorderFn = useServerFn(reorderQuestions);
   const bulkAppliesFn = useServerFn(bulkSetAppliesTo);
+  const aiTagFn = useServerFn(aiSuggestAndApplyAppliesTo);
 
   const [selectedCat, setSelectedCat] = useState<string>("all");
   const [risk, setRisk] = useState<string>("all");
