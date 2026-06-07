@@ -81,9 +81,16 @@ async function buildAnswerDigest(
     const score = Number(r.score) || 0;
     const risk = r.questions?.risk_level ?? "low";
     if (Math.abs(score) >= 3 || risk === "critical" || risk === "high") {
+      const rawA = r.answer;
+      const safeA =
+        typeof rawA === "string"
+          ? rawA.slice(0, 500)
+          : Array.isArray(rawA)
+            ? rawA.slice(0, 20).map((v) => (typeof v === "string" ? v.slice(0, 200) : v))
+            : rawA;
       byCat[cat].topRisk.push({
-        q: r.questions?.question ?? "",
-        a: r.answer,
+        q: (r.questions?.question ?? "").slice(0, 300),
+        a: safeA,
         risk,
         score,
       });
