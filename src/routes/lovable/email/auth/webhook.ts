@@ -31,7 +31,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "safe-pathways-platform"
+const SITE_NAME = "RedFlagDaddy.com"
 const SENDER_DOMAIN = "notify.redflagdaddy.com"
 const ROOT_DOMAIN = "redflagdaddy.com"
 const FROM_DOMAIN = "redflagdaddy.com"
