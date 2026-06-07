@@ -3,10 +3,21 @@ import { z } from "zod";
 
 const CodeSchema = z.object({ code: z.string().trim().min(4).max(64) });
 
+// Bounded answer shapes: text capped at 4000 chars; arrays/objects capped to
+// prevent storage abuse and inflated AI token costs.
+const AnswerSchema = z.union([
+  z.null(),
+  z.boolean(),
+  z.number().finite(),
+  z.string().max(4000),
+  z.array(z.union([z.string().max(500), z.number().finite(), z.boolean()])).max(50),
+  z.record(z.string().max(100), z.union([z.string().max(500), z.number().finite(), z.boolean()])),
+]);
+
 const SaveSchema = z.object({
   code: z.string().trim().min(4).max(64),
   questionId: z.string().uuid(),
-  answer: z.any(),
+  answer: AnswerSchema,
 });
 
 const CompleteSchema = z.object({ code: z.string().trim().min(4).max(64) });
