@@ -1,15 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2 } from "lucide-react";
+import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2 } from "lucide-react";
 import { createJourney } from "@/lib/journeys.functions";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
   component: Create,
 });
+
+const selfRoles = ["Dominant", "submissive", "switch"] as const;
+type SelfRole = (typeof selfRoles)[number];
 
 const participantTypes = [
   { value: "Dominant", desc: "They lead in the dynamic." },
