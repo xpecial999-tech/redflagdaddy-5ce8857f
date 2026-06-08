@@ -114,7 +114,7 @@ function JourneyTracker() {
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {journey.participant_type} · journey
             </p>
-            <h1 className="text-2xl font-display font-semibold truncate">{journey.title}</h1>
+            <h1 className="text-2xl font-display font-semibold break-words">{journey.title}</h1>
           </div>
           <StatusPill status={effectiveStatus} />
         </div>
