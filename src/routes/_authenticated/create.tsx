@@ -209,8 +209,30 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
   );
 }
 
-function SuccessScreen({ url, code, email, title }: { url: string; code: string; email: string | null; title: string }) {
+function SuccessScreen({ url, code, email, title, partnerType }: { url: string; code: string; email: string | null; title: string; partnerType: SelfRole }) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
+  const navigate = useNavigate();
+  const createFn = useServerFn(createJourney);
+  const opposite: SelfRole | "" =
+    partnerType === "Dominant" ? "submissive" : partnerType === "submissive" ? "Dominant" : "";
+  const [selfType, setSelfType] = useState<SelfRole | "">(opposite);
+
+  const selfMutation = useMutation({
+    mutationFn: () =>
+      createFn({
+        data: {
+          title: "My self-assessment",
+          participantType: selfType as SelfRole,
+          recipientName: null,
+          recipientEmail: null,
+          notes: null,
+        },
+      }),
+    onSuccess: (res) => {
+      navigate({ to: "/assessment/$code", params: { code: res.journey.invite_code } });
+    },
+  });
+
   const copy = (val: string, kind: "url" | "code") => {
     navigator.clipboard.writeText(val);
     setCopied(kind);
@@ -265,6 +287,43 @@ function SuccessScreen({ url, code, email, title }: { url: string; code: string;
       <a href={mailto} className="block w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30">
         <Mail className="w-4 h-4" /> Send by email
       </a>
+
+      <div className="glass-strong rounded-3xl p-6 text-center space-y-4">
+        <div className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-br from-aurora-1 to-aurora-2 items-center justify-center mx-auto">
+          <UserCircle2 className="w-5 h-5 text-primary-foreground" />
+        </div>
+        <div>
+          <h3 className="font-display text-lg font-semibold tracking-tight">Take your own assessment too</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Add your perspective — we'll compare both sides in the final report.
+          </p>
+        </div>
+        <div>
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">I am a…</span>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {selfRoles.map((r) => (
+              <button
+                type="button"
+                key={r}
+                onClick={() => setSelfType(r)}
+                className={`rounded-xl border px-2 py-3 text-xs font-medium transition ${selfType === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+        {selfMutation.error && (
+          <p className="text-xs text-destructive">{(selfMutation.error as Error).message}</p>
+        )}
+        <button
+          onClick={() => selfMutation.mutate()}
+          disabled={!selfType || selfMutation.isPending}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
+        >
+          {selfMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Preparing…</> : <>Start my assessment <ArrowRight className="w-4 h-4" /></>}
+        </button>
+      </div>
     </motion.div>
   );
 }
