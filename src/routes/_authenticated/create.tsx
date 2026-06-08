@@ -141,6 +141,7 @@ function Create() {
             code={mutation.data.journey.invite_code}
             email={mutation.data.journey.recipient_email}
             title={mutation.data.journey.title}
+            partnerType={mutation.data.journey.participant_type as SelfRole}
           />
         )}
       </AnimatePresence>
