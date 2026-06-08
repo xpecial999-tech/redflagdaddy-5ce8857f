@@ -312,27 +312,11 @@ function ShareCard({
         <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
           <KeyRound className="w-3.5 h-3.5" /> Invite code
         </div>
-        <div className="flex gap-2">
-          <input
-            readOnly
-            value={code}
-            className="flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-sm font-mono tracking-[0.3em] text-center"
-          />
-          <button
-            onClick={() => copy(code, "code")}
-            className="rounded-xl bg-primary/15 text-primary px-3 text-xs font-medium inline-flex items-center gap-1.5 min-w-[88px] justify-center"
-          >
-            {copied === "code" ? (
-              <>
-                <Check className="w-3.5 h-3.5" /> Copied
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5" /> Copy
-              </>
-            )}
-          </button>
-        </div>
+        <input
+          readOnly
+          value={code}
+          className="w-full rounded-xl bg-input border border-border px-3 py-2.5 text-sm font-mono tracking-[0.3em] text-center"
+        />
       </div>
       <a
         href={mailto}
