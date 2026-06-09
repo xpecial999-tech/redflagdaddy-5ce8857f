@@ -1,35 +1,63 @@
-## Goal
+## 1. Database
 
-Make every slider/scale question in the assessment use the same "on a scale of 1 to 10" format — both in the wording shown to the user and in the underlying answer config used by the slider UI.
+New migration adds:
 
-Today there are 121 `slider` + `scale` questions, with a mix of ranges (1–4, 1–5, 1–6, 0–100) and inconsistent prompt wording ("On a scale of 1 to 4…", "Rate the…", "How comfortable…").
+- `app_settings` (singleton, one row): `paid_mode_enabled boolean` (default `false`), `price_cents int` (default `100`), `currency text` (default `'USD'`). Service role read/write only; `authenticated` may `SELECT` so we can show banners.
+- `users.is_paid boolean default false` and `users.paid_at timestamptz`.
+- `journeys.category_ids uuid[]` (nullable — null = default mixed 100-question set).
+- `journeys.question_limit int` (nullable — null = use entitlement default).
+- `payments` table: `id`, `user_id`, `provider text` (`'peach'`), `provider_ref text`, `amount_cents`, `currency`, `status` (`pending|paid|failed`), `created_at`, `updated_at`. Service-role write; user can read own rows.
 
-## Changes
+## 2. Question selection
 
-### 1. Database migration — normalize all slider/scale questions
+`getAssessment` builds a deterministic question list using the journey id as a seed:
 
-For every question where `question_type IN ('slider','scale')`:
+- Fetch active questions matching `applies_to`.
+- If `journey.category_ids` set → restrict to those categories (deep-dive uses every question in the chosen categories).
+- Else → trim to `effectiveLimit` proportional per category, sorted by `(weight desc, risk_level rank desc, id asc)` to be stable.
+- `effectiveLimit` = `journey.question_limit ?? (paidMode && creator not paid ? 20 : 100)`.
 
-- **`answer_options`** → set to `[{"min": 1, "max": 10, "step": 1}]`
-  (This is the shape the slider UI already reads from `answer_options[0]`. The `scale` renderer is already hardcoded to 1–10 and will keep working.)
-- **`question` text** → rewrite any "on a scale of 1 to N" / "On a scale of 1-N" phrase to "on a scale of 1 to 10". Questions that don't currently mention a scale (e.g. "How important is aftercare to you?") get " (on a scale of 1 to 10)" appended so the rubric is explicit.
+Guest journeys (no creator) keep the 100 default; admin toggle only constrains signed-in free users.
 
-Scoring continues to work via the existing `computeScore` path for `slider`/`scale`: `score = answer * weight`. Per-option `score` values in the old `answer_options` are dropped — they were only meaningful for the old non-uniform ranges.
+## 3. Create flow
 
-### 2. Frontend — no code changes required
+`src/routes/_authenticated/create.tsx` gains a new step between "role" and "respondent":
 
-`src/routes/assessment.$code.tsx` already:
-- Renders `scale` as a 1–10 slider regardless of options.
-- Renders `slider` from `{min, max, step}` in `answer_options[0]`, defaulting to mid-range, with the NaN guards we added previously.
+- "Full assessment (≈100 questions)" or "Category deep-dive" (multi-select categories with question counts).
+- Free + paid-mode-on users see "20 question limit" notice and a disabled deep-dive (with upgrade link), and are blocked at 2 active journeys (server-enforced).
 
-After the migration both branches will render identical 1–10 sliders.
+`createJourney` now accepts `categoryIds?: string[]` and enforces:
+- 2-journey cap when free + paid mode on (counts non-deleted journeys per `creator_id`).
+- Per-tier question limit is stamped onto the row at create time.
 
-### 3. Existing responses
+## 4. Entitlement + gating
 
-Old responses with answers like `"3"` (on a 1–4 scale) will keep their stored value, but they'll display on a 1–10 slider. We won't back-fill historical responses — only new submissions use the unified 1–10 scale. If you'd rather we wipe or rescale historical responses, say so and I'll add that to the migration.
+New `getEntitlement` server fn returns `{ paidModeEnabled, isPaid, freeQuestionCap: 20, freeJourneyCap: 2 }`. UI uses it to:
 
-## Out of scope
+- Hide "Download PDF" + "Enable share link" buttons on results.tsx for free users (replace with an Upgrade CTA → `/upgrade`).
+- Show remaining-journey counter on dashboard / create.
+- Surface "Upgrade" link in app shell when paid mode is on and user is not paid.
 
-- No change to question categories, weights, branching, or which questions apply to which participant type.
-- No change to `single_choice`, `multi_choice`, `boolean`, `scenario`, or `text` questions.
-- No change to results calculation logic.
+## 5. Peach Payments (sandbox)
+
+- Add `/upgrade` route: shows $1 unlock CTA, calls `startPeachCheckout` which uses Peach's Copy-and-Pay flow:
+  - `POST https://eu-test.oppwa.com/v1/checkouts` with `entityId`, `amount=1.00`, `currency=USD`, `paymentType=DB`, auth header `Bearer ${PEACH_ACCESS_TOKEN}`. Returns `checkoutId`.
+  - Page loads Peach's `paymentWidgets.js?checkoutId=...` and submits to `/upgrade/return?id=...`.
+- `/upgrade/return` server route polls Peach `GET /v1/checkouts/{id}/payment`, on success inserts `payments` row + sets `users.is_paid=true, paid_at=now()`, then redirects to `/dashboard?upgraded=1`.
+- `/api/public/peach/webhook` accepts Peach server-to-server notifications (best-effort second confirmation). Verifies via a shared `PEACH_WEBHOOK_SECRET` header.
+- Required secrets: `PEACH_ENTITY_ID`, `PEACH_ACCESS_TOKEN`, `PEACH_WEBHOOK_SECRET`, `PEACH_BASE_URL` (defaults to `https://eu-test.oppwa.com`).
+
+## 6. Admin
+
+`admin.tsx` gets a new "Settings" tab:
+- Big switch: **Paid mode** (off = current behaviour, on = enforce 20-question + 2-journey + no-PDF limits for non-paid users).
+- Read-only price ($1) + currency display.
+- Server fns `getAppSettings` / `setAppSettings` (admin-guarded via existing `assertAdmin`).
+
+## Technical notes
+
+- Deterministic 100-question selection: implemented in `getAssessment` (pure TS) using mulberry32 seeded from `journey.id`. No DB sample call needed.
+- Free + admin toggle is the only place a hard 20-cap is applied; existing journeys created before the toggle keep their stored `question_limit` (null = recompute at fetch).
+- `category_ids` lives on `journeys`, not invites, so both creator and respondent see the same set.
+- All Peach calls are server-only (`createServerFn` / `/api/public/...`). The widget is loaded client-side from Peach's CDN.
+- I'll request the three Peach secrets via `add_secret` once you confirm — they need to be entered before checkout will work, but the rest (admin toggle, 20Q/2-journey caps, PDF gating, category deep-dives) works without them.
