@@ -46,6 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { getAdminSettings, setPaidMode } from "@/lib/entitlement.functions";
 
 import {
   listQuestions,
@@ -204,7 +205,7 @@ function SettingsTab() {
   const q = useQuery({ queryKey: ["admin-settings"], queryFn: () => getFn() });
   const m = useMutation({
     mutationFn: (enabled: boolean) => setFn({ data: { enabled } }),
-    onSuccess: (r) => {
+    onSuccess: (r: { enabled: boolean }) => {
       toast.success(r.enabled ? "Paid mode enabled" : "Paid mode disabled");
       qc.invalidateQueries({ queryKey: ["admin-settings"] });
       qc.invalidateQueries({ queryKey: ["entitlement"] });
