@@ -90,7 +90,7 @@ function ResultsPage() {
     <div className="space-y-6">
       {/* Action bar */}
       <div className="flex flex-wrap gap-2 justify-end no-print">
-        {analysis && (
+        {analysis && ent.data?.canDownloadReport && (
           <Button
             variant="outline"
             size="sm"
@@ -99,7 +99,7 @@ function ResultsPage() {
             <Download className="h-4 w-4 mr-1.5" /> Download PDF
           </Button>
         )}
-        {analysis && (
+        {analysis && ent.data?.canDownloadReport && (
           <Button
             variant={share?.enabled ? "secondary" : "outline"}
             size="sm"
@@ -110,7 +110,12 @@ function ResultsPage() {
             {share?.enabled ? "Sharing on" : "Enable share link"}
           </Button>
         )}
-        {shareUrl && (
+        {analysis && ent.data && !ent.data.canDownloadReport && (
+          <Link to="/upgrade" className="inline-flex items-center text-xs rounded-md bg-primary/15 text-primary px-3 py-1.5 font-medium">
+            <Lock className="h-3.5 w-3.5 mr-1.5" /> Upgrade to download / share
+          </Link>
+        )}
+        {shareUrl && ent.data?.canDownloadReport && (
           <Button variant="outline" size="sm" onClick={copyShare}>
             {copied ? (
               <Check className="h-4 w-4 mr-1.5" />
