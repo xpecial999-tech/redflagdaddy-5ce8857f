@@ -33,12 +33,14 @@ function ResultsPage() {
   const fetchResults = useServerFn(getResults);
   const runAi = useServerFn(runAnalysis);
   const toggleShare = useServerFn(toggleShareReport);
+  const entFn = useServerFn(getEntitlement);
   const [copied, setCopied] = useState(false);
 
   const q = useQuery({
     queryKey: ["results", id],
     queryFn: () => fetchResults({ data: { journeyId: id } }),
   });
+  const ent = useQuery({ queryKey: ["entitlement"], queryFn: () => entFn() });
 
   const m = useMutation({
     mutationFn: () => runAi({ data: { journeyId: id } }),
