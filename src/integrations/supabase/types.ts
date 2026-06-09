@@ -32,6 +32,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          currency: string
+          id: boolean
+          paid_mode_enabled: boolean
+          price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          currency?: string
+          id?: boolean
+          paid_mode_enabled?: boolean
+          price_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          currency?: string
+          id?: boolean
+          paid_mode_enabled?: boolean
+          price_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -159,6 +183,7 @@ export type Database = {
       }
       journeys: {
         Row: {
+          category_ids: string[] | null
           created_at: string
           creator_id: string | null
           guest_email: string | null
@@ -166,12 +191,14 @@ export type Database = {
           invite_code: string
           invite_url: string | null
           participant_type: Database["public"]["Enums"]["participant_type"]
+          question_limit: number | null
           recipient_email: string | null
           status: Database["public"]["Enums"]["journey_status"]
           title: string
           updated_at: string
         }
         Insert: {
+          category_ids?: string[] | null
           created_at?: string
           creator_id?: string | null
           guest_email?: string | null
@@ -179,12 +206,14 @@ export type Database = {
           invite_code?: string
           invite_url?: string | null
           participant_type?: Database["public"]["Enums"]["participant_type"]
+          question_limit?: number | null
           recipient_email?: string | null
           status?: Database["public"]["Enums"]["journey_status"]
           title: string
           updated_at?: string
         }
         Update: {
+          category_ids?: string[] | null
           created_at?: string
           creator_id?: string | null
           guest_email?: string | null
@@ -192,10 +221,50 @@ export type Database = {
           invite_code?: string
           invite_url?: string | null
           participant_type?: Database["public"]["Enums"]["participant_type"]
+          question_limit?: number | null
           recipient_email?: string | null
           status?: Database["public"]["Enums"]["journey_status"]
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          id: string
+          provider: string
+          provider_ref: string | null
+          raw: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          id?: string
+          provider: string
+          provider_ref?: string | null
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          provider?: string
+          provider_ref?: string | null
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -442,7 +511,9 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_paid: boolean
           name: string | null
+          paid_at: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -450,7 +521,9 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          is_paid?: boolean
           name?: string | null
+          paid_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -458,7 +531,9 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_paid?: boolean
           name?: string | null
+          paid_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
