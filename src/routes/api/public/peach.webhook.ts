@@ -28,7 +28,7 @@ export const Route = createFileRoute("/api/public/peach/webhook")({
           .from("payments")
           .update({
             status: ok ? "paid" : "failed",
-            raw: payload as unknown as Record<string, unknown>,
+            raw: payload as never,
             updated_at: new Date().toISOString(),
           })
           .eq("provider", "peach")

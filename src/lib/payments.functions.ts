@@ -56,7 +56,7 @@ export const startPeachCheckout = createServerFn({ method: "POST" })
       amount_cents: cents,
       currency,
       status: "pending",
-      raw: json as unknown as Record<string, unknown>,
+      raw: json as never,
     });
 
     return { checkoutId: json.id, scriptUrl: `${PEACH_BASE}/v1/paymentWidgets.js?checkoutId=${json.id}` };
@@ -80,7 +80,7 @@ export const finalizePeachPayment = createServerFn({ method: "POST" })
       .from("payments")
       .update({
         status: ok ? "paid" : "failed",
-        raw: json as unknown as Record<string, unknown>,
+        raw: json as never,
         updated_at: new Date().toISOString(),
       })
       .eq("provider", "peach")
