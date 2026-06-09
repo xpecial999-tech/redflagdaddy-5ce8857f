@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { generateInviteCode } from "./utils.server";
+import { loadEntitlement, DEFAULT_QUESTION_LIMIT } from "./entitlement.functions";
 
 const CreateJourneySchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -9,6 +10,7 @@ const CreateJourneySchema = z.object({
   recipientName: z.string().trim().max(120).optional().nullable(),
   recipientEmail: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
   notes: z.string().trim().max(2000).optional().nullable(),
+  categoryIds: z.array(z.string().uuid()).max(30).optional().nullable(),
 });
 
 function originFromRequest(): string {
@@ -20,6 +22,17 @@ export const createJourney = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => CreateJourneySchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    const ent = await loadEntitlement(userId);
+    if (!ent.canCreateJourney) {
+      throw new Error(
+        `Free plan limit reached (${ent.freeJourneyCap} journeys). Upgrade to create more.`,
+      );
+    }
+    // Free users can't use category deep-dive
+    const categoryIds = ent.canDeepDive && data.categoryIds && data.categoryIds.length > 0 ? data.categoryIds : null;
+    const questionLimit = categoryIds ? null : ent.questionLimit ?? DEFAULT_QUESTION_LIMIT;
+
     const code = generateInviteCode();
     const origin = originFromRequest();
     const inviteUrl = `${origin}/journey/${code}`;
@@ -34,13 +47,14 @@ export const createJourney = createServerFn({ method: "POST" })
         invite_url: inviteUrl,
         recipient_email: data.recipientEmail || null,
         status: "pending",
+        category_ids: categoryIds,
+        question_limit: questionLimit,
       })
-      .select("id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at")
+      .select("id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, category_ids, question_limit")
       .single();
 
     if (error) throw new Error(error.message);
 
-    // Create matching invite row (7-day expiry default via schema)
     const { error: inviteErr } = await supabase.from("invites").insert({
       journey_id: journey.id,
       code,
@@ -77,7 +91,7 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
     const { data: journey, error } = await supabase
       .from("journeys")
       .select(
-        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, updated_at, creator_id",
+        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, updated_at, creator_id, category_ids, question_limit",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -85,7 +99,7 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
     if (!journey) throw new Error("Journey not found");
     if (journey.creator_id !== userId) throw new Error("Not authorized");
 
-    const [{ data: invite }, { count: responseCount }, { count: questionCount }] = await Promise.all([
+    const [{ data: invite }, { count: responseCount }] = await Promise.all([
       supabase
         .from("invites")
         .select("id, expires_at, completed_at, created_at")
@@ -95,15 +109,23 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
         .from("responses")
         .select("id", { count: "exact", head: true })
         .eq("journey_id", journey.id),
-      supabase
+    ]);
+
+    // Total questions = limit if set, otherwise count of relevant questions
+    let total = journey.question_limit ?? 0;
+    if (!total) {
+      let q = supabase
         .from("questions")
         .select("id", { count: "exact", head: true })
         .eq("active", true)
-        .contains("applies_to", [journey.participant_type]),
-    ]);
-
+        .contains("applies_to", [journey.participant_type]);
+      if (journey.category_ids && journey.category_ids.length > 0) {
+        q = q.in("category_id", journey.category_ids);
+      }
+      const { count } = await q;
+      total = count ?? 0;
+    }
     const answered = responseCount ?? 0;
-    const total = questionCount ?? 0;
     const progress = total > 0 ? Math.min(100, Math.round((answered / total) * 100)) : 0;
 
     const expiresAt = invite?.expires_at ?? null;
@@ -133,4 +155,3 @@ export const deleteJourney = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
-
