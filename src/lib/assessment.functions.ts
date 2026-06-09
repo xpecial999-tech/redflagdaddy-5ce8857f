@@ -80,18 +80,116 @@ function computeScore(qType: string, options: AnswerOption[], weight: number, an
   }
 }
 
+// Deterministic PRNG seeded by string
+function mulberry32(seed: number) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = seed;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function seedFromString(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+const RISK_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+
+function selectQuestions<T extends { id: string; category_id: string; weight: number | string; risk_level: string }>(
+  questions: T[],
+  limit: number,
+  seedKey: string,
+): T[] {
+  if (questions.length <= limit) return questions;
+  const byCat = new Map<string, T[]>();
+  for (const q of questions) {
+    const arr = byCat.get(q.category_id) ?? [];
+    arr.push(q);
+    byCat.set(q.category_id, arr);
+  }
+  const rand = mulberry32(seedFromString(seedKey));
+  const sortedByCat = new Map<string, T[]>();
+  for (const [k, list] of byCat) {
+    const tagged = list.map((q) => ({
+      q,
+      score: (Number(q.weight) || 1) * 10 + (RISK_RANK[q.risk_level] ?? 1),
+      r: rand(),
+    }));
+    tagged.sort((a, b) => b.score - a.score || a.r - b.r);
+    sortedByCat.set(k, tagged.map((t) => t.q));
+  }
+  const total = questions.length;
+  const allocations = new Map<string, number>();
+  let allocated = 0;
+  for (const [k, list] of sortedByCat) {
+    const n = Math.max(1, Math.floor((list.length / total) * limit));
+    allocations.set(k, Math.min(n, list.length));
+    allocated += allocations.get(k)!;
+  }
+  const cats = Array.from(sortedByCat.keys());
+  while (allocated > limit) {
+    const k = cats[Math.floor(rand() * cats.length)];
+    if ((allocations.get(k) ?? 0) > 1) {
+      allocations.set(k, (allocations.get(k) ?? 0) - 1);
+      allocated--;
+    }
+  }
+  while (allocated < limit) {
+    const k = cats[Math.floor(rand() * cats.length)];
+    const cur = allocations.get(k) ?? 0;
+    if (cur < (sortedByCat.get(k)?.length ?? 0)) {
+      allocations.set(k, cur + 1);
+      allocated++;
+    }
+  }
+  const selected: T[] = [];
+  for (const [k, n] of allocations) {
+    selected.push(...(sortedByCat.get(k) ?? []).slice(0, n));
+  }
+  return selected;
+}
+
 export const getAssessment = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => CodeSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code);
 
-    const { data: questions, error: qErr } = await supabaseAdmin
+    const { data: jExt } = await supabaseAdmin
+      .from("journeys")
+      .select("category_ids, question_limit, creator_id")
+      .eq("id", journey.id)
+      .maybeSingle();
+    const categoryIds = (jExt?.category_ids ?? null) as string[] | null;
+    let limit = (jExt?.question_limit ?? null) as number | null;
+
+    if (limit == null && jExt?.creator_id) {
+      const { loadEntitlement } = await import("./entitlement.functions");
+      const ent = await loadEntitlement(jExt.creator_id as string);
+      if (!categoryIds) limit = ent.questionLimit;
+    } else if (limit == null && !categoryIds) {
+      limit = 100;
+    }
+
+    let qy = supabaseAdmin
       .from("questions")
       .select("id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic, applies_to")
       .eq("active", true)
-      .contains("applies_to", [journey.participant_type])
-      .order("order_index", { ascending: true });
+      .contains("applies_to", [journey.participant_type]);
+    if (categoryIds && categoryIds.length > 0) qy = qy.in("category_id", categoryIds);
+    const { data: allQuestions, error: qErr } = await qy.order("order_index", { ascending: true });
     if (qErr) throw new Error(qErr.message);
+
+    const questions =
+      limit && !categoryIds
+        ? selectQuestions(allQuestions ?? [], limit, journey.id)
+        : (allQuestions ?? []);
 
     const { data: categories, error: cErr } = await supabaseAdmin
       .from("question_categories")
@@ -107,7 +205,7 @@ export const getAssessment = createServerFn({ method: "POST" })
     return {
       journey,
       invite,
-      questions: questions ?? [],
+      questions,
       categories: categories ?? [],
       responses: responses ?? [],
     };
