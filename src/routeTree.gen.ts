@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportTokenRouteImport } from './routes/report.$token'
 import { Route as JourneyCodeRouteImport } from './routes/journey.$code'
 import { Route as AssessmentCodeRouteImport } from './routes/assessment.$code'
+import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
@@ -33,6 +34,7 @@ import { Route as AuthenticatedJourneysIdRouteImport } from './routes/_authentic
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicPeachWebhookRouteImport } from './routes/api/public/peach.webhook'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -87,6 +89,11 @@ const AssessmentCodeRoute = AssessmentCodeRouteImport.update({
   id: '/assessment/$code',
   path: '/assessment/$code',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedUpgradeRoute = AuthenticatedUpgradeRouteImport.update({
+  id: '/upgrade',
+  path: '/upgrade',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
@@ -158,6 +165,11 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPeachWebhookRoute = ApiPublicPeachWebhookRouteImport.update({
+  id: '/api/public/peach/webhook',
+  path: '/api/public/peach/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -171,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRouteWithChildren
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/report/$token': typeof ReportTokenRoute
@@ -180,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
   '/results/$id': typeof AuthenticatedResultsIdRoute
+  '/api/public/peach/webhook': typeof ApiPublicPeachWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -196,6 +210,7 @@ export interface FileRoutesByTo {
   '/create': typeof AuthenticatedCreateRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRouteWithChildren
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/report/$token': typeof ReportTokenRoute
@@ -205,6 +220,7 @@ export interface FileRoutesByTo {
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
   '/results/$id': typeof AuthenticatedResultsIdRoute
+  '/api/public/peach/webhook': typeof ApiPublicPeachWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -223,6 +239,7 @@ export interface FileRoutesById {
   '/_authenticated/create': typeof AuthenticatedCreateRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
+  '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/report/$token': typeof ReportTokenRoute
@@ -232,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/_authenticated/profile/safety': typeof AuthenticatedProfileSafetyRoute
   '/_authenticated/results/$id': typeof AuthenticatedResultsIdRoute
+  '/api/public/peach/webhook': typeof ApiPublicPeachWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -250,6 +268,7 @@ export interface FileRouteTypes {
     | '/create'
     | '/dashboard'
     | '/profile'
+    | '/upgrade'
     | '/assessment/$code'
     | '/journey/$code'
     | '/report/$token'
@@ -259,6 +278,7 @@ export interface FileRouteTypes {
     | '/profile/privacy'
     | '/profile/safety'
     | '/results/$id'
+    | '/api/public/peach/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -275,6 +295,7 @@ export interface FileRouteTypes {
     | '/create'
     | '/dashboard'
     | '/profile'
+    | '/upgrade'
     | '/assessment/$code'
     | '/journey/$code'
     | '/report/$token'
@@ -284,6 +305,7 @@ export interface FileRouteTypes {
     | '/profile/privacy'
     | '/profile/safety'
     | '/results/$id'
+    | '/api/public/peach/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -301,6 +323,7 @@ export interface FileRouteTypes {
     | '/_authenticated/create'
     | '/_authenticated/dashboard'
     | '/_authenticated/profile'
+    | '/_authenticated/upgrade'
     | '/assessment/$code'
     | '/journey/$code'
     | '/report/$token'
@@ -310,6 +333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile/privacy'
     | '/_authenticated/profile/safety'
     | '/_authenticated/results/$id'
+    | '/api/public/peach/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -327,6 +351,7 @@ export interface RootRouteChildren {
   AssessmentCodeRoute: typeof AssessmentCodeRoute
   JourneyCodeRoute: typeof JourneyCodeRoute
   ReportTokenRoute: typeof ReportTokenRoute
+  ApiPublicPeachWebhookRoute: typeof ApiPublicPeachWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -410,6 +435,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/assessment/$code'
       preLoaderRoute: typeof AssessmentCodeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/upgrade': {
+      id: '/_authenticated/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof AuthenticatedUpgradeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
@@ -502,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/peach/webhook': {
+      id: '/api/public/peach/webhook'
+      path: '/api/public/peach/webhook'
+      fullPath: '/api/public/peach/webhook'
+      preLoaderRoute: typeof ApiPublicPeachWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -528,6 +567,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCreateRoute: typeof AuthenticatedCreateRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRouteWithChildren
+  AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
   AuthenticatedJourneysIdRoute: typeof AuthenticatedJourneysIdRoute
   AuthenticatedResultsIdRoute: typeof AuthenticatedResultsIdRoute
 }
@@ -537,6 +577,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCreateRoute: AuthenticatedCreateRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRouteWithChildren,
+  AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
   AuthenticatedJourneysIdRoute: AuthenticatedJourneysIdRoute,
   AuthenticatedResultsIdRoute: AuthenticatedResultsIdRoute,
 }
@@ -556,6 +597,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssessmentCodeRoute: AssessmentCodeRoute,
   JourneyCodeRoute: JourneyCodeRoute,
   ReportTokenRoute: ReportTokenRoute,
+  ApiPublicPeachWebhookRoute: ApiPublicPeachWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

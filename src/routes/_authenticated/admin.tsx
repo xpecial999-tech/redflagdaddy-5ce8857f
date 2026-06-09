@@ -46,6 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { getAdminSettings, setPaidMode } from "@/lib/entitlement.functions";
 
 import {
   listQuestions,
@@ -169,11 +170,12 @@ function AdminPanel() {
 
 
       <Tabs defaultValue="questions" className="w-full">
-        <TabsList className="grid grid-cols-4 w-full h-auto">
+        <TabsList className="grid grid-cols-5 w-full h-auto">
           <TabsTrigger value="questions" className="text-xs sm:text-sm py-2">Questions</TabsTrigger>
           <TabsTrigger value="categories" className="text-xs sm:text-sm py-2">Categories</TabsTrigger>
           <TabsTrigger value="journeys" className="text-xs sm:text-sm py-2">Journeys</TabsTrigger>
           <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2">Analytics</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs sm:text-sm py-2">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="questions" className="mt-4">
@@ -188,7 +190,45 @@ function AdminPanel() {
         <TabsContent value="analytics" className="mt-4">
           <AnalyticsTab />
         </TabsContent>
+        <TabsContent value="settings" className="mt-4">
+          <SettingsTab />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function SettingsTab() {
+  const getFn = useServerFn(getAdminSettings);
+  const setFn = useServerFn(setPaidMode);
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["admin-settings"], queryFn: () => getFn() });
+  const m = useMutation({
+    mutationFn: (enabled: boolean) => setFn({ data: { enabled } }),
+    onSuccess: (r: { enabled: boolean }) => {
+      toast.success(r.enabled ? "Paid mode enabled" : "Paid mode disabled");
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      qc.invalidateQueries({ queryKey: ["entitlement"] });
+    },
+  });
+  const enabled = !!q.data?.paid_mode_enabled;
+  return (
+    <div className="space-y-4 max-w-2xl">
+      <div className="glass-strong rounded-2xl p-5 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-semibold">Paid mode</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Off: every user has full access (current behaviour).<br />
+              On: free users get 20-question journeys, 2 journeys max, and no PDF/share. $1 one-time unlocks full access via Peach Payments.
+            </p>
+          </div>
+          <Switch checked={enabled} disabled={m.isPending || q.isLoading} onCheckedChange={(v) => m.mutate(v)} />
+        </div>
+        <div className="text-xs text-muted-foreground border-t border-border pt-3">
+          Price: <span className="font-mono">${((q.data?.price_cents ?? 100) / 100).toFixed(2)} {q.data?.currency ?? "USD"}</span>
+        </div>
+      </div>
     </div>
   );
 }
