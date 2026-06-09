@@ -1,16 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Share2, Link2, Check } from "lucide-react";
+import { Loader2, Download, Share2, Link2, Check, Lock } from "lucide-react";
 import { toast } from "sonner";
 import {
   getResults,
   runAnalysis,
   toggleShareReport,
 } from "@/lib/analysis.functions";
+import { getEntitlement } from "@/lib/entitlement.functions";
 import { ReportView } from "@/components/ReportView";
 
 export const Route = createFileRoute("/_authenticated/results/$id")({

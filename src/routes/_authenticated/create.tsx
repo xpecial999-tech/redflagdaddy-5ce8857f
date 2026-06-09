@@ -2,9 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2 } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers } from "lucide-react";
 import { createJourney } from "@/lib/journeys.functions";
+import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
@@ -20,14 +21,22 @@ const participantTypes = [
   { value: "switch", desc: "They move between roles." },
 ] as const;
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3 | 4 | 5;
 type ParticipantType = (typeof participantTypes)[number]["value"];
 
 function Create() {
   const createFn = useServerFn(createJourney);
+  const entFn = useServerFn(getEntitlement);
+  const catsFn = useServerFn(listPublicCategories);
+
+  const ent = useQuery({ queryKey: ["entitlement"], queryFn: () => entFn() });
+  const cats = useQuery({ queryKey: ["public-categories"], queryFn: () => catsFn() });
+
   const [step, setStep] = useState<Step>(1);
   const [title, setTitle] = useState("");
   const [participantType, setParticipantType] = useState<ParticipantType>("submissive");
+  const [mode, setMode] = useState<"full" | "deep">("full");
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [notes, setNotes] = useState("");
@@ -41,30 +50,49 @@ function Create() {
           recipientName: recipientName.trim() || null,
           recipientEmail: recipientEmail.trim() || null,
           notes: notes.trim() || null,
+          categoryIds: mode === "deep" && categoryIds.length > 0 ? categoryIds : null,
         },
       }),
-    onSuccess: () => setStep(4),
+    onSuccess: () => setStep(5),
   });
+
+  const canDeepDive = ent.data?.canDeepDive ?? true;
+  const canCreate = ent.data?.canCreateJourney ?? true;
+  const qLimit = ent.data?.questionLimit ?? 100;
 
   const canContinue =
     (step === 1 && title.trim().length > 0) ||
     (step === 2 && !!participantType) ||
-    (step === 3 && true);
+    (step === 3 && (mode === "full" || categoryIds.length > 0)) ||
+    (step === 4 && true);
 
   return (
     <div className="space-y-6">
       <header>
         <p className="text-xs text-muted-foreground uppercase tracking-wider">
-          {step < 4 ? `Step ${step} of 3` : "All set"}
+          {step < 5 ? `Step ${step} of 4` : "All set"}
         </p>
         <h1 className="text-3xl font-display font-semibold">
-          {step < 4 ? "Create journey" : "Journey ready"}
+          {step < 5 ? "Create journey" : "Journey ready"}
         </h1>
+        {ent.data?.paidModeEnabled && !ent.data.isPaid && (
+          <div className="mt-3 glass rounded-xl p-3 text-xs flex items-center justify-between gap-2">
+            <span className="text-muted-foreground">
+              Free plan · {qLimit} questions · {ent.data.activeJourneys}/{ent.data.freeJourneyCap} journeys used
+            </span>
+            <Link to="/upgrade" className="text-primary font-medium">Upgrade</Link>
+          </div>
+        )}
+        {!canCreate && (
+          <div className="mt-3 glass rounded-xl p-3 text-sm text-destructive">
+            You've hit the free-plan journey limit. <Link to="/upgrade" className="underline">Upgrade</Link> for unlimited.
+          </div>
+        )}
       </header>
 
-      {step < 4 && (
+      {step < 5 && (
         <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-          <motion.div className="h-full bg-gradient-to-r from-aurora-1 to-aurora-2" animate={{ width: `${(step / 3) * 100}%` }} />
+          <motion.div className="h-full bg-gradient-to-r from-aurora-1 to-aurora-2" animate={{ width: `${(step / 4) * 100}%` }} />
         </div>
       )}
 
@@ -114,6 +142,69 @@ function Create() {
 
         {step === 3 && (
           <StepWrap key="3">
+            <h2 className="font-semibold mb-3">Question set</h2>
+            <div className="space-y-2">
+              <button
+                onClick={() => setMode("full")}
+                className={`w-full text-left rounded-2xl p-4 border transition ${mode === "full" ? "border-primary/60 bg-primary/10" : "border-border bg-input"}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-medium flex items-center gap-2"><Sparkles className="w-4 h-4 text-aurora-2" /> Full assessment</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">≈{qLimit} questions across all categories.</div>
+                  </div>
+                  {mode === "full" && <Check className="w-4 h-4 text-primary" />}
+                </div>
+              </button>
+              <button
+                onClick={() => canDeepDive && setMode("deep")}
+                disabled={!canDeepDive}
+                className={`w-full text-left rounded-2xl p-4 border transition ${mode === "deep" ? "border-primary/60 bg-primary/10" : "border-border bg-input"} ${!canDeepDive ? "opacity-60" : ""}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-medium flex items-center gap-2">
+                      {canDeepDive ? <Layers className="w-4 h-4 text-aurora-1" /> : <Lock className="w-4 h-4" />} Category deep-dive
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {canDeepDive ? "Pick categories — get every question in them." : "Upgrade to unlock."}
+                    </div>
+                  </div>
+                  {mode === "deep" && <Check className="w-4 h-4 text-primary" />}
+                </div>
+              </button>
+            </div>
+
+            {mode === "deep" && canDeepDive && (
+              <div className="mt-4">
+                <p className="text-xs text-muted-foreground mb-2">Choose at least one category</p>
+                <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+                  {(cats.data?.categories ?? []).map((c) => {
+                    const on = categoryIds.includes(c.id);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() =>
+                          setCategoryIds((prev) =>
+                            prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id],
+                          )
+                        }
+                        className={`text-left rounded-xl border px-3 py-2 text-xs transition ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
+                      >
+                        <div className="font-medium">{c.name}</div>
+                        <div className="text-[10px] opacity-70">{c.count} questions</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </StepWrap>
+        )}
+
+        {step === 4 && (
+          <StepWrap key="4">
             <h2 className="font-semibold mb-3">Respondent details</h2>
             <Field label="Participant name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Optional" />
             <Field label="Participant email" type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} placeholder="Optional, for invite" />
@@ -134,9 +225,9 @@ function Create() {
           </StepWrap>
         )}
 
-        {step === 4 && mutation.data && (
+        {step === 5 && mutation.data && (
           <SuccessScreen
-            key="4"
+            key="5"
             url={mutation.data.journey.invite_url ?? ""}
             code={mutation.data.journey.invite_code}
             email={mutation.data.journey.recipient_email}
@@ -146,7 +237,7 @@ function Create() {
         )}
       </AnimatePresence>
 
-      {step < 4 && (
+      {step < 5 && (
         <div className="flex gap-3">
           {step > 1 && (
             <button onClick={() => setStep((step - 1) as Step)} className="flex-1 rounded-xl glass py-3 text-sm font-medium">
@@ -154,23 +245,23 @@ function Create() {
             </button>
           )}
           <button
-            disabled={!canContinue || mutation.isPending}
+            disabled={!canContinue || mutation.isPending || !canCreate}
             onClick={() => {
-              if (step < 3) setStep((step + 1) as Step);
+              if (step < 4) setStep((step + 1) as Step);
               else mutation.mutate();
             }}
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-50"
           >
             {mutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating…</> :
-              step < 3 ? <>Continue <ArrowRight className="w-4 h-4" /></> :
+              step < 4 ? <>Continue <ArrowRight className="w-4 h-4" /></> :
               <>Create journey <Sparkles className="w-4 h-4" /></>}
           </button>
         </div>
       )}
 
-      {step === 4 && mutation.data && (
+      {step === 5 && mutation.data && (
         <div className="flex gap-3">
-          <button onClick={() => { setStep(1); setTitle(""); setNotes(""); setRecipientEmail(""); setRecipientName(""); mutation.reset(); }} className="flex-1 rounded-xl glass py-3 text-sm font-medium">
+          <button onClick={() => { setStep(1); setTitle(""); setNotes(""); setRecipientEmail(""); setRecipientName(""); setMode("full"); setCategoryIds([]); mutation.reset(); }} className="flex-1 rounded-xl glass py-3 text-sm font-medium">
             Create another
           </button>
           <Link
@@ -226,6 +317,7 @@ function SuccessScreen({ url, code, email, title, partnerType }: { url: string; 
           recipientName: null,
           recipientEmail: null,
           notes: null,
+          categoryIds: null,
         },
       }),
     onSuccess: (res) => {
