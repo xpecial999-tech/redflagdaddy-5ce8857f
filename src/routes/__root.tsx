@@ -32,9 +32,32 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const isChunkLoadError =
+    typeof error?.message === "string" &&
+    /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module|ChunkLoadError/i.test(
+      error.message,
+    );
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+    if (isChunkLoadError && typeof window !== "undefined") {
+      const KEY = "__rfd_chunk_reload__";
+      const last = Number(sessionStorage.getItem(KEY) || "0");
+      if (Date.now() - last > 30_000) {
+        sessionStorage.setItem(KEY, String(Date.now()));
+        window.location.reload();
+      }
+    }
+  }, [error, isChunkLoadError]);
+  if (isChunkLoadError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="glass rounded-3xl p-8 max-w-md text-center">
+          <h1 className="text-xl font-semibold">Updating to the latest version…</h1>
+          <p className="mt-2 text-sm text-muted-foreground">One moment.</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="glass rounded-3xl p-8 max-w-md text-center">
