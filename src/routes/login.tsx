@@ -45,9 +45,13 @@ function Login() {
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
+        <p className="text-xs text-muted-foreground text-center mt-4">
+          <Link to="/forgot-password" className="text-primary">Forgot your password?</Link>
+        </p>
         <p className="text-xs text-muted-foreground text-center mt-6">
           New here? <Link to="/register" className="text-primary">Create an account</Link>
         </p>
+
       </motion.div>
     </div>
   );
