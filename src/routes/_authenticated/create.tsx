@@ -51,6 +51,7 @@ function Create() {
           participantType,
           recipientName: recipientName.trim() || null,
           recipientEmail: recipientEmail.trim() || null,
+          recipientPhone: recipientPhone.trim() ? toE164(recipientPhone.trim()) : null,
           notes: notes.trim() || null,
           categoryIds: mode === "deep" && categoryIds.length > 0 ? categoryIds : null,
           questionLimit: mode === "quick" ? 50 : null,
