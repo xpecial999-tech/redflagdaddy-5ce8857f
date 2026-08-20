@@ -25,6 +25,8 @@ const roles = ["Dominant", "submissive", "switch"] as const;
 
 function Register() {
   const navigate = useNavigate();
+  const sendOtp = useServerFn(requestPhoneOtp);
+  const verifyOtp = useServerFn(verifyPhoneOtp);
   const [step, setStep] = useState<"form" | "otp">("form");
   const [role, setRole] = useState<typeof roles[number]>("switch");
   const [name, setName] = useState("");
@@ -48,12 +50,9 @@ function Register() {
     setInfo(null);
     if (!isValidE164(e164)) return setError("Enter a valid mobile number, including country code.");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      phone: e164,
-      options: { data: { name, role }, shouldCreateUser: true },
-    });
+    const result = await sendOtp({ data: { phone: e164 } }).catch(() => ({ error: "Could not send code." }));
     setLoading(false);
-    if (error) return setError(error.message);
+    if ("error" in result && result.error) return setError(result.error);
     setStep("otp");
     setInfo(`We sent a 6-digit code to ${formatPhone(e164)}. Enter it below to finish.`);
   };
@@ -63,18 +62,28 @@ function Register() {
     if (otp.length !== 6) return setError("Enter the 6-digit code.");
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.verifyOtp({ phone: e164, token: otp, type: "sms" });
-    if (error) {
+    const result = await verifyOtp({
+      data: {
+        phone: e164,
+        code: otp,
+        metadata: { name: name || undefined, role },
+      },
+    }).catch(() => ({ error: "Could not verify code." }));
+    if ("error" in result && result.error) {
       setLoading(false);
-      return setError(error.message);
+      return setError(result.error);
     }
-    // Make sure the profile carries the chosen name/role even if metadata lagged.
-    const { data: auth } = await supabase.auth.getUser();
-    if (auth.user) {
-      await supabase
-        .from("users")
-        .update({ name: name || null, role, phone: e164 })
-        .eq("id", auth.user.id);
+    if (!("session" in result) || !result.session) {
+      setLoading(false);
+      return setError("Could not create account.");
+    }
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: result.session.access_token,
+      refresh_token: result.session.refresh_token,
+    });
+    if (sessionError) {
+      setLoading(false);
+      return setError(sessionError.message);
     }
     setLoading(false);
     navigate({ to: "/dashboard" });
