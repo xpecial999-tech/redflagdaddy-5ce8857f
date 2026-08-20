@@ -9,6 +9,13 @@ const CreateJourneySchema = z.object({
   participantType: z.enum(["Dominant", "submissive", "switch"]),
   recipientName: z.string().trim().max(120).optional().nullable(),
   recipientEmail: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
+  recipientPhone: z
+    .string()
+    .trim()
+    .regex(/^\+[1-9]\d{7,14}$/, "Enter a valid mobile number")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   notes: z.string().trim().max(2000).optional().nullable(),
   categoryIds: z.array(z.string().uuid()).max(30).optional().nullable(),
   questionLimit: z.number().int().min(10).max(500).optional().nullable(),
@@ -83,10 +90,25 @@ export const createJourney = createServerFn({ method: "POST" })
       });
     }
 
+    let smsSent = false;
+    if (data.recipientPhone) {
+      try {
+        const { sendClickatellSms } = await import("./phone-auth.server");
+        await sendClickatellSms(
+          data.recipientPhone,
+          `You've been invited to a RedFlagDaddy assessment: "${journey.title}". Start here: ${inviteUrl}`,
+        );
+        smsSent = true;
+      } catch (e) {
+        console.error("Invite SMS failed:", e);
+      }
+    }
+
     return {
       journey,
       notes: data.notes ?? null,
       recipientName: data.recipientName ?? null,
+      smsSent,
     };
   });
 

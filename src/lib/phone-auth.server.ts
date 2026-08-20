@@ -49,7 +49,7 @@ function getSupabaseSignInClient() {
   });
 }
 
-async function sendClickatellSms(phone: string, content: string) {
+export async function sendClickatellSms(phone: string, content: string) {
   const apiKey = process.env["CLICKATELL_API_KEY"];
   if (!apiKey) throw new Error("CLICKATELL_API_KEY is not configured");
 

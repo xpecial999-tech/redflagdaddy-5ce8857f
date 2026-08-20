@@ -3,9 +3,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap } from "lucide-react";
+import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap, MessageSquare } from "lucide-react";
 import { createJourney } from "@/lib/journeys.functions";
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
+import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
@@ -39,6 +40,7 @@ function Create() {
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
   const [notes, setNotes] = useState("");
 
   const mutation = useMutation({
@@ -49,6 +51,7 @@ function Create() {
           participantType,
           recipientName: recipientName.trim() || null,
           recipientEmail: recipientEmail.trim() || null,
+          recipientPhone: recipientPhone.trim() ? toE164(recipientPhone.trim()) : null,
           notes: notes.trim() || null,
           categoryIds: mode === "deep" && categoryIds.length > 0 ? categoryIds : null,
           questionLimit: mode === "quick" ? 50 : null,
@@ -65,7 +68,7 @@ function Create() {
     (step === 1 && title.trim().length > 0) ||
     (step === 2 && !!participantType) ||
     (step === 3 && (mode !== "deep" || categoryIds.length > 0)) ||
-    (step === 4 && true);
+    (step === 4 && (!recipientPhone.trim() || isValidE164(toE164(recipientPhone.trim()))));
 
   return (
     <div className="space-y-6">
@@ -223,6 +226,16 @@ function Create() {
             <h2 className="font-semibold mb-3">Respondent details</h2>
             <Field label="Participant name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Optional" />
             <Field label="Participant email" type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} placeholder="Optional, for invite" />
+            <Field
+              label="Participant mobile (SMS invite)"
+              type="tel"
+              value={recipientPhone}
+              onChange={(e) => setRecipientPhone(e.target.value)}
+              placeholder="Optional, e.g. 082 123 4567"
+            />
+            {recipientPhone.trim() && !isValidE164(toE164(recipientPhone)) && (
+              <p className="text-xs text-destructive -mt-2">Enter a valid mobile number.</p>
+            )}
             <label className="block">
               <span className="text-xs text-muted-foreground">Notes for them</span>
               <textarea
@@ -248,6 +261,8 @@ function Create() {
             email={mutation.data.journey.recipient_email}
             title={mutation.data.journey.title}
             partnerType={mutation.data.journey.participant_type as SelfRole}
+            smsSent={mutation.data.smsSent}
+            phone={recipientPhone.trim() ? toE164(recipientPhone.trim()) : null}
           />
         )}
       </AnimatePresence>
@@ -315,7 +330,7 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
   );
 }
 
-function SuccessScreen({ url, code, email, title, partnerType }: { url: string; code: string; email: string | null; title: string; partnerType: SelfRole }) {
+function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }: { url: string; code: string; email: string | null; title: string; partnerType: SelfRole; smsSent?: boolean; phone?: string | null }) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
   const navigate = useNavigate();
   const createFn = useServerFn(createJourney);
@@ -368,7 +383,19 @@ function SuccessScreen({ url, code, email, title, partnerType }: { url: string; 
         </motion.div>
         <h2 className="text-xl font-display font-semibold">"{title}" is live</h2>
         <p className="text-sm text-muted-foreground mt-1">Share the link or code with your respondent. Expires in 7 days.</p>
+        {phone && (
+          <p className={`text-xs mt-2 ${smsSent ? "text-primary" : "text-destructive"}`}>
+            {smsSent ? `Invite SMS sent to ${formatPhone(phone)}.` : "We couldn't send the SMS — share the link below instead."}
+          </p>
+        )}
       </div>
+
+      <a
+        href={`sms:${phone ?? ""}?&body=${encodeURIComponent(`You've been invited to a RedFlagDaddy assessment: "${title}". Start here: ${url}`)}`}
+        className="w-full rounded-2xl bg-input border border-border px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
+      >
+        <MessageSquare className="w-4 h-4" /> Send invite by SMS
+      </a>
 
       <div className="glass rounded-2xl p-4 space-y-3">
         <div>
