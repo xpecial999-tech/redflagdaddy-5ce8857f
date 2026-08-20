@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isCurrentUserAdmin } from "@/lib/admin-auth.functions";
+import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/phone-auth.functions";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 
@@ -24,6 +25,8 @@ export const Route = createFileRoute("/login")({
 function Login() {
   const navigate = useNavigate();
   const checkAdmin = useServerFn(isCurrentUserAdmin);
+  const sendOtp = useServerFn(requestPhoneOtp);
+  const verifyOtp = useServerFn(verifyPhoneOtp);
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +42,9 @@ function Login() {
     setInfo(null);
     if (!isValidE164(e164)) return setError("Enter a valid mobile number, including country code.");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      phone: e164,
-      options: { shouldCreateUser: false },
-    });
+    const result = await sendOtp({ data: { phone: e164 } }).catch(() => ({ error: "Could not send code." }));
     setLoading(false);
-    if (error) return setError(error.message);
+    if ("error" in result && result.error) return setError(result.error);
     setStep("otp");
     setInfo(`We sent a 6-digit code to ${formatPhone(e164)}.`);
   };
@@ -54,16 +54,28 @@ function Login() {
     if (otp.length !== 6) return setError("Enter the 6-digit code.");
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase.auth.verifyOtp({ phone: e164, token: otp, type: "sms" });
-    if (error) {
+    const result = await verifyOtp({ data: { phone: e164, code: otp } }).catch(() => ({
+      error: "Could not verify code.",
+    }));
+    if ("error" in result && result.error) {
       setLoading(false);
-      return setError(error.message);
+      return setError(result.error);
+    }
+    if (!("session" in result) || !result.session) {
+      setLoading(false);
+      return setError("Could not sign you in.");
+    }
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: result.session.access_token,
+      refresh_token: result.session.refresh_token,
+    });
+    if (sessionError) {
+      setLoading(false);
+      return setError(sessionError.message);
     }
     let isAdmin = false;
-    if (data.user) {
-      const adminStatus = await checkAdmin().catch(() => ({ isAdmin: false }));
-      isAdmin = adminStatus.isAdmin;
-    }
+    const adminStatus = await checkAdmin().catch(() => ({ isAdmin: false }));
+    isAdmin = adminStatus.isAdmin;
     setLoading(false);
     navigate({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
   };
