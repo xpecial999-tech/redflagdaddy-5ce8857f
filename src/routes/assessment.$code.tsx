@@ -132,11 +132,14 @@ function AssessmentPage() {
 
   const completeMutation = useMutation({
     mutationFn: () => completeFn({ data: { code } }),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       qc.invalidateQueries({ queryKey: ["assessment", code] });
-      navigate({ to: "/results/$id", params: { id: res.journeyId } });
+      const { data: sess } = await supabase.auth.getSession();
+      if (sess.session) navigate({ to: "/results/$id", params: { id: res.journeyId } });
+      else setSubmitted(true);
     },
   });
+
 
   function recordAnswer(answer: unknown) {
     if (!current) return;
