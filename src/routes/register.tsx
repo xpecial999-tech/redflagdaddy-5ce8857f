@@ -3,9 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 
 export const Route = createFileRoute("/register")({
-  head: () => ({ meta: [{ title: "Create account — RedFlagDaddy" }] }),
+  head: () => ({
+    meta: [
+      { title: "Create account — RedFlagDaddy" },
+      { name: "description", content: "Create your RedFlagDaddy account with your mobile number — we'll text you a 6-digit code." },
+      { property: "og:title", content: "Create account — RedFlagDaddy" },
+      { property: "og:description", content: "Sign up with your mobile number. Consent-first, 18+ only." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Register,
 });
 
@@ -16,12 +26,13 @@ function Register() {
   const [step, setStep] = useState<"form" | "otp">("form");
   const [role, setRole] = useState<typeof roles[number]>("switch");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  const e164 = toE164(phone);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -29,24 +40,20 @@ function Register() {
     }
   }, [step]);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const sendCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setError(null);
     setInfo(null);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name, role } },
+    if (!isValidE164(e164)) return setError("Enter a valid mobile number, including country code.");
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: e164,
+      options: { data: { name, role }, shouldCreateUser: true },
     });
     setLoading(false);
     if (error) return setError(error.message);
-    if (data.session) {
-      navigate({ to: "/dashboard" });
-      return;
-    }
     setStep("otp");
-    setInfo(`We sent a 6-digit code to ${email}. Enter it below to finish.`);
+    setInfo(`We sent a 6-digit code to ${formatPhone(e164)}. Enter it below to finish.`);
   };
 
   const onVerify = async (e: React.FormEvent) => {
@@ -54,22 +61,21 @@ function Register() {
     if (otp.length !== 6) return setError("Enter the 6-digit code.");
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: "email",
-    });
+    const { error } = await supabase.auth.verifyOtp({ phone: e164, token: otp, type: "sms" });
+    if (error) {
+      setLoading(false);
+      return setError(error.message);
+    }
+    // Make sure the profile carries the chosen name/role even if metadata lagged.
+    const { data: auth } = await supabase.auth.getUser();
+    if (auth.user) {
+      await supabase
+        .from("users")
+        .update({ name: name || null, role, phone: e164 })
+        .eq("id", auth.user.id);
+    }
     setLoading(false);
-    if (error) return setError(error.message);
     navigate({ to: "/dashboard" });
-  };
-
-  const onResend = async () => {
-    setError(null);
-    setInfo(null);
-    const { error } = await supabase.auth.resend({ type: "signup", email });
-    if (error) return setError(error.message);
-    setInfo("Code resent. Check your inbox.");
   };
 
   return (
@@ -80,10 +86,18 @@ function Register() {
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <h1 className="text-2xl font-display font-semibold mb-1">Create your account</h1>
               <p className="text-sm text-muted-foreground mb-6">18+ only. Consent-first by design.</p>
-              <form className="space-y-3" onSubmit={onSubmit}>
+              <form className="space-y-3" onSubmit={sendCode}>
                 <Field label="Display name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Used on your journeys" />
-                <Field label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-                <Field label="Password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+                <Field
+                  label="Mobile number"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+27 82 123 4567"
+                />
 
                 <div>
                   <span className="text-xs text-muted-foreground">Primary identity</span>
@@ -115,7 +129,7 @@ function Register() {
           ) : (
             <motion.div key="otp" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <h1 className="text-2xl font-display font-semibold mb-1">Enter your code</h1>
-              <p className="text-sm text-muted-foreground mb-6">{info ?? `We sent a 6-digit code to ${email}.`}</p>
+              <p className="text-sm text-muted-foreground mb-6">{info ?? `We sent a 6-digit code to ${formatPhone(e164)}.`}</p>
               <form className="space-y-4" onSubmit={onVerify}>
                 <div className="flex justify-center">
                   <InputOTP maxLength={6} value={otp} onChange={setOtp}>
@@ -134,10 +148,10 @@ function Register() {
                 </button>
               </form>
               <div className="flex items-center justify-between mt-6 text-xs text-muted-foreground">
-                <button type="button" onClick={() => setStep("form")} className="hover:text-foreground">
-                  ← Use a different email
+                <button type="button" onClick={() => { setStep("form"); setOtp(""); setError(null); }} className="hover:text-foreground">
+                  ← Use a different number
                 </button>
-                <button type="button" onClick={onResend} className="text-primary">
+                <button type="button" onClick={() => sendCode()} className="text-primary">
                   Resend code
                 </button>
               </div>
