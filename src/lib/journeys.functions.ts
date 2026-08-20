@@ -90,10 +90,25 @@ export const createJourney = createServerFn({ method: "POST" })
       });
     }
 
+    let smsSent = false;
+    if (data.recipientPhone) {
+      try {
+        const { sendClickatellSms } = await import("./phone-auth.server");
+        await sendClickatellSms(
+          data.recipientPhone,
+          `You've been invited to a RedFlagDaddy assessment: "${journey.title}". Start here: ${inviteUrl}`,
+        );
+        smsSent = true;
+      } catch (e) {
+        console.error("Invite SMS failed:", e);
+      }
+    }
+
     return {
       journey,
       notes: data.notes ?? null,
       recipientName: data.recipientName ?? null,
+      smsSent,
     };
   });
 
