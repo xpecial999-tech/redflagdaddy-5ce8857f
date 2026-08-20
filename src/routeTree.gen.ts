@@ -39,6 +39,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicSmsClickatellRouteImport } from './routes/api/public/sms.clickatell'
 import { Route as ApiPublicPeachWebhookRouteImport } from './routes/api/public/peach.webhook'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -197,6 +198,11 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSmsClickatellRoute = ApiPublicSmsClickatellRouteImport.update({
+  id: '/api/public/sms/clickatell',
+  path: '/api/public/sms/clickatell',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPeachWebhookRoute = ApiPublicPeachWebhookRouteImport.update({
   id: '/api/public/peach/webhook',
   path: '/api/public/peach/webhook',
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/results/$id': typeof AuthenticatedResultsIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/peach/webhook': typeof ApiPublicPeachWebhookRoute
+  '/api/public/sms/clickatell': typeof ApiPublicSmsClickatellRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/results/$id': typeof AuthenticatedResultsIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/peach/webhook': typeof ApiPublicPeachWebhookRoute
+  '/api/public/sms/clickatell': typeof ApiPublicSmsClickatellRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/results/$id': typeof AuthenticatedResultsIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/peach/webhook': typeof ApiPublicPeachWebhookRoute
+  '/api/public/sms/clickatell': typeof ApiPublicSmsClickatellRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/results/$id'
     | '/lovable/email/suppression'
     | '/api/public/peach/webhook'
+    | '/api/public/sms/clickatell'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/results/$id'
     | '/lovable/email/suppression'
     | '/api/public/peach/webhook'
+    | '/api/public/sms/clickatell'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -394,6 +405,7 @@ export interface FileRouteTypes {
     | '/_authenticated/results/$id'
     | '/lovable/email/suppression'
     | '/api/public/peach/webhook'
+    | '/api/public/sms/clickatell'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -417,6 +429,7 @@ export interface RootRouteChildren {
   ReportTokenRoute: typeof ReportTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicPeachWebhookRoute: typeof ApiPublicPeachWebhookRoute
+  ApiPublicSmsClickatellRoute: typeof ApiPublicSmsClickatellRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -636,6 +649,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sms/clickatell': {
+      id: '/api/public/sms/clickatell'
+      path: '/api/public/sms/clickatell'
+      fullPath: '/api/public/sms/clickatell'
+      preLoaderRoute: typeof ApiPublicSmsClickatellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/peach/webhook': {
       id: '/api/public/peach/webhook'
       path: '/api/public/peach/webhook'
@@ -703,6 +723,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportTokenRoute: ReportTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicPeachWebhookRoute: ApiPublicPeachWebhookRoute,
+  ApiPublicSmsClickatellRoute: ApiPublicSmsClickatellRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
