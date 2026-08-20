@@ -54,7 +54,7 @@ function Profile() {
     );
   }
 
-  const displayName = me.name || me.email.split("@")[0];
+  const displayName = me.name || formatPhone(me.phone) || me.email?.split("@")[0] || "Member";
   const initial = displayName.charAt(0).toUpperCase();
   const role = me.role || "member";
 
@@ -73,8 +73,11 @@ function Profile() {
           {role}
           {me.isAdmin ? " · admin" : ""}
         </p>
-        <p className="text-xs text-muted-foreground mt-1">{me.email}</p>
+        <p className="text-xs text-muted-foreground mt-1">{formatPhone(me.phone) || me.email}</p>
       </motion.section>
+
+      <ContactEmailCard userId={me.id} initialEmail={me.email} />
+
 
       <section className="space-y-2">
         {settings.map((s) => (
