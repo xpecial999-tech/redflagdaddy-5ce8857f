@@ -32,7 +32,12 @@ export const createJourney = createServerFn({ method: "POST" })
     }
     // Free users can't use category deep-dive
     const categoryIds = ent.canDeepDive && data.categoryIds && data.categoryIds.length > 0 ? data.categoryIds : null;
-    const questionLimit = categoryIds ? null : ent.questionLimit ?? DEFAULT_QUESTION_LIMIT;
+    const entLimit = ent.questionLimit ?? DEFAULT_QUESTION_LIMIT;
+    const questionLimit = categoryIds
+      ? null
+      : data.questionLimit
+        ? Math.min(data.questionLimit, entLimit)
+        : entLimit;
 
     const code = generateInviteCode();
     const origin = originFromRequest();
