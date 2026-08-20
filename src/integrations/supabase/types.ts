@@ -509,31 +509,34 @@ export type Database = {
       users: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           id: string
           is_paid: boolean
           name: string | null
           paid_at: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           id: string
           is_paid?: boolean
           name?: string | null
           paid_at?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           id?: string
           is_paid?: boolean
           name?: string | null
           paid_at?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
