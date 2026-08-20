@@ -19,7 +19,7 @@ export function isValidE164(value: string): boolean {
 /** Pretty display: "+27 82 123 4567" (loose grouping, purely cosmetic). */
 export function formatPhone(value: string | null | undefined): string {
   if (!value) return "";
-  const m = /^(\+\d{1,3})(\d+)$/.exec(value);
+  const m = /^(\+\d{1,3}?)(\d{9,})$/.exec(value);
   if (!m) return value;
   const rest = m[2].replace(/(\d{2})(\d{3})(\d+)/, "$1 $2 $3");
   return `${m[1]} ${rest}`;
