@@ -3,10 +3,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap } from "lucide-react";
+import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap, MessageSquare } from "lucide-react";
 import { createJourney } from "@/lib/journeys.functions";
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
-import { toE164, isValidE164 } from "@/lib/phone";
+import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
@@ -261,6 +261,8 @@ function Create() {
             email={mutation.data.journey.recipient_email}
             title={mutation.data.journey.title}
             partnerType={mutation.data.journey.participant_type as SelfRole}
+            smsSent={mutation.data.smsSent}
+            phone={recipientPhone.trim() ? toE164(recipientPhone.trim()) : null}
           />
         )}
       </AnimatePresence>
