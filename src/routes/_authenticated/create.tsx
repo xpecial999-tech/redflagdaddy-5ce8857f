@@ -390,13 +390,6 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
         )}
       </div>
 
-      <a
-        href={`sms:${phone ?? ""}?&body=${encodeURIComponent(`You've been invited to a RedFlagDaddy assessment: "${title}". Start here: ${url}`)}`}
-        className="w-full rounded-2xl bg-input border border-border px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
-      >
-        <MessageSquare className="w-4 h-4" /> Send invite by SMS
-      </a>
-
       <div className="glass rounded-2xl p-4 space-y-3">
         <div>
           <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5"><Link2 className="w-3.5 h-3.5" /> Invite URL</div>
@@ -415,6 +408,13 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
 
       <a href={mailto} className="block w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30">
         <Mail className="w-4 h-4" /> Send by email
+      </a>
+
+      <a
+        href={`sms:${phone ?? ""}${/(iPhone|iPad|Mac)/.test(typeof navigator !== "undefined" ? navigator.userAgent : "") ? "&" : "?"}body=${encodeURIComponent(`You've been invited to a RedFlagDaddy assessment: "${title}". Start here: ${url}`)}`}
+        className="block w-full inline-flex items-center justify-center gap-2 rounded-xl bg-input border border-border py-3 text-sm font-medium"
+      >
+        <MessageSquare className="w-4 h-4" /> Send by SMS
       </a>
 
       <div className="glass-strong rounded-3xl p-6 text-center space-y-4">
