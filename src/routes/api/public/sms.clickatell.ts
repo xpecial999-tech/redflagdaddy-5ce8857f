@@ -63,7 +63,7 @@ export const Route = createFileRoute("/api/public/sms/clickatell")({
         }
 
         const payload = parsed.data;
-        const phone = payload.to || payload.phone;
+        const phone = payload.to || payload.phone || payload.user?.phone;
         const code = payload.code || payload.otp;
         const message = payload.message || (code ? `Your RedFlagDaddy code is ${code}.` : undefined);
 
