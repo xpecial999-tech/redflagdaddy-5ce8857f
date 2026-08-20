@@ -347,5 +347,39 @@ export const completeAssessment = createServerFn({ method: "POST" })
       console.error("AI analysis failed:", e);
     }
 
+    // Best-effort completion notification to the journey owner.
+    try {
+      const { data: owner } = await supabaseAdmin
+        .from("journeys")
+        .select("creator_id, guest_email")
+        .eq("id", journey.id)
+        .maybeSingle();
+
+      let ownerEmail: string | null = (owner?.guest_email as string | null) ?? null;
+      if (!ownerEmail && owner?.creator_id) {
+        const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(
+          owner.creator_id as string,
+        );
+        ownerEmail = userRes?.user?.email ?? null;
+      }
+
+      if (ownerEmail) {
+        const { sendAppEmail } = await import("./email/queue.server");
+        await sendAppEmail({
+          templateName: "assessment-complete",
+          to: ownerEmail,
+          idempotencyKey: `assessment-complete-${journey.id}`,
+          templateData: {
+            journeyTitle: journey.title,
+            resultsUrl: owner?.creator_id
+              ? `https://redflagdaddy.com/results/${journey.id}`
+              : "https://redflagdaddy.com/dashboard",
+          },
+        });
+      }
+    } catch (e) {
+      console.error("Completion email failed:", e);
+    }
+
     return { ok: true as const, journeyId: journey.id };
   });

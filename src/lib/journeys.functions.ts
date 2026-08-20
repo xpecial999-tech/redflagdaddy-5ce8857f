@@ -62,6 +62,21 @@ export const createJourney = createServerFn({ method: "POST" })
     });
     if (inviteErr) throw new Error(inviteErr.message);
 
+    if (data.recipientEmail) {
+      const { sendAppEmail } = await import("./email/queue.server");
+      await sendAppEmail({
+        templateName: "journey-invite",
+        to: data.recipientEmail,
+        idempotencyKey: `journey-invite-${journey.id}`,
+        templateData: {
+          inviterName: data.recipientName ?? null,
+          journeyTitle: journey.title,
+          inviteUrl,
+          inviteCode: code,
+        },
+      });
+    }
+
     return {
       journey,
       notes: data.notes ?? null,

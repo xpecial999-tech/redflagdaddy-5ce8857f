@@ -44,5 +44,19 @@ export const createGuestJourney = createServerFn({ method: "POST" })
     });
     if (iErr) throw new Error(iErr.message);
 
+    if (partnerEmail) {
+      const { sendAppEmail } = await import("./email/queue.server");
+      await sendAppEmail({
+        templateName: "journey-invite",
+        to: partnerEmail,
+        idempotencyKey: `journey-invite-${journey.id}`,
+        templateData: {
+          journeyTitle: data.isSelf ? "Self-assessment" : "Guest assessment",
+          inviteUrl: `https://redflagdaddy.com/journey/${code}`,
+          inviteCode: code,
+        },
+      });
+    }
+
     return { code, hasPartnerEmail: Boolean(partnerEmail) };
   });
