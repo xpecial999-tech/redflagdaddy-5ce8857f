@@ -64,7 +64,7 @@ function Create() {
   const canContinue =
     (step === 1 && title.trim().length > 0) ||
     (step === 2 && !!participantType) ||
-    (step === 3 && (mode === "full" || categoryIds.length > 0)) ||
+    (step === 3 && (mode !== "deep" || categoryIds.length > 0)) ||
     (step === 4 && true);
 
   return (
