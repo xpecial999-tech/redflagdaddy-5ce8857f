@@ -12,7 +12,7 @@ const CLICKATELL_URL = "https://platform.clickatell.com/v1/message";
 
 type OtpMetadata = {
   name?: string;
-  role?: string;
+  role?: "Dominant" | "submissive" | "switch";
 };
 
 function hashCode(code: string): string {
@@ -38,7 +38,9 @@ function randomPassword(): string {
   return randomBytes(32).toString("base64");
 }
 
-async function getSupabaseAdmin() {
+type SupabaseAdminClient = Awaited<ReturnType<typeof import("@/integrations/supabase/client.server")>>["supabaseAdmin"];
+
+async function getSupabaseAdmin(): Promise<SupabaseAdminClient> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
 }
@@ -73,7 +75,7 @@ async function sendClickatellSms(phone: string, message: string) {
   return body;
 }
 
-async function countRecentRequests(supabaseAdmin: ReturnType<typeof getSupabaseAdmin>, phone: string) {
+async function countRecentRequests(supabaseAdmin: SupabaseAdminClient, phone: string) {
   const since = new Date(Date.now() - OTP_REQUEST_WINDOW_MS).toISOString();
   const { count, error } = await supabaseAdmin
     .from("phone_otps")
@@ -177,7 +179,7 @@ export const verifyPhoneOtp = createServerFn({ method: "POST" })
     // Find or create the auth user by phone.
     const { data: existing, error: listError } = await supabaseAdmin.auth.admin.listUsers({
       page: 1,
-      perPage: 1,
+      perPage: 1000,
     });
     if (listError) {
       console.error("[phone-otp] Failed to list users:", listError);
@@ -229,14 +231,12 @@ export const verifyPhoneOtp = createServerFn({ method: "POST" })
 
     // Ensure the public.users profile carries the latest metadata.
     if (data.metadata?.name || data.metadata?.role) {
-      await supabaseAdmin
-        .from("users")
-        .update({
-          name: data.metadata.name ?? null,
-          role: data.metadata.role ?? null,
-          phone: data.phone,
-        })
-        .eq("id", userId);
+      const update: { name?: string | null; role?: "Dominant" | "submissive" | "switch"; phone: string } = {
+        phone: data.phone,
+      };
+      if (data.metadata.name !== undefined) update.name = data.metadata.name || null;
+      if (data.metadata.role !== undefined) update.role = data.metadata.role;
+      await supabaseAdmin.from("users").update(update).eq("id", userId);
     }
 
     return {
