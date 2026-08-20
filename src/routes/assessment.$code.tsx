@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft,
   ArrowRight,
