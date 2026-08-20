@@ -32,19 +32,21 @@ export function useMe() {
         return;
       }
       const [{ data: profile }, adminStatus] = await Promise.all([
-        supabase.from("users").select("id, email, name, role").eq("id", user.id).maybeSingle(),
+        supabase.from("users").select("id, email, phone, name, role").eq("id", user.id).maybeSingle(),
         checkAdmin().catch(() => ({ isAdmin: false })),
       ]);
       if (cancelled) return;
       setMe({
         id: user.id,
-        email: profile?.email ?? user.email ?? "",
+        email: profile?.email ?? user.email ?? null,
+        phone: (profile as { phone?: string | null } | null)?.phone ?? user.phone ?? null,
         name: profile?.name ?? (user.user_metadata?.name as string) ?? null,
         role: (profile?.role as string) ?? null,
         isAdmin: !!adminStatus.isAdmin,
       });
       setLoading(false);
     }
+
     load();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") load();
