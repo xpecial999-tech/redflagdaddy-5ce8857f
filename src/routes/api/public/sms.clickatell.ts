@@ -1,9 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+const userSchema = z.object({ phone: z.string().optional() }).passthrough();
+
 const smsPayloadSchema = z
   .object({
-    phone: z.string().min(1),
+    event: z.string().optional(),
+    phone: z.string().optional(),
+    user: userSchema.optional(),
     code: z.string().optional(),
     otp: z.string().optional(),
     message: z.string().optional(),
@@ -59,7 +63,7 @@ export const Route = createFileRoute("/api/public/sms/clickatell")({
         }
 
         const payload = parsed.data;
-        const phone = payload.to || payload.phone;
+        const phone = payload.to || payload.phone || payload.user?.phone;
         const code = payload.code || payload.otp;
         const message = payload.message || (code ? `Your RedFlagDaddy code is ${code}.` : undefined);
 
