@@ -15,7 +15,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft,
   ArrowRight,
@@ -71,13 +72,28 @@ function AssessmentPage() {
   const [cursor, setCursor] = useState(0);
   const [savingId, setSavingId] = useState<string | null>(null);
 
+  const [submitted, setSubmitted] = useState(false);
+  const hydrated = useRef(false);
+
   // Hydrate answers when data first loads
   useEffect(() => {
     if (!data) return;
     const initial: Record<string, unknown> = {};
     for (const r of data.responses) initial[r.question_id] = r.answer;
     setAnswers(initial);
+    if (!hydrated.current) {
+      hydrated.current = true;
+      const ordered = [...(data.questions ?? [])].sort(
+        (a, b) => (a as { order_index: number }).order_index - (b as { order_index: number }).order_index,
+      ) as unknown as Question[];
+      const firstUnanswered = ordered.findIndex(
+        (q) => initial[q.id] === undefined || initial[q.id] === "",
+      );
+      if (firstUnanswered > 0) setCursor(firstUnanswered);
+      else if (firstUnanswered === -1 && ordered.length) setCursor(ordered.length - 1);
+    }
   }, [data]);
+
 
   const questions = useMemo(() => (data?.questions ?? []) as unknown as Question[], [data]);
 
@@ -117,11 +133,14 @@ function AssessmentPage() {
 
   const completeMutation = useMutation({
     mutationFn: () => completeFn({ data: { code } }),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       qc.invalidateQueries({ queryKey: ["assessment", code] });
-      navigate({ to: "/results/$id", params: { id: res.journeyId } });
+      const { data: sess } = await supabase.auth.getSession();
+      if (sess.session) navigate({ to: "/results/$id", params: { id: res.journeyId } });
+      else setSubmitted(true);
     },
   });
+
 
   function recordAnswer(answer: unknown) {
     if (!current) return;
@@ -138,6 +157,19 @@ function AssessmentPage() {
   }
   function goPrev() {
     if (cursor > 0) setCursor(cursor - 1);
+  }
+
+  if (submitted) {
+    return (
+      <div className="glass rounded-2xl p-8 max-w-xl mx-auto text-center space-y-3">
+        <h1 className="text-2xl font-display font-semibold">Assessment complete</h1>
+        <p className="text-sm text-muted-foreground">
+          Thank you. Your answers are saved and the report is being generated — it will be emailed to
+          the person who invited you.
+        </p>
+        <p className="text-xs text-muted-foreground">You can safely close this page.</p>
+      </div>
+    );
   }
 
   if (isLoading) {
