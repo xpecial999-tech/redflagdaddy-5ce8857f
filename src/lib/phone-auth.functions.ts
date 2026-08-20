@@ -58,13 +58,17 @@ async function sendClickatellSms(phone: string, message: string) {
   const apiKey = process.env["CLICKATELL_API_KEY"];
   if (!apiKey) throw new Error("CLICKATELL_API_KEY is not configured");
 
+  // Clickatell expects MSISDN digits only (no leading +)
+  const msisdn = phone.replace(/\D/g, "");
+
   const response = await fetch(CLICKATELL_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
       Authorization: apiKey,
     },
-    body: JSON.stringify({ content: message, to: [phone] }),
+    body: JSON.stringify({ content: message, to: [msisdn] }),
   });
 
   const body = await response.text();
@@ -72,8 +76,26 @@ async function sendClickatellSms(phone: string, message: string) {
     console.error(`[clickatell-sms] Provider error ${response.status}: ${body}`);
     throw new Error(`Clickatell error: ${response.status}`);
   }
+
+  // Clickatell returns 202 with per-message results; a non-zero errorCode means it was rejected
+  try {
+    const parsed = JSON.parse(body) as {
+      messages?: { apiMessageId?: string; accepted?: boolean; error?: unknown; errorCode?: number; errorDescription?: string }[];
+      error?: unknown;
+    };
+    const failed = parsed.messages?.find((m) => m.accepted === false || (m.errorCode && m.errorCode !== 0));
+    if (failed) {
+      console.error("[clickatell-sms] Message rejected:", JSON.stringify(failed));
+      throw new Error(failed.errorDescription || "SMS provider rejected this number");
+    }
+    console.log("[clickatell-sms] Accepted:", body);
+  } catch (e) {
+    if (e instanceof Error && e.message.includes("SMS provider")) throw e;
+    console.log("[clickatell-sms] Raw response:", body);
+  }
   return body;
 }
+
 
 async function countRecentRequests(supabaseAdmin: SupabaseAdminClient, phone: string) {
   const since = new Date(Date.now() - OTP_REQUEST_WINDOW_MS).toISOString();
