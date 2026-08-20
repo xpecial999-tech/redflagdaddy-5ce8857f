@@ -357,11 +357,21 @@ export const completeAssessment = createServerFn({ method: "POST" })
 
       let ownerEmail: string | null = (owner?.guest_email as string | null) ?? null;
       if (!ownerEmail && owner?.creator_id) {
-        const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(
-          owner.creator_id as string,
-        );
-        ownerEmail = userRes?.user?.email ?? null;
+        // Phone-based accounts may have no auth email; fall back to the optional profile email.
+        const { data: profile } = await supabaseAdmin
+          .from("users")
+          .select("email")
+          .eq("id", owner.creator_id as string)
+          .maybeSingle();
+        ownerEmail = (profile?.email as string | null) ?? null;
+        if (!ownerEmail) {
+          const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(
+            owner.creator_id as string,
+          );
+          ownerEmail = userRes?.user?.email ?? null;
+        }
       }
+
 
       if (ownerEmail) {
         const { sendAppEmail } = await import("./email/queue.server");
