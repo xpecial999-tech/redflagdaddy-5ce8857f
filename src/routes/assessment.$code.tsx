@@ -159,6 +159,19 @@ function AssessmentPage() {
     if (cursor > 0) setCursor(cursor - 1);
   }
 
+  if (submitted) {
+    return (
+      <div className="glass rounded-2xl p-8 max-w-xl mx-auto text-center space-y-3">
+        <h1 className="text-2xl font-display font-semibold">Assessment complete</h1>
+        <p className="text-sm text-muted-foreground">
+          Thank you. Your answers are saved and the report is being generated — it will be emailed to
+          the person who invited you.
+        </p>
+        <p className="text-xs text-muted-foreground">You can safely close this page.</p>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       
