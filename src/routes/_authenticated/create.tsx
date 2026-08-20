@@ -381,7 +381,19 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
         </motion.div>
         <h2 className="text-xl font-display font-semibold">"{title}" is live</h2>
         <p className="text-sm text-muted-foreground mt-1">Share the link or code with your respondent. Expires in 7 days.</p>
+        {phone && (
+          <p className={`text-xs mt-2 ${smsSent ? "text-primary" : "text-destructive"}`}>
+            {smsSent ? `Invite SMS sent to ${formatPhone(phone)}.` : "We couldn't send the SMS — share the link below instead."}
+          </p>
+        )}
       </div>
+
+      <a
+        href={`sms:${phone ?? ""}?&body=${encodeURIComponent(`You've been invited to a RedFlagDaddy assessment: "${title}". Start here: ${url}`)}`}
+        className="w-full rounded-2xl bg-input border border-border px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
+      >
+        <MessageSquare className="w-4 h-4" /> Send invite by SMS
+      </a>
 
       <div className="glass rounded-2xl p-4 space-y-3">
         <div>
