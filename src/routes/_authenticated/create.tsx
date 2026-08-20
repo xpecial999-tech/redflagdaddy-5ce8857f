@@ -328,7 +328,7 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
   );
 }
 
-function SuccessScreen({ url, code, email, title, partnerType }: { url: string; code: string; email: string | null; title: string; partnerType: SelfRole }) {
+function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }: { url: string; code: string; email: string | null; title: string; partnerType: SelfRole; smsSent?: boolean; phone?: string | null }) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
   const navigate = useNavigate();
   const createFn = useServerFn(createJourney);
