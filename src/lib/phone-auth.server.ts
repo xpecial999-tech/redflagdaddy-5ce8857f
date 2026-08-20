@@ -180,19 +180,30 @@ export async function verifyPhoneOtpHandler(data: { phone: string; code: string;
   const existingUser = existing.users.find((user: User) => (user.phone ?? "").replace(/\D/g, "") === digits);
   const password = randomPassword();
   let userId: string;
+  // Phone grant is disabled in Auth, so we bootstrap the session with an email+password grant.
+  const syntheticEmail = `${digits}@phone.redflagdaddy.com`;
+  let signInEmail: string;
 
   if (existingUser) {
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(existingUser.id, { password, phone_confirm: true });
+    signInEmail = existingUser.email || syntheticEmail;
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+      password,
+      phone_confirm: true,
+      ...(existingUser.email ? {} : { email: syntheticEmail, email_confirm: true }),
+    });
     if (error) {
       console.error("[phone-otp] Failed to update user password:", error);
       return { error: "Could not sign you in. Please try again." };
     }
     userId = existingUser.id;
   } else {
+    signInEmail = syntheticEmail;
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       phone: data.phone,
+      email: syntheticEmail,
       password,
       phone_confirm: true,
+      email_confirm: true,
       user_metadata: { name: data.metadata?.name, role: data.metadata?.role },
     });
     if (error || !created.user) {
@@ -203,11 +214,12 @@ export async function verifyPhoneOtpHandler(data: { phone: string; code: string;
   }
 
   const signInClient = getSupabaseSignInClient();
-  const { data: signInData, error: signInError } = await signInClient.auth.signInWithPassword({ phone: data.phone, password });
+  const { data: signInData, error: signInError } = await signInClient.auth.signInWithPassword({ email: signInEmail, password });
   if (signInError || !signInData.session) {
     console.error("[phone-otp] Failed to bootstrap session:", signInError);
     return { error: "Could not sign you in. Please try again." };
   }
+
 
   if (data.metadata?.name || data.metadata?.role) {
     const update: { name?: string | null; role?: "Dominant" | "submissive" | "switch"; phone: string } = { phone: data.phone };
