@@ -71,13 +71,28 @@ function AssessmentPage() {
   const [cursor, setCursor] = useState(0);
   const [savingId, setSavingId] = useState<string | null>(null);
 
+  const [submitted, setSubmitted] = useState(false);
+  const hydrated = useRef(false);
+
   // Hydrate answers when data first loads
   useEffect(() => {
     if (!data) return;
     const initial: Record<string, unknown> = {};
     for (const r of data.responses) initial[r.question_id] = r.answer;
     setAnswers(initial);
+    if (!hydrated.current) {
+      hydrated.current = true;
+      const ordered = [...(data.questions ?? [])].sort(
+        (a, b) => (a as { order_index: number }).order_index - (b as { order_index: number }).order_index,
+      ) as unknown as Question[];
+      const firstUnanswered = ordered.findIndex(
+        (q) => initial[q.id] === undefined || initial[q.id] === "",
+      );
+      if (firstUnanswered > 0) setCursor(firstUnanswered);
+      else if (firstUnanswered === -1 && ordered.length) setCursor(ordered.length - 1);
+    }
   }, [data]);
+
 
   const questions = useMemo(() => (data?.questions ?? []) as unknown as Question[], [data]);
 
