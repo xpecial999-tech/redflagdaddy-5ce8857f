@@ -39,6 +39,7 @@ function Create() {
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
   const [notes, setNotes] = useState("");
 
   const mutation = useMutation({
