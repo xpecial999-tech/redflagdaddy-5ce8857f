@@ -5,11 +5,13 @@ import { isCurrentUserAdmin } from "@/lib/admin-auth.functions";
 
 export type Me = {
   id: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   name: string | null;
   role: string | null;
   isAdmin: boolean;
 };
+
 
 export function useMe() {
   const checkAdmin = useServerFn(isCurrentUserAdmin);

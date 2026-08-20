@@ -10,12 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as GuestRouteImport } from './routes/guest'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DemoReportRouteImport } from './routes/demo-report'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -48,11 +46,6 @@ const UnsubscribeRoute = UnsubscribeRouteImport.update({
   path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -71,11 +64,6 @@ const JoinRoute = JoinRouteImport.update({
 const GuestRoute = GuestRouteImport.update({
   id: '/guest',
   path: '/guest',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoReportRoute = DemoReportRouteImport.update({
@@ -219,12 +207,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/demo-report': typeof DemoReportRoute
-  '/forgot-password': typeof ForgotPasswordRoute
   '/guest': typeof GuestRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/create': typeof AuthenticatedCreateRoute
@@ -253,12 +239,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/demo-report': typeof DemoReportRoute
-  '/forgot-password': typeof ForgotPasswordRoute
   '/guest': typeof GuestRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/create': typeof AuthenticatedCreateRoute
@@ -289,12 +273,10 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/demo-report': typeof DemoReportRoute
-  '/forgot-password': typeof ForgotPasswordRoute
   '/guest': typeof GuestRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/create': typeof AuthenticatedCreateRoute
@@ -325,12 +307,10 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/demo-report'
-    | '/forgot-password'
     | '/guest'
     | '/join'
     | '/login'
     | '/register'
-    | '/reset-password'
     | '/unsubscribe'
     | '/admin'
     | '/create'
@@ -359,12 +339,10 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/demo-report'
-    | '/forgot-password'
     | '/guest'
     | '/join'
     | '/login'
     | '/register'
-    | '/reset-password'
     | '/unsubscribe'
     | '/admin'
     | '/create'
@@ -394,12 +372,10 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/demo-report'
-    | '/forgot-password'
     | '/guest'
     | '/join'
     | '/login'
     | '/register'
-    | '/reset-password'
     | '/unsubscribe'
     | '/_authenticated/admin'
     | '/_authenticated/create'
@@ -430,12 +406,10 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   DemoReportRoute: typeof DemoReportRoute
-  ForgotPasswordRoute: typeof ForgotPasswordRoute
   GuestRoute: typeof GuestRoute
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   AssessmentCodeRoute: typeof AssessmentCodeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
@@ -457,13 +431,6 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe'
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -492,13 +459,6 @@ declare module '@tanstack/react-router' {
       path: '/guest'
       fullPath: '/guest'
       preLoaderRoute: typeof GuestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo-report': {
@@ -732,12 +692,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   DemoReportRoute: DemoReportRoute,
-  ForgotPasswordRoute: ForgotPasswordRoute,
   GuestRoute: GuestRoute,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   AssessmentCodeRoute: AssessmentCodeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
