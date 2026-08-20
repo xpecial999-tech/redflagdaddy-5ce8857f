@@ -35,7 +35,7 @@ function Create() {
   const [step, setStep] = useState<Step>(1);
   const [title, setTitle] = useState("");
   const [participantType, setParticipantType] = useState<ParticipantType>("submissive");
-  const [mode, setMode] = useState<"full" | "deep">("full");
+  const [mode, setMode] = useState<"full" | "quick" | "deep">("full");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
