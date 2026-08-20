@@ -223,6 +223,16 @@ function Create() {
             <h2 className="font-semibold mb-3">Respondent details</h2>
             <Field label="Participant name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Optional" />
             <Field label="Participant email" type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} placeholder="Optional, for invite" />
+            <Field
+              label="Participant mobile (SMS invite)"
+              type="tel"
+              value={recipientPhone}
+              onChange={(e) => setRecipientPhone(e.target.value)}
+              placeholder="Optional, e.g. 082 123 4567"
+            />
+            {recipientPhone.trim() && !isValidE164(toE164(recipientPhone)) && (
+              <p className="text-xs text-destructive -mt-2">Enter a valid mobile number.</p>
+            )}
             <label className="block">
               <span className="text-xs text-muted-foreground">Notes for them</span>
               <textarea
