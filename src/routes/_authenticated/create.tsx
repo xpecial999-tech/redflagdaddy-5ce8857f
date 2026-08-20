@@ -68,7 +68,7 @@ function Create() {
     (step === 1 && title.trim().length > 0) ||
     (step === 2 && !!participantType) ||
     (step === 3 && (mode !== "deep" || categoryIds.length > 0)) ||
-    (step === 4 && true);
+    (step === 4 && (!recipientPhone.trim() || isValidE164(toE164(recipientPhone.trim()))));
 
   return (
     <div className="space-y-6">
