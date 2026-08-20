@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { LogOut, Shield, Bell, Lock, HelpCircle, Loader2, ChevronRight } from "lucide-react";
+import { LogOut, Shield, Bell, Lock, HelpCircle, Loader2, ChevronRight, Mail } from "lucide-react";
+import { useState } from "react";
 import { useMe } from "@/hooks/use-me";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPhone } from "@/lib/phone";
 import { Link } from "@tanstack/react-router";
+
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — RedFlagDaddy" }] }),
