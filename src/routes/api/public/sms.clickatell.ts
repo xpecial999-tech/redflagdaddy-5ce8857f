@@ -1,9 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+const userSchema = z.object({ phone: z.string().optional() }).passthrough();
+
 const smsPayloadSchema = z
   .object({
-    phone: z.string().min(1),
+    event: z.string().optional(),
+    phone: z.string().optional(),
+    user: userSchema.optional(),
     code: z.string().optional(),
     otp: z.string().optional(),
     message: z.string().optional(),
