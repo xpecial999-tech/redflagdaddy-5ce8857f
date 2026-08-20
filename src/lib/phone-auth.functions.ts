@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual, randomBytes } from "crypto";
 import type { Database } from "@/integrations/supabase/types";
 import { isValidE164, toE164 } from "./phone";
@@ -38,11 +38,11 @@ function randomPassword(): string {
   return randomBytes(32).toString("base64");
 }
 
-type SupabaseAdminClient = Awaited<ReturnType<typeof import("@/integrations/supabase/client.server")>>["supabaseAdmin"];
+type SupabaseAdminClient = SupabaseClient<Database>;
 
 async function getSupabaseAdmin(): Promise<SupabaseAdminClient> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
+  return supabaseAdmin as SupabaseAdminClient;
 }
 
 function getSupabaseSignInClient() {
@@ -186,7 +186,7 @@ export const verifyPhoneOtp = createServerFn({ method: "POST" })
       return { error: "Could not sign you in. Please try again." };
     }
 
-    const existingUser = existing.users.find((u) => u.phone === data.phone);
+    const existingUser = existing.users.find((u: User) => u.phone === data.phone);
     const password = randomPassword();
 
     let userId: string;
