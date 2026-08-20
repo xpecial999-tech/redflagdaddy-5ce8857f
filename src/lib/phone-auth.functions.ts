@@ -186,7 +186,11 @@ export const verifyPhoneOtp = createServerFn({ method: "POST" })
       return { error: "Could not sign you in. Please try again." };
     }
 
-    const existingUser = existing.users.find((u: User) => u.phone === data.phone);
+    // Supabase stores phones without the leading "+", so compare digits only.
+    const digits = data.phone.replace(/\D/g, "");
+    const existingUser = existing.users.find(
+      (u: User) => (u.phone ?? "").replace(/\D/g, "") === digits,
+    );
     const password = randomPassword();
 
     let userId: string;
