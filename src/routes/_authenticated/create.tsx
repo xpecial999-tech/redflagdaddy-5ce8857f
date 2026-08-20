@@ -51,6 +51,7 @@ function Create() {
           recipientEmail: recipientEmail.trim() || null,
           notes: notes.trim() || null,
           categoryIds: mode === "deep" && categoryIds.length > 0 ? categoryIds : null,
+          questionLimit: mode === "quick" ? 50 : null,
         },
       }),
     onSuccess: () => setStep(5),
