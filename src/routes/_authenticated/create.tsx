@@ -158,6 +158,20 @@ function Create() {
                 </div>
               </button>
               <button
+                onClick={() => setMode("quick")}
+                className={`w-full text-left rounded-2xl p-4 border transition ${mode === "quick" ? "border-primary/60 bg-primary/10" : "border-border bg-input"}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-medium flex items-center gap-2"><Zap className="w-4 h-4 text-aurora-1" /> Quick assessment</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      ≈{Math.min(50, qLimit)} questions — a fair spread across all categories.
+                    </div>
+                  </div>
+                  {mode === "quick" && <Check className="w-4 h-4 text-primary" />}
+                </div>
+              </button>
+              <button
                 onClick={() => canDeepDive && setMode("deep")}
                 disabled={!canDeepDive}
                 className={`w-full text-left rounded-2xl p-4 border transition ${mode === "deep" ? "border-primary/60 bg-primary/10" : "border-border bg-input"} ${!canDeepDive ? "opacity-60" : ""}`}
