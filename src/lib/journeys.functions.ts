@@ -11,6 +11,7 @@ const CreateJourneySchema = z.object({
   recipientEmail: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
   notes: z.string().trim().max(2000).optional().nullable(),
   categoryIds: z.array(z.string().uuid()).max(30).optional().nullable(),
+  questionLimit: z.number().int().min(10).max(500).optional().nullable(),
 });
 
 function originFromRequest(): string {
@@ -31,7 +32,12 @@ export const createJourney = createServerFn({ method: "POST" })
     }
     // Free users can't use category deep-dive
     const categoryIds = ent.canDeepDive && data.categoryIds && data.categoryIds.length > 0 ? data.categoryIds : null;
-    const questionLimit = categoryIds ? null : ent.questionLimit ?? DEFAULT_QUESTION_LIMIT;
+    const entLimit = ent.questionLimit ?? DEFAULT_QUESTION_LIMIT;
+    const questionLimit = categoryIds
+      ? null
+      : data.questionLimit
+        ? Math.min(data.questionLimit, entLimit)
+        : entLimit;
 
     const code = generateInviteCode();
     const origin = originFromRequest();

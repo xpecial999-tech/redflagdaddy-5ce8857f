@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers } from "lucide-react";
+import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap } from "lucide-react";
 import { createJourney } from "@/lib/journeys.functions";
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 
@@ -35,7 +35,7 @@ function Create() {
   const [step, setStep] = useState<Step>(1);
   const [title, setTitle] = useState("");
   const [participantType, setParticipantType] = useState<ParticipantType>("submissive");
-  const [mode, setMode] = useState<"full" | "deep">("full");
+  const [mode, setMode] = useState<"full" | "quick" | "deep">("full");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
@@ -51,6 +51,7 @@ function Create() {
           recipientEmail: recipientEmail.trim() || null,
           notes: notes.trim() || null,
           categoryIds: mode === "deep" && categoryIds.length > 0 ? categoryIds : null,
+          questionLimit: mode === "quick" ? 50 : null,
         },
       }),
     onSuccess: () => setStep(5),
@@ -63,7 +64,7 @@ function Create() {
   const canContinue =
     (step === 1 && title.trim().length > 0) ||
     (step === 2 && !!participantType) ||
-    (step === 3 && (mode === "full" || categoryIds.length > 0)) ||
+    (step === 3 && (mode !== "deep" || categoryIds.length > 0)) ||
     (step === 4 && true);
 
   return (
@@ -154,6 +155,20 @@ function Create() {
                     <div className="text-xs text-muted-foreground mt-0.5">≈{qLimit} questions across all categories.</div>
                   </div>
                   {mode === "full" && <Check className="w-4 h-4 text-primary" />}
+                </div>
+              </button>
+              <button
+                onClick={() => setMode("quick")}
+                className={`w-full text-left rounded-2xl p-4 border transition ${mode === "quick" ? "border-primary/60 bg-primary/10" : "border-border bg-input"}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-medium flex items-center gap-2"><Zap className="w-4 h-4 text-aurora-1" /> Quick assessment</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      ≈{Math.min(50, qLimit)} questions — a fair spread across all categories.
+                    </div>
+                  </div>
+                  {mode === "quick" && <Check className="w-4 h-4 text-primary" />}
                 </div>
               </button>
               <button
