@@ -11,6 +11,7 @@ const CreateJourneySchema = z.object({
   recipientEmail: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
   notes: z.string().trim().max(2000).optional().nullable(),
   categoryIds: z.array(z.string().uuid()).max(30).optional().nullable(),
+  questionLimit: z.number().int().min(10).max(500).optional().nullable(),
 });
 
 function originFromRequest(): string {
