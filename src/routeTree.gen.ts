@@ -21,18 +21,22 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportTokenRouteImport } from './routes/report.$token'
 import { Route as JourneyCodeRouteImport } from './routes/journey.$code'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AssessmentCodeRouteImport } from './routes/assessment.$code'
 import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedResultsIdRouteImport } from './routes/_authenticated/results.$id'
 import { Route as AuthenticatedProfileSafetyRouteImport } from './routes/_authenticated/profile.safety'
 import { Route as AuthenticatedProfilePrivacyRouteImport } from './routes/_authenticated/profile.privacy'
 import { Route as AuthenticatedProfileNotificationsRouteImport } from './routes/_authenticated/profile.notifications'
 import { Route as AuthenticatedProfileHelpRouteImport } from './routes/_authenticated/profile.help'
 import { Route as AuthenticatedJourneysIdRouteImport } from './routes/_authenticated/journeys.$id'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -97,6 +101,11 @@ const JourneyCodeRoute = JourneyCodeRouteImport.update({
   path: '/journey/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AssessmentCodeRoute = AssessmentCodeRouteImport.update({
   id: '/assessment/$code',
   path: '/assessment/$code',
@@ -126,6 +135,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedResultsIdRoute = AuthenticatedResultsIdRouteImport.update({
   id: '/results/$id',
@@ -161,6 +175,18 @@ const AuthenticatedJourneysIdRoute = AuthenticatedJourneysIdRouteImport.update({
   path: '/journeys/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -199,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/report/$token': typeof ReportTokenRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
@@ -207,10 +234,13 @@ export interface FileRoutesByFullPath {
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
   '/results/$id': typeof AuthenticatedResultsIdRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/peach/webhook': typeof ApiPublicPeachWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -228,6 +258,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/report/$token': typeof ReportTokenRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
@@ -236,10 +267,13 @@ export interface FileRoutesByTo {
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
   '/results/$id': typeof AuthenticatedResultsIdRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/peach/webhook': typeof ApiPublicPeachWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -259,6 +293,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
   '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/report/$token': typeof ReportTokenRoute
   '/_authenticated/journeys/$id': typeof AuthenticatedJourneysIdRoute
@@ -267,10 +302,13 @@ export interface FileRoutesById {
   '/_authenticated/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/_authenticated/profile/safety': typeof AuthenticatedProfileSafetyRoute
   '/_authenticated/results/$id': typeof AuthenticatedResultsIdRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/peach/webhook': typeof ApiPublicPeachWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -290,6 +328,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/upgrade'
     | '/assessment/$code'
+    | '/email/unsubscribe'
     | '/journey/$code'
     | '/report/$token'
     | '/journeys/$id'
@@ -298,10 +337,13 @@ export interface FileRouteTypes {
     | '/profile/privacy'
     | '/profile/safety'
     | '/results/$id'
+    | '/lovable/email/suppression'
     | '/api/public/peach/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -319,6 +361,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/upgrade'
     | '/assessment/$code'
+    | '/email/unsubscribe'
     | '/journey/$code'
     | '/report/$token'
     | '/journeys/$id'
@@ -327,10 +370,13 @@ export interface FileRouteTypes {
     | '/profile/privacy'
     | '/profile/safety'
     | '/results/$id'
+    | '/lovable/email/suppression'
     | '/api/public/peach/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -349,6 +395,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/upgrade'
     | '/assessment/$code'
+    | '/email/unsubscribe'
     | '/journey/$code'
     | '/report/$token'
     | '/_authenticated/journeys/$id'
@@ -357,10 +404,13 @@ export interface FileRouteTypes {
     | '/_authenticated/profile/privacy'
     | '/_authenticated/profile/safety'
     | '/_authenticated/results/$id'
+    | '/lovable/email/suppression'
     | '/api/public/peach/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -375,12 +425,16 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   AssessmentCodeRoute: typeof AssessmentCodeRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   JourneyCodeRoute: typeof JourneyCodeRoute
   ReportTokenRoute: typeof ReportTokenRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicPeachWebhookRoute: typeof ApiPublicPeachWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -469,6 +523,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JourneyCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/assessment/$code': {
       id: '/assessment/$code'
       path: '/assessment/$code'
@@ -511,6 +572,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/results/$id': {
       id: '/_authenticated/results/$id'
       path: '/results/$id'
@@ -552,6 +620,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/journeys/$id'
       preLoaderRoute: typeof AuthenticatedJourneysIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -637,12 +719,16 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   AssessmentCodeRoute: AssessmentCodeRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   JourneyCodeRoute: JourneyCodeRoute,
   ReportTokenRoute: ReportTokenRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicPeachWebhookRoute: ApiPublicPeachWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
