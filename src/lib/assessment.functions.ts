@@ -181,8 +181,14 @@ export const getAssessment = createServerFn({ method: "POST" })
     let qy = supabaseAdmin
       .from("questions")
       .select("id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic, applies_to")
-      .eq("active", true)
-      .contains("applies_to", [journey.participant_type]);
+      .eq("active", true);
+
+    // Expand the participant's archetype into its broad family + specific tags
+    if (journey.participant_type && journey.participant_type !== "any") {
+      const expanded = expandRoleForFiltering(journey.participant_type);
+      qy = qy.or(expanded.map((r) => `applies_to.cs.{${r}}`).join(","));
+    }
+
     if (categoryIds && categoryIds.length > 0) qy = qy.in("category_id", categoryIds);
     const { data: allQuestions, error: qErr } = await qy.order("order_index", { ascending: true });
     if (qErr) throw new Error(qErr.message);
