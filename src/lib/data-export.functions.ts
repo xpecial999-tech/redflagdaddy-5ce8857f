@@ -19,9 +19,9 @@ export const exportMyData = createServerFn({ method: "GET" })
     const journeys = journeysRes.data ?? [];
     const journeyIds = journeys.map((j) => j.id);
 
-    let responses: unknown[] = [];
-    let results: unknown[] = [];
-    let invites: unknown[] = [];
+    let responses: Record<string, unknown>[] = [];
+    let results: Record<string, unknown>[] = [];
+    let invites: Record<string, unknown>[] = [];
 
     if (journeyIds.length > 0) {
       const [rRes, resRes, iRes] = await Promise.all([
