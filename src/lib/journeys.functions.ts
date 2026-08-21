@@ -4,6 +4,8 @@ import { z } from "zod";
 import { generateInviteCode } from "./utils.server";
 import { loadEntitlement, DEFAULT_QUESTION_LIMIT } from "./entitlement.functions";
 import { ALL_ROLES } from "./roles";
+import { buildInviteSms } from "./invite-message";
+
 
 const CreateJourneySchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -77,9 +79,16 @@ export const createJourney = createServerFn({ method: "POST" })
     if (data.recipientPhone) {
       try {
         const { sendClickatellSms } = await import("./phone-auth.server");
+        const { data: me } = await supabase.from("users").select("name").eq("id", userId).maybeSingle();
         await sendClickatellSms(
           data.recipientPhone,
-          `You've been invited to a RedFlagDaddy assessment: "${journey.title}". Start here: ${inviteUrl}`,
+          buildInviteSms({
+            recipientName: data.recipientName,
+            senderName: me?.name ?? null,
+            title: journey.title,
+            notes: data.notes,
+            url: inviteUrl,
+          }),
           "journey-invite",
         );
         smsSent = true;
@@ -87,6 +96,7 @@ export const createJourney = createServerFn({ method: "POST" })
         console.error("Invite SMS failed:", e);
       }
     }
+
 
     return {
       journey,
@@ -182,6 +192,8 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         channel: z.literal("sms").default("sms"),
         recipientName: z.string().trim().max(120).optional().nullable(),
+        notes: z.string().trim().max(500).optional().nullable(),
+
         recipientPhone: z
           .string()
           .trim()
@@ -217,11 +229,19 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
       const phone = data.recipientPhone?.trim();
       if (!phone) throw new Error("Enter a valid mobile number.");
       const { sendClickatellSms } = await import("./phone-auth.server");
+      const { data: me } = await supabase.from("users").select("name").eq("id", userId).maybeSingle();
       await sendClickatellSms(
         phone,
-        `You've been invited to a RedFlagDaddy assessment: "${journey.title}". Start here: ${inviteUrl}`,
+        buildInviteSms({
+          recipientName: data.recipientName,
+          senderName: me?.name ?? null,
+          title: journey.title,
+          notes: data.notes,
+          url: inviteUrl,
+        }),
         "journey-invite",
       );
+
       const { error: updErr } = await supabase
         .from("journeys")
         .update({ guest_phone: phone })
