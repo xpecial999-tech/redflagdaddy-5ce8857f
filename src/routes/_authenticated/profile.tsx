@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { LogOut, Shield, Bell, Lock, HelpCircle, Loader2, ChevronRight } from "lucide-react";
+import { LogOut, Shield, Lock, HelpCircle, Loader2, ChevronRight } from "lucide-react";
 import { useMe } from "@/hooks/use-me";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/phone";
@@ -18,12 +18,6 @@ const settings = [
     icon: Lock,
     label: "Privacy & data",
     desc: "Manage what's stored and shared.",
-  },
-  {
-    to: "/profile/notifications" as const,
-    icon: Bell,
-    label: "Notifications",
-    desc: "Email & in-app preferences.",
   },
   {
     to: "/profile/safety" as const,
