@@ -4,15 +4,19 @@ import { generateInviteCode } from "./utils.server";
 import { isValidE164, toE164 } from "./phone";
 
 const CreateGuestSchema = z.object({
-  guestEmail: z.string().trim().email().max(255),
+  guestEmail: z
+    .string()
+    .trim()
+    .email()
+    .max(255)
+    .optional()
+    .or(z.literal("")),
   guestPhone: z
     .string()
     .trim()
     .max(24)
-    .optional()
-    .or(z.literal(""))
     .transform((v) => {
-      if (!v) return "";
+      if (!v) throw new Error("Mobile number is required.");
       const normalized = toE164(v);
       if (!isValidE164(normalized)) throw new Error("Enter a valid mobile number with country code.");
       return normalized;
@@ -44,7 +48,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
         participant_type: data.partnerType,
         invite_code: code,
         recipient_email: partnerEmail,
-        guest_email: data.guestEmail,
+        guest_email: data.guestEmail || null,
         guest_phone: guestPhone,
         status: "pending",
       })

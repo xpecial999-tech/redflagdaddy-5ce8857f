@@ -3,12 +3,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { createGuestJourney } from "@/lib/guest.functions";
+import { formatPhone } from "@/lib/phone";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   UserCircle2,
-  Mail,
+  Smartphone,
   ClipboardList,
   Copy,
   Check,
@@ -36,9 +37,9 @@ const partnerRoles = ["Dominant", "submissive", "switch"] as const;
 
 const steps = [
   {
-    icon: Mail,
+    icon: Smartphone,
     title: "Tell us where to send your report",
-    body: "We'll email your completed compatibility, safety and red-flag report to you when the assessment is done.",
+    body: "We'll text your completed compatibility, safety and red-flag report link to your mobile number when the assessment is done.",
   },
   {
     icon: ClipboardList,
@@ -50,14 +51,13 @@ const steps = [
 function GuestPage() {
   const createFn = useServerFn(createGuestJourney);
 
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [partnerType, setPartnerType] = useState<typeof partnerRoles[number] | "">("");
 
   const mutation = useMutation({
     mutationFn: () =>
       createFn({
-        data: { guestEmail: email, guestPhone: phone, partnerEmail: "", partnerType },
+        data: { guestPhone: phone, partnerEmail: "", partnerType },
       }),
   });
 
@@ -66,7 +66,6 @@ function GuestPage() {
     return (
       <PartnerLinkView
         code={mutation.data.code}
-        guestEmail={email}
         guestPhone={phone}
         partnerType={partnerType}
       />
@@ -89,7 +88,7 @@ function GuestPage() {
             Continue as guest
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Take the assessment without creating an account. Your final report lands in your inbox.
+            Take the assessment without creating an account. Your final report link is sent to your mobile number.
           </p>
         </div>
 
@@ -125,22 +124,13 @@ function GuestPage() {
             }}
           >
             <Field
-              label="Your email address"
-              hint="Only used to send your completed report."
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="you@example.com"
-            />
-
-            <Field
-              label="Your mobile number (optional)"
-              hint="We'll text you a private download link to your report when it's ready."
+              label="Your mobile number"
+              hint="We'll text your private report link here when the assessment is done."
               type="tel"
               inputMode="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              required
               placeholder="071 234 5678"
             />
 
@@ -194,12 +184,10 @@ function GuestPage() {
 
 function PartnerLinkView({
   code,
-  guestEmail,
   guestPhone,
   partnerType,
 }: {
   code: string;
-  guestEmail: string;
   guestPhone?: string;
   partnerType: string;
 }) {
@@ -217,7 +205,7 @@ function PartnerLinkView({
 
   const selfMutation = useMutation({
     mutationFn: () =>
-      createFn({ data: { guestEmail, guestPhone: guestPhone ?? "", partnerEmail: "", partnerType: selfType as typeof partnerRoles[number], isSelf: true } }),
+      createFn({ data: { guestPhone: guestPhone ?? "", partnerEmail: "", partnerType: selfType as typeof partnerRoles[number], isSelf: true } }),
 
     onSuccess: (res) => {
       navigate({ to: "/journey/$code", params: { code: res.code } });
@@ -270,7 +258,7 @@ function PartnerLinkView({
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Send this link to your partner so they can take the {partnerType} assessment. They'll
-            answer privately and we'll email the combined report to you.
+            answer privately and we'll text the combined report link to your mobile number.
           </p>
         </div>
 
@@ -302,8 +290,8 @@ function PartnerLinkView({
               <li>Share the link using one of the buttons below — your contacts stay on your device.</li>
               <li>They open the link, confirm they're 18+, and complete the assessment.</li>
               <li>
-                Once they finish, we'll email the combined report to you:{" "}
-                <span className="text-foreground">{guestEmail}</span>
+                Once they finish, we'll text the combined report link to:{" "}
+                <span className="text-foreground">{formatPhone(guestPhone) || guestPhone}</span>
               </li>
             </ol>
           </div>
