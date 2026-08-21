@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { LogOut, Shield, Lock, HelpCircle, Loader2, ChevronRight } from "lucide-react";
+import { LogOut, Lock, Loader2, ChevronRight } from "lucide-react";
 import { useMe } from "@/hooks/use-me";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/phone";
@@ -18,18 +18,6 @@ const settings = [
     icon: Lock,
     label: "Privacy & data",
     desc: "Manage what's stored and shared.",
-  },
-  {
-    to: "/profile/safety" as const,
-    icon: Shield,
-    label: "Safety center",
-    desc: "Block lists, panic features.",
-  },
-  {
-    to: "/profile/help" as const,
-    icon: HelpCircle,
-    label: "Help & consent guides",
-    desc: "Education resources.",
   },
 ];
 
