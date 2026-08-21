@@ -479,6 +479,27 @@ export type Database = {
           },
         ]
       }
+      rate_limit_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          key_hash: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          key_hash: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          key_hash?: string
+        }
+        Relationships: []
+      }
       sms_log: {
         Row: {
           content_preview: string | null
@@ -626,6 +647,15 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_phone_otps: { Args: never; Returns: undefined }
+      consume_rate_limit: {
+        Args: {
+          action_name: string
+          hashed_key: string
+          max_events: number
+          window_seconds: number
+        }
+        Returns: boolean
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

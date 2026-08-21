@@ -23,6 +23,11 @@ export const createGuestJourney = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => CreateGuestSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
+    await consumeRateLimits([
+      { action: "guest_journey_ip", value: callerIp(), windowSeconds: 60 * 60, maxEvents: 5 },
+      { action: "guest_journey_phone", value: data.guestPhone, windowSeconds: 24 * 60 * 60, maxEvents: 3 },
+    ]);
     const code = generateInviteCode();
     const guestPhone = data.guestPhone && data.guestPhone.length > 0 ? data.guestPhone : null;
 
@@ -80,6 +85,13 @@ export const sendGuestInvite = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!journey || journey.creator_id !== null) throw new Error("Invite not found");
+
+    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
+    await consumeRateLimits([
+      { action: "guest_invite_ip", value: callerIp(), windowSeconds: 60 * 60, maxEvents: 5 },
+      { action: "guest_invite_code", value: data.code, windowSeconds: 60 * 60, maxEvents: 3 },
+      { action: "guest_invite_phone", value: data.recipientPhone, windowSeconds: 24 * 60 * 60, maxEvents: 5 },
+    ]);
 
     const origin = process.env["PUBLIC_SITE_URL"] ?? "https://redflagdaddy.com";
     const url = journey.invite_url ?? `${origin}/j/${journey.invite_code}`;
