@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isCurrentUserAdmin } from "@/lib/admin-auth.functions";
 import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/phone-auth.functions";
