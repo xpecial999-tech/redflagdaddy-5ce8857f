@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Compass, LayoutDashboard, Plus, User, Shield, LogIn } from "lucide-react";
+import { LayoutDashboard, Plus, User, Shield, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { useMe } from "@/hooks/use-me";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 const baseNavItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
