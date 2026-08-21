@@ -182,22 +182,24 @@ function Register() {
         </AnimatePresence>
       </motion.div>
 
-      <section className="glass-strong rounded-3xl p-6 text-center">
-        <h2 className="text-2xl font-display font-semibold mb-2">How it works</h2>
-        <p className="text-sm text-muted-foreground mb-6">Three steps, fully consent-first.</p>
-        <ol className="space-y-4 text-left">
-          {[
-            "Create a journey and choose what to assess.",
-            "Invite the other person via a private, expiring link.",
-            "Review side-by-side compatibility, limits and red flags.",
-          ].map((s, i) => (
-            <li key={i} className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center font-semibold">{i + 1}</span>
-              <span className="text-sm pt-0.5">{s}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {step === "form" && (
+        <section className="glass-strong rounded-3xl p-6 text-center">
+          <h2 className="text-2xl font-display font-semibold mb-2">How it works</h2>
+          <p className="text-sm text-muted-foreground mb-6">Three steps, fully consent-first.</p>
+          <ol className="space-y-4 text-left">
+            {[
+              "Create a journey and choose what to assess.",
+              "Invite the other person via a private, expiring link.",
+              "Review side-by-side compatibility, limits and red flags.",
+            ].map((s, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center font-semibold">{i + 1}</span>
+                <span className="text-sm pt-0.5">{s}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
     </div>
   );
 }
