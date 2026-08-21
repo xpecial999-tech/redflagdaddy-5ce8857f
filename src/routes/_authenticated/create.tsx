@@ -229,12 +229,14 @@ function Create() {
         {step === 5 && mutation.data && (
           <SuccessScreen
             key="5"
+            journeyId={mutation.data.journey.id}
             url={mutation.data.journey.invite_url ?? ""}
             code={mutation.data.journey.invite_code}
             title={mutation.data.journey.title}
             partnerType={mutation.data.journey.participant_type as Role}
             smsSent={mutation.data.smsSent}
             phone={recipientPhone.trim() ? toE164(recipientPhone.trim()) : null}
+            recipientName={recipientName.trim() || null}
           />
         )}
       </AnimatePresence>
