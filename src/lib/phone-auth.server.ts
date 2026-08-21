@@ -209,11 +209,16 @@ export async function requestPhoneOtpHandler(data: { phone: string; ip?: string 
   return { sent: true };
 }
 
-export async function verifyPhoneOtpHandler(data: { phone: string; code: string; metadata?: OtpMetadata }) {
+export async function verifyPhoneOtpHandler(data: {
+  phone: string;
+  code: string;
+  metadata?: OtpMetadata;
+  ip?: string | null;
+}) {
   const supabaseAdmin = await getSupabaseAdmin();
   const { data: rows, error: fetchError } = await supabaseAdmin
     .from("phone_otps")
-    .select("id, code_hash, expires_at, attempts, used")
+    .select("id, code_hash, expires_at, attempts, used, locked_until")
     .eq("phone", data.phone)
     .eq("used", false)
     .order("created_at", { ascending: false })
@@ -225,17 +230,27 @@ export async function verifyPhoneOtpHandler(data: { phone: string; code: string;
   }
 
   const row = rows?.[0];
-  if (!row) return { error: "Invalid or expired code." };
-  if (new Date(row.expires_at) < new Date()) return { error: "Code has expired. Please request a new one." };
-  if (row.attempts >= MAX_VERIFY_ATTEMPTS) {
-    await supabaseAdmin.from("phone_otps").update({ used: true }).eq("id", row.id);
-    return { error: "Too many attempts. Please request a new code." };
+  if (!row) return { error: GENERIC_VERIFY_ERROR };
+  if (row.locked_until && new Date(row.locked_until) > new Date()) {
+    return { error: "Too many attempts. This number is locked for 15 minutes." };
   }
+  if (new Date(row.expires_at) < new Date()) return { error: GENERIC_VERIFY_ERROR };
 
   const newAttempts = row.attempts + 1;
   if (!safeCompare(row.code_hash, hashCode(data.code))) {
-    await supabaseAdmin.from("phone_otps").update({ attempts: newAttempts }).eq("id", row.id);
-    return { error: "Invalid code." };
+    const lockNow = newAttempts >= MAX_VERIFY_ATTEMPTS;
+    await supabaseAdmin
+      .from("phone_otps")
+      .update({
+        attempts: newAttempts,
+        ...(lockNow ? { used: true, locked_until: new Date(Date.now() + LOCKOUT_MS).toISOString() } : {}),
+      })
+      .eq("id", row.id);
+    if (lockNow) {
+      console.warn("[phone-otp] Lockout triggered after repeated bad codes");
+      return { error: "Too many attempts. This number is locked for 15 minutes." };
+    }
+    return { error: GENERIC_VERIFY_ERROR };
   }
   await supabaseAdmin.from("phone_otps").update({ used: true, attempts: newAttempts }).eq("id", row.id);
 
