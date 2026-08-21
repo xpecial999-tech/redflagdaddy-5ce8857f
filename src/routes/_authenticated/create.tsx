@@ -1,3 +1,4 @@
+import { oppositeRole, type Role } from "@/lib/roles";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
