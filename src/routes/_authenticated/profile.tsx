@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { LogOut, Shield, Bell, Lock, HelpCircle, Loader2, ChevronRight, Mail } from "lucide-react";
-import { useState } from "react";
+import { LogOut, Shield, Bell, Lock, HelpCircle, Loader2, ChevronRight } from "lucide-react";
 import { useMe } from "@/hooks/use-me";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/phone";
