@@ -51,14 +51,16 @@ function GuestPage() {
   const createFn = useServerFn(createGuestJourney);
 
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [partnerType, setPartnerType] = useState<typeof partnerRoles[number] | "">("");
 
   const mutation = useMutation({
     mutationFn: () =>
       createFn({
-        data: { guestEmail: email, partnerEmail: "", partnerType },
+        data: { guestEmail: email, guestPhone: phone, partnerEmail: "", partnerType },
       }),
   });
+
 
   if (mutation.data) {
     return (
