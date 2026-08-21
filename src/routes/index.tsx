@@ -31,8 +31,9 @@ function Landing() {
           transition={{ duration: 1, delay: 1 }}
           className="text-muted-foreground max-w-md mx-auto"
         >
-          RedFlagDaddy helps Dominants, submissives and switches assess consent,
-          compatibility, safety and red flags — with structure, not guesswork.
+          RedFlagDaddy helps Dominants, submissives, switches and the full spectrum
+          of BDSM archetypes assess consent, compatibility, safety and red flags
+          — with structure, not guesswork.
         </motion.p>
 
         <motion.div
