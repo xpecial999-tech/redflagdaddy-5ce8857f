@@ -19,9 +19,9 @@ export const exportMyData = createServerFn({ method: "GET" })
     const journeys = journeysRes.data ?? [];
     const journeyIds = journeys.map((j) => j.id);
 
-    let responses: Record<string, unknown>[] = [];
-    let results: Record<string, unknown>[] = [];
-    let invites: Record<string, unknown>[] = [];
+    let responses: unknown[] = [];
+    let results: unknown[] = [];
+    let invites: unknown[] = [];
 
     if (journeyIds.length > 0) {
       const [rRes, resRes, iRes] = await Promise.all([
@@ -34,7 +34,7 @@ export const exportMyData = createServerFn({ method: "GET" })
       invites = iRes.data ?? [];
     }
 
-    return {
+    const payload = {
       exportedAt: new Date().toISOString(),
       profile: profileRes.data ?? null,
       preferences: prefsRes.data ?? null,
@@ -43,4 +43,6 @@ export const exportMyData = createServerFn({ method: "GET" })
       responses,
       results,
     };
+
+    return { json: JSON.stringify(payload, null, 2) };
   });
