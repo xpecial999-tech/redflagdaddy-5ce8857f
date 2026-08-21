@@ -58,7 +58,30 @@ function getSupabaseSignInClient() {
   });
 }
 
-export async function sendClickatellSms(phone: string, content: string) {
+async function logSms(entry: {
+  phone: string;
+  purpose: string;
+  content: string;
+  providerMessageId?: string | null;
+  status: string;
+  error?: string | null;
+}) {
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    await (supabaseAdmin.from("sms_log") as any).insert({
+      phone: entry.phone,
+      purpose: entry.purpose,
+      content_preview: entry.content.slice(0, 160),
+      provider_message_id: entry.providerMessageId ?? null,
+      status: entry.status,
+      error: entry.error ?? null,
+    });
+  } catch (e) {
+    console.error("[clickatell-sms] Failed to write sms_log:", e);
+  }
+}
+
+export async function sendClickatellSms(phone: string, content: string, purpose = "general") {
   const apiKey = process.env["CLICKATELL_API_KEY"];
   if (!apiKey) throw new Error("CLICKATELL_API_KEY is not configured");
 
@@ -77,7 +100,8 @@ export async function sendClickatellSms(phone: string, content: string) {
 
   const body = await response.text();
   if (!response.ok) {
-    console.error(`[clickatell-sms] Provider error ${response.status}: ${body}`);
+    console.error(`[clickatell-sms] Provider error ${response.status} to ${to}: ${body}`);
+    await logSms({ phone: to, purpose, content, status: "failed", error: `HTTP ${response.status}: ${body.slice(0, 300)}` });
     throw new Error(`Clickatell error: ${response.status}`);
   }
 
@@ -95,16 +119,26 @@ export async function sendClickatellSms(phone: string, content: string) {
     parsed = JSON.parse(body) as typeof parsed;
   } catch {
     console.error("[clickatell-sms] Invalid provider response");
+    await logSms({ phone: to, purpose, content, status: "failed", error: "Invalid provider response" });
     throw new Error("Clickatell returned an invalid response");
   }
 
   const message = parsed.messages?.[0];
   if (!message || message.accepted !== true || !message.apiMessageId) {
     console.error("[clickatell-sms] Message was not accepted:", body);
+    await logSms({
+      phone: to,
+      purpose,
+      content,
+      status: "rejected",
+      error: message?.errorDescription ?? body.slice(0, 300),
+    });
     throw new Error(message?.errorDescription || "SMS provider did not accept the message");
   }
 
-  console.log(`[clickatell-sms] Accepted message ${message.apiMessageId}`);
+  console.log(`[clickatell-sms] Accepted message ${message.apiMessageId} to ${to} (${purpose})`);
+  await logSms({ phone: to, purpose, content, providerMessageId: message.apiMessageId, status: "accepted" });
+  return message.apiMessageId;
 }
 
 /** Hash the caller IP so we can rate-limit without storing raw addresses. */
@@ -199,6 +233,7 @@ export async function requestPhoneOtpHandler(data: { phone: string; ip?: string 
     await sendClickatellSms(
       data.phone,
       `Your RedFlagDaddy code is ${code}. It expires in ${OTP_EXPIRY_MINUTES} minutes. Never share it with anyone.`,
+      "otp",
     );
   } catch (error) {
     await supabaseAdmin.from("phone_otps").update({ used: true }).eq("id", stored.id);

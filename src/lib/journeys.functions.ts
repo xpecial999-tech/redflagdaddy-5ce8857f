@@ -80,6 +80,7 @@ export const createJourney = createServerFn({ method: "POST" })
         await sendClickatellSms(
           data.recipientPhone,
           `You've been invited to a RedFlagDaddy assessment: "${journey.title}". Start here: ${inviteUrl}`,
+          "journey-invite",
         );
         smsSent = true;
       } catch (e) {
@@ -219,6 +220,7 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
       await sendClickatellSms(
         phone,
         `You've been invited to a RedFlagDaddy assessment: "${journey.title}". Start here: ${inviteUrl}`,
+        "journey-invite",
       );
       const { error: updErr } = await supabase
         .from("journeys")
