@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/phone-auth.functions";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
-import { ALL_ROLES, TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role } from "@/lib/roles";
+import { TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role } from "@/lib/roles";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
