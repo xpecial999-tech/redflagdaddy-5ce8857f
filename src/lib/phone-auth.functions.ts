@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { requestPhoneOtpHandler, verifyPhoneOtpHandler, type OtpMetadata } from "./phone-auth.server";
 import { isValidE164, toE164 } from "./phone";
+import { isRole } from "./roles";
 
 function callerIp(): string | null {
   const forwarded = getRequestHeader("x-forwarded-for");
@@ -30,7 +31,7 @@ export const verifyPhoneOtp = createServerFn({ method: "POST" })
     const metadata: OtpMetadata | undefined = data.metadata
       ? {
           ...(typeof data.metadata.name === "string" ? { name: data.metadata.name.trim().slice(0, 80) } : {}),
-          ...(["Dominant", "submissive", "switch"].includes(data.metadata.role as string)
+          ...(typeof data.metadata.role === "string" && isRole(data.metadata.role)
             ? { role: data.metadata.role }
             : {}),
         }

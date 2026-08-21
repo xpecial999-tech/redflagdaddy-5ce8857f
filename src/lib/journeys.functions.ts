@@ -3,10 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { generateInviteCode } from "./utils.server";
 import { loadEntitlement, DEFAULT_QUESTION_LIMIT } from "./entitlement.functions";
+import { ALL_ROLES } from "./roles";
 
 const CreateJourneySchema = z.object({
   title: z.string().trim().min(1).max(120),
-  participantType: z.enum(["Dominant", "submissive", "switch"]),
+  participantType: z.enum(ALL_ROLES),
   recipientName: z.string().trim().max(120).optional().nullable(),
   recipientEmail: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
   recipientPhone: z

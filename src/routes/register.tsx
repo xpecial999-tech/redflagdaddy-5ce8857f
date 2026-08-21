@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/phone-auth.functions";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
+import { TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role } from "@/lib/roles";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -21,14 +22,12 @@ export const Route = createFileRoute("/register")({
   component: Register,
 });
 
-const roles = ["Dominant", "submissive", "switch"] as const;
-
 function Register() {
   const navigate = useNavigate();
   const sendOtp = useServerFn(requestPhoneOtp);
   const verifyOtp = useServerFn(verifyPhoneOtp);
   const [step, setStep] = useState<"form" | "otp">("form");
-  const [role, setRole] = useState<typeof roles[number]>("switch");
+  const [role, setRole] = useState<Role>("switch");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -112,13 +111,10 @@ function Register() {
 
                 <div>
                   <span className="text-xs text-muted-foreground">Primary identity</span>
-                  <div className="mt-1 grid grid-cols-3 gap-2">
-                    {roles.map((r) => (
-                      <button type="button" key={r} onClick={() => setRole(r)}
-                        className={`rounded-xl border px-2 py-2.5 text-xs font-medium transition ${role === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground"}`}>
-                        {r}
-                      </button>
-                    ))}
+                  <div className="mt-2 space-y-3 max-h-64 overflow-y-auto pr-1">
+                    <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={role} onSelect={setRole} />
+                    <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={role} onSelect={setRole} />
+                    <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={role} onSelect={setRole} />
                   </div>
                 </div>
 
@@ -201,5 +197,25 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
       <span className="text-xs text-muted-foreground">{label}</span>
       <input {...props} className="mt-1 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
     </label>
+  );
+}
+
+function RoleGroup({ label, roles, selected, onSelect }: { label: string; roles: readonly Role[]; selected: Role; onSelect: (r: Role) => void }) {
+  return (
+    <div>
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</span>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        {roles.map((r) => (
+          <button
+            type="button"
+            key={r}
+            onClick={() => onSelect(r)}
+            className={`rounded-xl border px-2 py-2.5 text-xs font-medium transition text-left ${selected === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:border-primary/50"}`}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

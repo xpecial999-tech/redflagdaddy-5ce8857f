@@ -7,23 +7,14 @@ import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, User
 import { createJourney } from "@/lib/journeys.functions";
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
+import { TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role, oppositeRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
   component: Create,
 });
 
-const selfRoles = ["Dominant", "submissive", "switch"] as const;
-type SelfRole = (typeof selfRoles)[number];
-
-const participantTypes = [
-  { value: "Dominant", desc: "They lead in the dynamic." },
-  { value: "submissive", desc: "They follow in the dynamic." },
-  { value: "switch", desc: "They move between roles." },
-] as const;
-
 type Step = 1 | 2 | 3 | 4 | 5;
-type ParticipantType = (typeof participantTypes)[number]["value"];
 
 function Create() {
   const createFn = useServerFn(createJourney);
@@ -35,7 +26,7 @@ function Create() {
 
   const [step, setStep] = useState<Step>(1);
   const [title, setTitle] = useState("");
-  const [participantType, setParticipantType] = useState<ParticipantType>("submissive");
+  const [participantType, setParticipantType] = useState<Role>("submissive");
   const [mode, setMode] = useState<"full" | "quick" | "deep">("full");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [recipientName, setRecipientName] = useState("");
@@ -119,27 +110,10 @@ function Create() {
         {step === 2 && (
           <StepWrap key="2">
             <h2 className="font-semibold mb-3">Their role in the dynamic</h2>
-            <div className="space-y-2">
-              {participantTypes.map((t) => {
-                const on = participantType === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    onClick={() => setParticipantType(t.value)}
-                    className={`w-full text-left rounded-2xl p-4 border transition ${on ? "border-primary/60 bg-primary/10" : "border-border bg-input"}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{t.value}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">{t.desc}</div>
-                      </div>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${on ? "bg-primary border-primary" : "border-border"}`}>
-                        {on && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={participantType} onSelect={setParticipantType} />
+              <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={participantType} onSelect={setParticipantType} />
+              <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={participantType} onSelect={setParticipantType} />
             </div>
           </StepWrap>
         )}
@@ -260,7 +234,7 @@ function Create() {
             code={mutation.data.journey.invite_code}
             email={mutation.data.journey.recipient_email}
             title={mutation.data.journey.title}
-            partnerType={mutation.data.journey.participant_type as SelfRole}
+            partnerType={mutation.data.journey.participant_type as Role}
             smsSent={mutation.data.smsSent}
             phone={recipientPhone.trim() ? toE164(recipientPhone.trim()) : null}
           />
@@ -330,20 +304,19 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
   );
 }
 
-function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }: { url: string; code: string; email: string | null; title: string; partnerType: SelfRole; smsSent?: boolean; phone?: string | null }) {
+function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }: { url: string; code: string; email: string | null; title: string; partnerType: Role; smsSent?: boolean; phone?: string | null }) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
   const navigate = useNavigate();
   const createFn = useServerFn(createJourney);
-  const opposite: SelfRole | "" =
-    partnerType === "Dominant" ? "submissive" : partnerType === "submissive" ? "Dominant" : "";
-  const [selfType, setSelfType] = useState<SelfRole | "">(opposite);
+  const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
+  const [selfType, setSelfType] = useState<Role | "">(opposite);
 
   const selfMutation = useMutation({
     mutationFn: () =>
       createFn({
         data: {
           title: "My self-assessment",
-          participantType: selfType as SelfRole,
+          participantType: selfType as Role,
           recipientName: null,
           recipientEmail: null,
           notes: null,
@@ -429,17 +402,10 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
         </div>
         <div>
           <span className="text-xs uppercase tracking-wider text-muted-foreground">I am a…</span>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {selfRoles.map((r) => (
-              <button
-                type="button"
-                key={r}
-                onClick={() => setSelfType(r)}
-                className={`rounded-xl border px-2 py-3 text-xs font-medium transition ${selfType === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
-              >
-                {r}
-              </button>
-            ))}
+          <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
+            <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={selfType} onSelect={setSelfType} />
+            <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={selfType} onSelect={setSelfType} />
+            <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={selfType} onSelect={setSelfType} />
           </div>
         </div>
         {selfMutation.error && (
@@ -454,5 +420,28 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
         </button>
       </div>
     </motion.div>
+  );
+}
+
+function RoleGroup({ label, roles, selected, onSelect }: { label: string; roles: readonly Role[]; selected: Role | ""; onSelect: (r: Role) => void }) {
+  return (
+    <div>
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</span>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        {roles.map((r) => {
+          const on = selected === r;
+          return (
+            <button
+              type="button"
+              key={r}
+              onClick={() => onSelect(r)}
+              className={`rounded-xl border px-3 py-2.5 text-xs font-medium transition text-left ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:border-primary/50"}`}
+            >
+              {r}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

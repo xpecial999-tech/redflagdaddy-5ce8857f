@@ -33,7 +33,7 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "How RedFlagDaddy works: structured assessments for Dominants, submissives and switches with research-grounded questions, safety scoring, real-time journey tracking and end-to-end privacy.",
+          "How RedFlagDaddy works: structured, role-aware assessments for Dominants, submissives, switches and the full spectrum of BDSM archetypes, with research-grounded questions, safety scoring, real-time journey tracking and end-to-end privacy.",
       },
       { property: "og:title", content: "About — RedFlagDaddy" },
       {
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/about")({
 const stats = [
   { value: "500+", label: "Curated questions" },
   { value: "23", label: "Assessment categories" },
-  { value: "3", label: "Role-aware tracks" },
+  { value: "20+", label: "Role-aware archetypes" },
   { value: "5", label: "Scoring dimensions" },
 ];
 
@@ -58,7 +58,7 @@ const flow = [
     icon: ClipboardCheck,
     title: "Create a journey",
     body:
-      "A guided 3-step wizard: name your assessment, pick the respondent's role (Dominant, submissive or switch), and add optional recipient details.",
+      "A guided wizard: name your assessment, pick the respondent's archetype (Dominant, submissive, switch, Master, brat, little, primal and more), and add optional recipient details.",
   },
   {
     icon: Users,
@@ -159,9 +159,10 @@ function About() {
           transition={{ delay: 0.2 }}
           className="text-muted-foreground max-w-xl mx-auto"
         >
-          RedFlagDaddy replaces guesswork with structure. We help Dominants, submissives and
-          switches assess consent, compatibility, safety and red flags — using a research-grounded
-          question library, transparent scoring, and real-time journey tracking.
+          RedFlagDaddy replaces guesswork with structure. We help Dominants, submissives,
+          switches and the full spectrum of BDSM archetypes assess consent, compatibility,
+          safety and red flags — using a research-grounded question library, transparent scoring,
+          and real-time journey tracking.
         </motion.p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto pt-4">
@@ -436,9 +437,9 @@ function About() {
         </h2>
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
           Our library is informed by established consent frameworks, BDSM safety literature and
-          community-vetted compatibility checklists — then tagged by role so Dominants,
-          submissives and switches only see what's relevant. Admins can refine tagging with
-          AI-assisted suggestions to keep the library sharp.
+          community-vetted compatibility checklists — then tagged by archetype so Dominants,
+          submissives, switches, Masters, brats, littles and every other role only see what's
+          relevant. Admins can refine tagging with AI-assisted suggestions to keep the library sharp.
         </p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
           {[

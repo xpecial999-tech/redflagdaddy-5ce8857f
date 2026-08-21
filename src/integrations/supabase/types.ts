@@ -625,7 +625,28 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "expired"
-      participant_type: "Dominant" | "submissive" | "switch" | "any"
+      participant_type:
+        | "Dominant"
+        | "submissive"
+        | "switch"
+        | "any"
+        | "Master"
+        | "slave"
+        | "brat"
+        | "little"
+        | "pet"
+        | "caregiver"
+        | "primal"
+        | "sadist"
+        | "masochist"
+        | "rope top"
+        | "rope bottom"
+        | "service top"
+        | "service bottom"
+        | "degradation giver"
+        | "degradation receiver"
+        | "exhibitionist"
+        | "voyeur"
       question_type:
         | "single_choice"
         | "multi_choice"
@@ -635,7 +656,27 @@ export type Database = {
         | "slider"
         | "scenario"
       risk_level: "low" | "medium" | "high" | "critical"
-      user_role: "Dominant" | "submissive" | "switch"
+      user_role:
+        | "Dominant"
+        | "submissive"
+        | "switch"
+        | "Master"
+        | "slave"
+        | "brat"
+        | "little"
+        | "pet"
+        | "caregiver"
+        | "primal"
+        | "sadist"
+        | "masochist"
+        | "rope top"
+        | "rope bottom"
+        | "service top"
+        | "service bottom"
+        | "degradation giver"
+        | "degradation receiver"
+        | "exhibitionist"
+        | "voyeur"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -770,7 +811,29 @@ export const Constants = {
         "completed",
         "expired",
       ],
-      participant_type: ["Dominant", "submissive", "switch", "any"],
+      participant_type: [
+        "Dominant",
+        "submissive",
+        "switch",
+        "any",
+        "Master",
+        "slave",
+        "brat",
+        "little",
+        "pet",
+        "caregiver",
+        "primal",
+        "sadist",
+        "masochist",
+        "rope top",
+        "rope bottom",
+        "service top",
+        "service bottom",
+        "degradation giver",
+        "degradation receiver",
+        "exhibitionist",
+        "voyeur",
+      ],
       question_type: [
         "single_choice",
         "multi_choice",
@@ -781,7 +844,28 @@ export const Constants = {
         "scenario",
       ],
       risk_level: ["low", "medium", "high", "critical"],
-      user_role: ["Dominant", "submissive", "switch"],
+      user_role: [
+        "Dominant",
+        "submissive",
+        "switch",
+        "Master",
+        "slave",
+        "brat",
+        "little",
+        "pet",
+        "caregiver",
+        "primal",
+        "sadist",
+        "masochist",
+        "rope top",
+        "rope bottom",
+        "service top",
+        "service bottom",
+        "degradation giver",
+        "degradation receiver",
+        "exhibitionist",
+        "voyeur",
+      ],
     },
   },
 } as const

@@ -17,6 +17,7 @@ import {
   MessageCircle,
   MessageSquare,
 } from "lucide-react";
+import { TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role, oppositeRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/guest")({
   head: () => ({ meta: [{ title: "Continue as guest — RedFlagDaddy" }] }),
@@ -33,8 +34,6 @@ export const Route = createFileRoute("/guest")({
   ),
 });
 
-const partnerRoles = ["Dominant", "submissive", "switch"] as const;
-
 const steps = [
   {
     icon: Smartphone,
@@ -44,7 +43,7 @@ const steps = [
   {
     icon: ClipboardList,
     title: "Pick the dynamic you're assessing",
-    body: "Is your partner a Dominant, submissive, or switch? This shapes the questions they will answer.",
+    body: "Choose the role that best matches your partner. This shapes the questions they will answer.",
   },
 ];
 
@@ -52,7 +51,7 @@ function GuestPage() {
   const createFn = useServerFn(createGuestJourney);
 
   const [phone, setPhone] = useState("");
-  const [partnerType, setPartnerType] = useState<typeof partnerRoles[number] | "">("");
+  const [partnerType, setPartnerType] = useState<Role | "">("");
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -138,19 +137,12 @@ function GuestPage() {
             <div>
               <span className="text-sm font-medium">Which assessment do you want to do?</span>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Is your partner a Dominant, submissive, or switch?
+                Choose the role that best matches your partner.
               </p>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {partnerRoles.map((r) => (
-                  <button
-                    type="button"
-                    key={r}
-                    onClick={() => setPartnerType(r)}
-                    className={`rounded-xl border px-2 py-3 text-xs font-medium transition ${partnerType === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
-                  >
-                    {r}
-                  </button>
-                ))}
+              <div className="mt-3 max-h-64 overflow-y-auto pr-1 space-y-3">
+                <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={partnerType} onSelect={setPartnerType} />
+                <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={partnerType} onSelect={setPartnerType} />
+                <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={partnerType} onSelect={setPartnerType} />
               </div>
             </div>
 
@@ -189,23 +181,18 @@ function PartnerLinkView({
 }: {
   code: string;
   guestPhone?: string;
-  partnerType: string;
+  partnerType: Role | "";
 }) {
   const navigate = useNavigate();
   const createFn = useServerFn(createGuestJourney);
   const [copied, setCopied] = useState(false);
 
-  const opposite: typeof partnerRoles[number] | "" =
-    partnerType === "Dominant"
-      ? "submissive"
-      : partnerType === "submissive"
-        ? "Dominant"
-        : "";
-  const [selfType, setSelfType] = useState<typeof partnerRoles[number] | "">(opposite);
+  const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
+  const [selfType, setSelfType] = useState<Role | "">(opposite);
 
   const selfMutation = useMutation({
     mutationFn: () =>
-      createFn({ data: { guestPhone: guestPhone ?? "", partnerEmail: "", partnerType: selfType as typeof partnerRoles[number], isSelf: true } }),
+      createFn({ data: { guestPhone: guestPhone ?? "", partnerEmail: "", partnerType: selfType as Role, isSelf: true } }),
 
     onSuccess: (res) => {
       navigate({ to: "/journey/$code", params: { code: res.code } });
@@ -336,17 +323,10 @@ function PartnerLinkView({
             <span className="text-xs uppercase tracking-wider text-muted-foreground">
               I am a…
             </span>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {partnerRoles.map((r) => (
-                <button
-                  type="button"
-                  key={r}
-                  onClick={() => setSelfType(r)}
-                  className={`rounded-xl border px-2 py-3 text-xs font-medium transition ${selfType === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
-                >
-                  {r}
-                </button>
-              ))}
+            <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
+              <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={selfType} onSelect={setSelfType} />
+              <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={selfType} onSelect={setSelfType} />
+              <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={selfType} onSelect={setSelfType} />
             </div>
           </div>
           {selfMutation.error && (
@@ -381,5 +361,25 @@ function Field({
         className="mt-2 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
     </label>
+  );
+}
+
+function RoleGroup({ label, roles, selected, onSelect }: { label: string; roles: readonly Role[]; selected: Role | ""; onSelect: (r: Role) => void }) {
+  return (
+    <div>
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</span>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        {roles.map((r) => (
+          <button
+            type="button"
+            key={r}
+            onClick={() => onSelect(r)}
+            className={`rounded-xl border px-2 py-2.5 text-xs font-medium transition text-left ${selected === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:border-primary/50"}`}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

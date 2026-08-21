@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { ALL_ROLES, type Role } from "./roles";
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -22,7 +23,7 @@ const OptionSchema = z.object({
   score: z.number().optional(),
 });
 
-const RoleSchema = z.enum(["Dominant", "submissive", "switch"]);
+const RoleSchema = z.enum(ALL_ROLES);
 
 const QuestionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -43,7 +44,7 @@ const QuestionSchema = z.object({
   active: z.boolean().default(true),
   order_index: z.number().int().default(0),
   branch_logic: z.record(z.string(), z.any()).default({}),
-  applies_to: z.array(RoleSchema).min(1).max(3).default(["Dominant", "submissive", "switch"]),
+  applies_to: z.array(RoleSchema).min(1).max(20).default(["Dominant", "submissive", "switch"]),
 });
 
 export const listQuestions = createServerFn({ method: "POST" })
@@ -85,7 +86,7 @@ export const bulkSetAppliesTo = createServerFn({ method: "POST" })
     z
       .object({
         ids: z.array(z.string().uuid()).min(1).max(2000),
-        applies_to: z.array(RoleSchema).min(1).max(3),
+        applies_to: z.array(RoleSchema).min(1).max(20),
       })
       .parse(d),
   )
@@ -101,20 +102,20 @@ export const bulkSetAppliesTo = createServerFn({ method: "POST" })
 
 // ---------- AI-assisted retag ----------
 
-const AI_SYSTEM_PROMPT = `You categorize BDSM / power-exchange assessment questions by which participant role they meaningfully apply to.
+const AI_SYSTEM_PROMPT = `You categorize BDSM / power-exchange assessment questions by which participant role(s) they meaningfully apply to.
 
-Roles:
-- "Dominant" — the partner taking the leading / top / controlling role.
-- "submissive" — the partner taking the following / bottom / receiving role.
-- "switch" — a partner who fluidly takes either role.
+Available roles:
+Top / leading family: Dominant, Master, sadist, rope top, service top, degradation giver, exhibitionist
+Bottom / receiving family: submissive, slave, brat, little, pet, masochist, rope bottom, service bottom, degradation receiver, voyeur
+Switch / fluid family: switch, primal, caregiver, exhibitionist, voyeur
 
 Rules:
 - Every question must be tagged with at least one role.
-- Tag "Dominant" when the question is about leading, controlling, giving instructions, enforcing limits, aftercare-from-the-top, or top-side experience.
-- Tag "submissive" when the question is about following, receiving, surrendering, using safewords, being cared for, or bottom-side experience.
-- Tag "switch" only when the question is genuinely role-neutral OR about switching itself.
-- If a question is fully role-neutral (e.g. general safety, consent, communication, hard limits negotiation between equals), tag ALL THREE roles.
-- Prefer fewer roles when one side clearly does the action and the other clearly does not.
+- Use a SPECIFIC archetype only when the question clearly targets that dynamic (e.g., bratting, littlespace, rope suspension, service submission, primal play).
+- Use the broad roles "Dominant", "submissive", or "switch" for questions that apply to the whole family but are not archetype-specific.
+- For fully role-neutral questions (general safety, consent, communication, hard limits negotiation between equals), tag the three broad roles: Dominant, submissive, switch.
+- "exhibitionist" and "voyeur" apply to either side of a dynamic; use them only when the question is specifically about showing or watching.
+- Prefer fewer, precise tags over many broad ones.
 - Return ONLY the structured tool call.`;
 
 export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
@@ -144,6 +145,7 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
 
+    const roleEnum = ALL_ROLES as unknown as string[];
     const tool = {
       type: "function",
       function: {
@@ -160,7 +162,7 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
                   id: { type: "string" },
                   applies_to: {
                     type: "array",
-                    items: { type: "string", enum: ["Dominant", "submissive", "switch"] },
+                    items: { type: "string", enum: roleEnum },
                   },
                 },
                 required: ["id", "applies_to"],
@@ -179,7 +181,7 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
     const CHUNK = 40;
     for (let i = 0; i < items.length; i += CHUNK) chunks.push(items.slice(i, i + CHUNK));
 
-    const suggestions = new Map<string, ("Dominant" | "submissive" | "switch")[]>();
+    const suggestions = new Map<string, Role[]>();
     for (const chunk of chunks) {
       const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -204,12 +206,12 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
       const call = json?.choices?.[0]?.message?.tool_calls?.[0];
       if (!call?.function?.arguments) throw new Error("AI did not return structured tags.");
       const parsed = JSON.parse(call.function.arguments) as {
-        results: { id: string; applies_to: ("Dominant" | "submissive" | "switch")[] }[];
+        results: { id: string; applies_to: string[] }[];
       };
       for (const r of parsed.results ?? []) {
-        const roles = Array.from(new Set(r.applies_to)).filter((x) =>
-          ["Dominant", "submissive", "switch"].includes(x),
-        ) as ("Dominant" | "submissive" | "switch")[];
+        const roles = Array.from(new Set(r.applies_to)).filter((x): x is Role =>
+          (ALL_ROLES as readonly string[]).includes(x),
+        );
         if (roles.length > 0) suggestions.set(r.id, roles);
       }
     }
@@ -224,7 +226,7 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
         groups.get(k)!.push(id);
       }
       for (const [k, ids] of groups) {
-        const roles = k.split("|") as ("Dominant" | "submissive" | "switch")[];
+        const roles = k.split("|") as Role[];
         const { error: uErr } = await sb
           .from("questions")
           .update({ applies_to: roles })

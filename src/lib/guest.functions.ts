@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateInviteCode } from "./utils.server";
 import { isValidE164, toE164 } from "./phone";
+import { ALL_ROLES } from "./roles";
 
 const CreateGuestSchema = z.object({
   guestEmail: z
@@ -28,7 +29,7 @@ const CreateGuestSchema = z.object({
     .max(255)
     .optional()
     .or(z.literal("")),
-  partnerType: z.enum(["Dominant", "submissive", "switch"]),
+  partnerType: z.enum(ALL_ROLES),
   isSelf: z.boolean().optional(),
 });
 
