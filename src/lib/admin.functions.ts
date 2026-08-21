@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { ALL_ROLES, type Role } from "./roles";
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -22,7 +23,7 @@ const OptionSchema = z.object({
   score: z.number().optional(),
 });
 
-const RoleSchema = z.enum(["Dominant", "submissive", "switch"]);
+const RoleSchema = z.enum(ALL_ROLES);
 
 const QuestionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -43,7 +44,7 @@ const QuestionSchema = z.object({
   active: z.boolean().default(true),
   order_index: z.number().int().default(0),
   branch_logic: z.record(z.string(), z.any()).default({}),
-  applies_to: z.array(RoleSchema).min(1).max(3).default(["Dominant", "submissive", "switch"]),
+  applies_to: z.array(RoleSchema).min(1).max(20).default(["Dominant", "submissive", "switch"]),
 });
 
 export const listQuestions = createServerFn({ method: "POST" })
