@@ -233,6 +233,7 @@ export async function requestPhoneOtpHandler(data: { phone: string; ip?: string 
     await sendClickatellSms(
       data.phone,
       `Your RedFlagDaddy code is ${code}. It expires in ${OTP_EXPIRY_MINUTES} minutes. Never share it with anyone.`,
+      "otp",
     );
   } catch (error) {
     await supabaseAdmin.from("phone_otps").update({ used: true }).eq("id", stored.id);

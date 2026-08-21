@@ -394,6 +394,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
           await sendClickatellSms(
             guestPhone,
             `RedFlagDaddy: your assessment report is ready. View or download it here: ${guestReportUrl}`,
+            "guest-report",
           );
         } catch (e) {
           console.error("Report SMS failed:", e);
@@ -413,6 +414,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
             await sendClickatellSms(
               ownerPhone,
               `RedFlagDaddy: your "${String(journey.title)}" report is ready. View it here: https://redflagdaddy.com/results/${journey.id}`,
+              "owner-report",
             );
           }
         } catch (e) {
