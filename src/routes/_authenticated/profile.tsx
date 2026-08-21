@@ -1,6 +1,16 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { LogOut, Lock, Loader2, ChevronRight, Download, Trash2, AlertTriangle } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronRight,
+  Download,
+  HelpCircle,
+  Loader2,
+  Lock,
+  LogOut,
+  Shield,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -87,7 +97,9 @@ function Profile() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm">Privacy & data</div>
-                <div className="text-xs text-muted-foreground">Manage what's stored and shared.</div>
+                <div className="text-xs text-muted-foreground">
+                  Manage what's stored and shared.
+                </div>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -96,6 +108,18 @@ function Profile() {
             <PrivacyModal onClose={() => setPrivacyOpen(false)} />
           </DialogContent>
         </Dialog>
+        <ProfileLink
+          to="/profile/safety"
+          icon={Shield}
+          label="Safety center"
+          desc="Review account access, private-link and crisis guidance."
+        />
+        <ProfileLink
+          to="/profile/help"
+          icon={HelpCircle}
+          label="Help & consent guides"
+          desc="Read published product, consent and privacy guidance."
+        />
       </section>
 
       <button
@@ -105,6 +129,34 @@ function Profile() {
         <LogOut className="w-4 h-4" /> Sign out
       </button>
     </div>
+  );
+}
+
+function ProfileLink({
+  to,
+  icon: Icon,
+  label,
+  desc,
+}: {
+  to: "/profile/safety" | "/profile/help";
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  desc: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="w-full text-left glass rounded-2xl p-4 flex items-center gap-3 hover:bg-white/5 transition"
+    >
+      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+        <Icon className="w-5 h-5 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-sm">{label}</div>
+        <div className="text-xs text-muted-foreground">{desc}</div>
+      </div>
+      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+    </Link>
   );
 }
 
@@ -173,7 +225,9 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
           <Download className="w-5 h-5 mr-3 text-primary" />
           <div className="text-left">
             <div className="text-sm font-medium">Download your data</div>
-            <div className="text-xs text-muted-foreground">Get a JSON copy of journeys, responses and results.</div>
+            <div className="text-xs text-muted-foreground">
+              Get a JSON copy of journeys, responses and results.
+            </div>
           </div>
           {exporting && <Loader2 className="w-4 h-4 ml-auto animate-spin" />}
         </Button>
@@ -187,7 +241,9 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
               <Trash2 className="w-5 h-5 mr-3 text-destructive" />
               <div className="text-left">
                 <div className="text-sm font-medium text-destructive">Delete your account</div>
-                <div className="text-xs text-muted-foreground">Permanently remove your account and all data.</div>
+                <div className="text-xs text-muted-foreground">
+                  Permanently remove your account and all data.
+                </div>
               </div>
             </Button>
           </AlertDialogTrigger>
@@ -198,8 +254,10 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
                 Delete your account?
               </AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete your profile, journeys, responses, results and payment history.
-                Type <span className="font-semibold text-foreground">delete my account</span> below to confirm.
+                This will permanently delete your profile, journeys, responses, results and payment
+                history. Type{" "}
+                <span className="font-semibold text-foreground">delete my account</span> below to
+                confirm.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <Input

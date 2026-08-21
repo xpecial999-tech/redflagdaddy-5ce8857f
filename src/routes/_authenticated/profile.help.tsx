@@ -1,5 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { HelpCircle, BookOpen, MessageSquare, ShieldCheck, Compass, ExternalLink } from "lucide-react";
+import {
+  BookOpen,
+  Compass,
+  ExternalLink,
+  HelpCircle,
+  MessageSquare,
+  ShieldCheck,
+} from "lucide-react";
 import { SubpageHeader } from "@/components/profile-settings";
 
 export const Route = createFileRoute("/_authenticated/profile/help")({
@@ -7,49 +14,37 @@ export const Route = createFileRoute("/_authenticated/profile/help")({
   component: Help,
 });
 
-const guides = [
+const resources = [
   {
-    icon: ShieldCheck,
-    title: "What is enthusiastic consent?",
-    desc: "The four pillars: informed, freely given, reversible and specific.",
-    read: "4 min read",
-  },
-  {
-    icon: BookOpen,
-    title: "Negotiating a scene",
-    desc: "A practical checklist for limits, safe words and aftercare planning.",
-    read: "7 min read",
+    icon: Compass,
+    title: "How RedFlagDaddy works",
+    desc: "Learn about journeys, private invites, results and account controls.",
+    to: "/about" as const,
   },
   {
     icon: ShieldCheck,
-    title: "Spotting red flags early",
-    desc: "Behaviour patterns that warrant pause — and how to act on them.",
-    read: "6 min read",
-  },
-  {
-    icon: BookOpen,
-    title: "Aftercare for every dynamic",
-    desc: "What to offer, what to ask for, and how to debrief without drama.",
-    read: "5 min read",
+    title: "Consent and safety guidelines",
+    desc: "Review consent, boundaries, communication, privacy and warning signs.",
+    to: "/consent-safety" as const,
   },
 ];
 
 const faqs = [
   {
-    q: "Who sees my answers?",
-    a: "Only you and the person you explicitly invited. Results are never shared with third parties and are scoped to your account at the database layer.",
+    q: "Who can see journey answers?",
+    a: "The signed-in journey owner can access answers submitted through their invite. Anyone with an active private invite or shared-report link may be able to open that link, so share it only with the intended person.",
   },
   {
     q: "Can I delete a journey?",
-    a: "Yes. Open the journey, tap the menu and choose Delete. Responses and results are permanently removed.",
+    a: "Yes. Open the journey and choose Delete journey. Its responses and results are permanently removed.",
   },
   {
-    q: "How is scoring calculated?",
-    a: "Every answer is weighted by category and risk level, then aggregated into five readable scores. Read more on the About page.",
+    q: "Can I delete or download my account data?",
+    a: "Yes. Open Privacy & data from your profile to download a JSON copy or permanently delete your account and its data.",
   },
   {
     q: "Is this a replacement for professional support?",
-    a: "No. RedFlagDaddy is a structured self-assessment tool. It does not replace therapy, medical advice or emergency services.",
+    a: "No. RedFlagDaddy is a structured reflection tool. It does not replace therapy, medical or legal advice, crisis support or emergency services.",
   },
 ];
 
@@ -59,49 +54,42 @@ function Help() {
       <SubpageHeader title="Help & consent guides" icon={HelpCircle} />
 
       <section className="glass-strong rounded-2xl p-5 flex items-start gap-3">
-        <Compass className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <BookOpen className="w-5 h-5 text-primary shrink-0 mt-0.5" />
         <div>
-          <h2 className="font-display text-lg">New to RedFlagDaddy?</h2>
+          <h2 className="font-display text-lg">Published resources</h2>
           <p className="text-sm text-muted-foreground">
-            Read the full overview of how the tool works, the question library, and our privacy
-            posture.
+            These links open guidance that is available now.
           </p>
-          <Link
-            to="/about"
-            className="inline-flex items-center gap-1.5 mt-3 text-sm text-primary"
-          >
-            Read the about page <ExternalLink className="w-3.5 h-3.5" />
-          </Link>
         </div>
       </section>
 
       <section className="space-y-3">
-        <SectionLabel>Guides</SectionLabel>
-        {guides.map((g) => (
-          <button
-            key={g.title}
+        <SectionLabel>Resources</SectionLabel>
+        {resources.map((resource) => (
+          <Link
+            key={resource.title}
+            to={resource.to}
             className="w-full text-left glass rounded-2xl p-4 flex items-start gap-3 hover:bg-white/5 transition"
           >
             <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
-              <g.icon className="w-5 h-5 text-primary" />
+              <resource.icon className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm">{g.title}</div>
-              <div className="text-xs text-muted-foreground">{g.desc}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">
-                {g.read}
+              <div className="font-medium text-sm flex items-center gap-1.5">
+                {resource.title} <ExternalLink className="w-3.5 h-3.5" />
               </div>
+              <div className="text-xs text-muted-foreground">{resource.desc}</div>
             </div>
-          </button>
+          </Link>
         ))}
       </section>
 
       <section className="space-y-3">
         <SectionLabel>FAQ</SectionLabel>
-        {faqs.map((f) => (
-          <div key={f.q} className="glass rounded-2xl p-4">
-            <div className="font-medium text-sm">{f.q}</div>
-            <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{f.a}</div>
+        {faqs.map((faq) => (
+          <div key={faq.q} className="glass rounded-2xl p-4">
+            <div className="font-medium text-sm">{faq.q}</div>
+            <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{faq.a}</div>
           </div>
         ))}
       </section>
@@ -109,13 +97,10 @@ function Help() {
       <section className="glass-strong rounded-2xl p-5 flex items-start gap-3">
         <MessageSquare className="w-5 h-5 text-primary shrink-0 mt-0.5" />
         <div>
-          <h2 className="font-display text-lg">Still need help?</h2>
+          <h2 className="font-display text-lg">Need product support?</h2>
           <p className="text-sm text-muted-foreground">
-            Our support team responds within 24 hours. Reach us at{" "}
-            <a href="mailto:support@redflagdaddy.com" className="text-primary">
-              support@redflagdaddy.com
-            </a>
-            .
+            A public support channel will be added before launch. Do not use RedFlagDaddy for
+            emergencies or crisis support.
           </p>
         </div>
       </section>
