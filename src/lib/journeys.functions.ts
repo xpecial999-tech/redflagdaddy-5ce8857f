@@ -192,6 +192,8 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         channel: z.literal("sms").default("sms"),
         recipientName: z.string().trim().max(120).optional().nullable(),
+        notes: z.string().trim().max(500).optional().nullable(),
+
         recipientPhone: z
           .string()
           .trim()
