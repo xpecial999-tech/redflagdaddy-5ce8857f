@@ -20,7 +20,18 @@ import {
   Sparkles,
   PlayCircle,
 } from "lucide-react";
-import { getJourneyStatus, deleteJourney } from "@/lib/journeys.functions";
+import { getJourneyStatus, deleteJourney, sendJourneyInvite } from "@/lib/journeys.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/journeys/$id")({
   head: () => ({ meta: [{ title: "Journey — RedFlagDaddy" }] }),
