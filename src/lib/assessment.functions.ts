@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { expandRoleForFiltering } from "./roles";
 
 const CodeSchema = z.object({ code: z.string().trim().min(4).max(64) });
 
