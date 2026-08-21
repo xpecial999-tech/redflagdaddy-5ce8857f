@@ -257,7 +257,6 @@ function PartnerLinkView({
     }
   };
 
-  const smsHref = `sms:?&body=${encodeURIComponent(shareMessage)}`;
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
   return (
