@@ -77,9 +77,16 @@ export const createJourney = createServerFn({ method: "POST" })
     if (data.recipientPhone) {
       try {
         const { sendClickatellSms } = await import("./phone-auth.server");
+        const { data: me } = await supabase.from("users").select("name").eq("id", userId).maybeSingle();
         await sendClickatellSms(
           data.recipientPhone,
-          `You've been invited to a RedFlagDaddy assessment: "${journey.title}". Start here: ${inviteUrl}`,
+          buildInviteSms({
+            recipientName: data.recipientName,
+            senderName: me?.name ?? null,
+            title: journey.title,
+            notes: data.notes,
+            url: inviteUrl,
+          }),
           "journey-invite",
         );
         smsSent = true;
@@ -87,6 +94,7 @@ export const createJourney = createServerFn({ method: "POST" })
         console.error("Invite SMS failed:", e);
       }
     }
+
 
     return {
       journey,
