@@ -402,17 +402,10 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
         </div>
         <div>
           <span className="text-xs uppercase tracking-wider text-muted-foreground">I am a…</span>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {selfRoles.map((r) => (
-              <button
-                type="button"
-                key={r}
-                onClick={() => setSelfType(r)}
-                className={`rounded-xl border px-2 py-3 text-xs font-medium transition ${selfType === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
-              >
-                {r}
-              </button>
-            ))}
+          <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
+            <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={selfType} onSelect={setSelfType} />
+            <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={selfType} onSelect={setSelfType} />
+            <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={selfType} onSelect={setSelfType} />
           </div>
         </div>
         {selfMutation.error && (
