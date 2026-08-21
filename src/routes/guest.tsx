@@ -87,7 +87,7 @@ function GuestPage() {
             Continue as guest
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Take the assessment without creating an account. Your final report lands in your inbox.
+            Take the assessment without creating an account. Your final report link is sent to your mobile number.
           </p>
         </div>
 
