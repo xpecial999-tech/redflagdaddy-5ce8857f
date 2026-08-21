@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { LogOut, Shield, Bell, Lock, HelpCircle, Loader2, ChevronRight, Mail } from "lucide-react";
-import { useState } from "react";
+import { LogOut, Shield, Bell, Lock, HelpCircle, Loader2, ChevronRight } from "lucide-react";
 import { useMe } from "@/hooks/use-me";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/phone";
@@ -57,7 +56,7 @@ function Profile() {
     );
   }
 
-  const displayName = me.name || formatPhone(me.phone) || me.email?.split("@")[0] || "Member";
+  const displayName = me.name || formatPhone(me.phone) || "Member";
   const initial = displayName.charAt(0).toUpperCase();
   const role = me.role || "member";
 
@@ -76,11 +75,8 @@ function Profile() {
           {role}
           {me.isAdmin ? " · admin" : ""}
         </p>
-        <p className="text-xs text-muted-foreground mt-1">{formatPhone(me.phone) || me.email}</p>
+        <p className="text-xs text-muted-foreground mt-1">{formatPhone(me.phone)}</p>
       </motion.section>
-
-      <ContactEmailCard userId={me.id} initialEmail={me.email} />
-
 
       <section className="space-y-2">
         {settings.map((s) => (
@@ -111,57 +107,4 @@ function Profile() {
   );
 }
 
-function ContactEmailCard({ userId, initialEmail }: { userId: string; initialEmail: string | null }) {
-  const [email, setEmail] = useState(initialEmail ?? "");
-  const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const save = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setStatus(null);
-    const value = email.trim();
-    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return setError("Enter a valid email address.");
-    }
-    setSaving(true);
-    const { error } = await supabase
-      .from("users")
-      .update({ email: value || null })
-      .eq("id", userId);
-    setSaving(false);
-    if (error) return setError(error.message);
-    setStatus(value ? "Saved. Reports and invites will be emailed here." : "Email removed.");
-  };
-
-  return (
-    <section className="glass rounded-2xl p-4">
-      <div className="flex items-center gap-2 mb-1">
-        <Mail className="w-4 h-4 text-primary" />
-        <h2 className="text-sm font-medium">Contact email (optional)</h2>
-      </div>
-      <p className="text-xs text-muted-foreground mb-3">
-        You sign in with your mobile number. Add an email if you'd also like reports and invite updates by email.
-      </p>
-      <form className="flex gap-2" onSubmit={save}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          className="flex-1 min-w-0 rounded-xl bg-input border border-border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <button
-          disabled={saving}
-          className="rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-60"
-        >
-          {saving ? "Saving…" : "Save"}
-        </button>
-      </form>
-      {error && <p className="text-xs text-destructive mt-2">{error}</p>}
-      {status && <p className="text-xs text-muted-foreground mt-2">{status}</p>}
-    </section>
-  );
-}
 
