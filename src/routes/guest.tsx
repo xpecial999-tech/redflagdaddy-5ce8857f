@@ -258,7 +258,7 @@ function PartnerLinkView({
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Send this link to your partner so they can take the {partnerType} assessment. They'll
-            answer privately and we'll email the combined report to you.
+            answer privately and we'll text the combined report link to your mobile number.
           </p>
         </div>
 
