@@ -86,7 +86,6 @@ function JourneyTracker() {
   const { journey, invite, progress, isExpired } = data;
   const effectiveStatus = isExpired && journey.status !== "completed" ? "expired" : journey.status;
   const url = journey.invite_url ?? "";
-  const code = journey.invite_code;
   const recipient = journey.recipient_email;
 
   const steps = buildSteps({
