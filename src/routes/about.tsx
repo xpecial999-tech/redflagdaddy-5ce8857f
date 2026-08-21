@@ -159,9 +159,10 @@ function About() {
           transition={{ delay: 0.2 }}
           className="text-muted-foreground max-w-xl mx-auto"
         >
-          RedFlagDaddy replaces guesswork with structure. We help Dominants, submissives and
-          switches assess consent, compatibility, safety and red flags — using a research-grounded
-          question library, transparent scoring, and real-time journey tracking.
+          RedFlagDaddy replaces guesswork with structure. We help Dominants, submissives,
+          switches and the full spectrum of BDSM archetypes assess consent, compatibility,
+          safety and red flags — using a research-grounded question library, transparent scoring,
+          and real-time journey tracking.
         </motion.p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto pt-4">
