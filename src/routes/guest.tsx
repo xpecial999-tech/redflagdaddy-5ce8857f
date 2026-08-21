@@ -132,6 +132,17 @@ function GuestPage() {
               placeholder="you@example.com"
             />
 
+            <Field
+              label="Your mobile number (optional)"
+              hint="We'll text you a private download link to your report when it's ready."
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="071 234 5678"
+            />
+
+
             <div>
               <span className="text-sm font-medium">Which assessment do you want to do?</span>
               <p className="text-xs text-muted-foreground mt-0.5">
