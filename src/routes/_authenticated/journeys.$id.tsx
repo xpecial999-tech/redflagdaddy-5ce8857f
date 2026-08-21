@@ -271,15 +271,13 @@ function TimelineRow({ step, last }: { step: Step; last: boolean }) {
 }
 
 function ShareCard({
+  journeyId,
   url,
-  code,
   email,
-  title,
 }: {
+  journeyId: string;
   url: string;
-  code: string;
   email: string | null;
-  title: string;
 }) {
   const [copied, setCopied] = useState(false);
   const [modal, setModal] = useState<"email" | "sms" | null>(null);
@@ -303,18 +301,13 @@ function ShareCard({
   const submit = async () => {
     setSending(true);
     try {
-      const payload =
-        modal === "email"
-          ? { id: code === "" ? "" : "", recipientEmail: contact, recipientName }
-          : { id: "", recipientPhone: contact, recipientName };
-      // channel determined by modal; id resolved below
       const res = await sendFn({
         data: {
-          id: payload.id,
-          channel: modal,
-          recipientEmail: modal === "email" ? payload.recipientEmail : undefined,
-          recipientPhone: modal === "sms" ? payload.recipientPhone : undefined,
-          recipientName: payload.recipientName || undefined,
+          id: journeyId,
+          channel: modal as "email" | "sms",
+          recipientEmail: modal === "email" ? contact : undefined,
+          recipientPhone: modal === "sms" ? contact : undefined,
+          recipientName: recipientName || undefined,
         },
       });
       if (res.ok) {
