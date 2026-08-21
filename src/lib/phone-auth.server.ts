@@ -306,9 +306,9 @@ export async function verifyPhoneOtpHandler(data: {
 
 
   if (data.metadata?.name || data.metadata?.role) {
-    const update: { name?: string | null; role?: string; phone: string } = { phone: data.phone };
+    const update: { name?: string | null; role?: Database["public"]["Enums"]["user_role"]; phone: string } = { phone: data.phone };
     if (data.metadata.name !== undefined) update.name = data.metadata.name || null;
-    if (data.metadata.role !== undefined) update.role = data.metadata.role;
+    if (data.metadata.role !== undefined) update.role = data.metadata.role as Database["public"]["Enums"]["user_role"];
     await supabaseAdmin.from("users").update(update).eq("id", userId);
   }
 
