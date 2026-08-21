@@ -50,3 +50,51 @@ export const createGuestJourney = createServerFn({ method: "POST" })
 
     return { code };
   });
+
+const SendGuestInviteSchema = z.object({
+  code: z.string().trim().min(4).max(24),
+  recipientName: z.string().trim().max(120).optional().nullable(),
+  notes: z.string().trim().max(500).optional().nullable(),
+  recipientPhone: z
+    .string()
+    .trim()
+    .max(24)
+    .transform((v) => {
+      const normalized = toE164(v);
+      if (!isValidE164(normalized)) throw new Error("Enter a valid mobile number with country code.");
+      return normalized;
+    }),
+});
+
+export const sendGuestInvite = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => SendGuestInviteSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { buildInviteSms } = await import("./invite-message");
+    const { sendClickatellSms } = await import("./phone-auth.server");
+
+    const { data: journey, error } = await supabaseAdmin
+      .from("journeys")
+      .select("id, title, invite_code, invite_url, creator_id")
+      .eq("invite_code", data.code)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!journey || journey.creator_id !== null) throw new Error("Invite not found");
+
+    const origin = process.env["PUBLIC_SITE_URL"] ?? "https://redflagdaddy.com";
+    const url = journey.invite_url ?? `${origin}/j/${journey.invite_code}`;
+
+    await sendClickatellSms(
+      data.recipientPhone,
+      buildInviteSms({
+        recipientName: data.recipientName,
+        senderName: null,
+        title: journey.title,
+        notes: data.notes,
+        url,
+      }),
+      "journey-invite",
+    );
+
+    return { ok: true as const };
+  });

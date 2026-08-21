@@ -6,7 +6,12 @@ import { RoleSelector } from "@/components/RoleSelector";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check, Copy, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap, MessageSquare } from "lucide-react";
-import { createJourney } from "@/lib/journeys.functions";
+import { createJourney, sendJourneyInvite } from "@/lib/journeys.functions";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 
@@ -229,12 +234,14 @@ function Create() {
         {step === 5 && mutation.data && (
           <SuccessScreen
             key="5"
+            journeyId={mutation.data.journey.id}
             url={mutation.data.journey.invite_url ?? ""}
             code={mutation.data.journey.invite_code}
             title={mutation.data.journey.title}
             partnerType={mutation.data.journey.participant_type as Role}
             smsSent={mutation.data.smsSent}
             phone={recipientPhone.trim() ? toE164(recipientPhone.trim()) : null}
+            recipientName={recipientName.trim() || null}
           />
         )}
       </AnimatePresence>
@@ -302,12 +309,42 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
   );
 }
 
-function SuccessScreen({ url, code, title, partnerType, smsSent, phone }: { url: string; code: string; title: string; partnerType: Role; smsSent?: boolean; phone?: string | null }) {
+function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phone, recipientName }: { journeyId: string; url: string; code: string; title: string; partnerType: Role; smsSent?: boolean; phone?: string | null; recipientName?: string | null }) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
   const navigate = useNavigate();
   const createFn = useServerFn(createJourney);
   const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
   const [selfType, setSelfType] = useState<Role | "">(opposite);
+  const sendFn = useServerFn(sendJourneyInvite);
+  const [smsOpen, setSmsOpen] = useState(false);
+  const [rName, setRName] = useState(recipientName ?? "");
+  const [rPhone, setRPhone] = useState(phone ?? "");
+  const [rNote, setRNote] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const submitSms = async () => {
+    setSending(true);
+    try {
+      const res = await sendFn({
+        data: {
+          id: journeyId,
+          channel: "sms" as const,
+          recipientPhone: rPhone.trim() ? toE164(rPhone.trim()) : "",
+          recipientName: rName.trim() || undefined,
+          notes: rNote.trim() || undefined,
+        },
+      });
+      if (res.ok) {
+        toast.success("Invite sent by SMS");
+        setSmsOpen(false);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSending(false);
+    }
+  };
+
 
   const selfMutation = useMutation({
     mutationFn: () =>
@@ -374,12 +411,46 @@ function SuccessScreen({ url, code, title, partnerType, smsSent, phone }: { url:
       </div>
 
 
-      <a
-        href={`sms:${phone ?? ""}${/(iPhone|iPad|Mac)/.test(typeof navigator !== "undefined" ? navigator.userAgent : "") ? "&" : "?"}body=${encodeURIComponent(`You've been invited to a RedFlagDaddy assessment: "${title}". Start here: ${url}`)}`}
+      <button
+        onClick={() => setSmsOpen(true)}
         className="block w-full inline-flex items-center justify-center gap-2 rounded-xl bg-input border border-border py-3 text-sm font-medium"
       >
         <MessageSquare className="w-4 h-4" /> Send by SMS
-      </a>
+      </button>
+
+      <Dialog open={smsOpen} onOpenChange={(o) => !o && setSmsOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send invite by SMS</DialogTitle>
+            <DialogDescription>We'll text the invite link straight to their phone.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="s-name">Recipient name (optional)</Label>
+              <Input id="s-name" value={rName} onChange={(e) => setRName(e.target.value)} placeholder="e.g. Natasha" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-phone">Recipient mobile number</Label>
+              <Input id="s-phone" value={rPhone} onChange={(e) => setRPhone(e.target.value)} placeholder="+27123456789" inputMode="tel" type="tel" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-note">Personal note (optional)</Label>
+              <Input id="s-note" value={rNote} onChange={(e) => setRNote(e.target.value)} placeholder="Add a line of context for them" maxLength={500} />
+            </div>
+          </div>
+          <DialogFooter>
+            <button
+              onClick={submitSms}
+              disabled={sending || !rPhone.trim()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-50"
+            >
+              {sending && <Loader2 className="w-4 h-4 animate-spin" />}
+              Send SMS
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <div className="glass-strong rounded-3xl p-6 text-center space-y-4">
         <div className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-br from-aurora-1 to-aurora-2 items-center justify-center mx-auto">
