@@ -7,6 +7,7 @@ import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, User
 import { createJourney } from "@/lib/journeys.functions";
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
+import { ALL_ROLES, TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role, oppositeRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
