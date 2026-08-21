@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/phone-auth.functions";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
+import { captureMarketingEvent } from "@/lib/marketing-attribution";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -53,6 +54,7 @@ function Register() {
     const result = await sendOtp({ data: { phone: e164 } }).catch(() => ({ error: "Could not send code." }));
     setLoading(false);
     if ("error" in result && result.error) return setError(result.error);
+    await captureMarketingEvent("signup_started", "account", { once: true });
     setStep("otp");
     setInfo(`We sent a 6-digit code to ${formatPhone(e164)}. Enter it below to finish.`);
   };
@@ -89,6 +91,7 @@ function Register() {
       setLoading(false);
       return setError(sessionError.message);
     }
+    await captureMarketingEvent("signup_completed", "account", { once: true });
     setLoading(false);
     navigate({ to: "/dashboard" });
   };
@@ -212,4 +215,3 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
     </label>
   );
 }
-

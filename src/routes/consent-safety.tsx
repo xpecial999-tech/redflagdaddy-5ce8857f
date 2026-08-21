@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AnalyticsPreference } from "@/components/AnalyticsConsent";
 import { motion } from "framer-motion";
 import { Shield, AlertTriangle, Lock, HeartPulse, Users, MessageCircle, Scale, ArrowLeft } from "lucide-react";
 
@@ -97,6 +98,17 @@ function ConsentSafety() {
           );
         })}
       </div>
+
+      <section className="glass-strong rounded-2xl p-5 space-y-3">
+        <div>
+          <h2 className="font-semibold">Anonymous analytics preference</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Change your device-level choice at any time. Opting out clears this tab's campaign
+            attribution and analytics session immediately.
+          </p>
+        </div>
+        <AnalyticsPreference />
+      </section>
 
       <motion.div
         initial={{ opacity: 0 }}

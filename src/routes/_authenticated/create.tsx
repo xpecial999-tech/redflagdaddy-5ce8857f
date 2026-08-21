@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
+import { captureMarketingEvent } from "@/lib/marketing-attribution";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
@@ -52,7 +53,10 @@ function Create() {
           questionLimit: mode === "quick" ? 50 : null,
         },
       }),
-    onSuccess: () => setStep(5),
+    onSuccess: () => {
+      void captureMarketingEvent("core_action_completed", "account", { once: true });
+      setStep(5);
+    },
   });
 
   const canDeepDive = ent.data?.canDeepDive ?? true;
@@ -482,4 +486,3 @@ function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phon
     </motion.div>
   );
 }
-

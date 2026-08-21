@@ -11,6 +11,17 @@ const baseNavItems = [
   { to: "/profile", label: "Profile", icon: User },
 ];
 
+const PUBLIC_PATHS = [
+  "/",
+  "/about",
+  "/login",
+  "/register",
+  "/join",
+  "/guest",
+  "/demo-report",
+  "/consent-safety",
+];
+
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { me } = useMe();
@@ -18,7 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? [...baseNavItems, { to: "/admin", label: "Admin", icon: Shield }]
     : baseNavItems;
   const hideNav =
-    ["/", "/about", "/login", "/register", "/join", "/guest"].includes(pathname) ||
+    PUBLIC_PATHS.includes(pathname) ||
     /^\/journey\/[^/]+/.test(pathname) ||
     pathname.startsWith("/assessment/") ||
     pathname.startsWith("/guest/");
@@ -58,6 +69,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           {children}
         </motion.div>
       </main>
+
+      {PUBLIC_PATHS.includes(pathname) && (
+        <footer className="px-4 pb-8 text-center text-xs text-muted-foreground">
+          <Link to="/about" className="hover:text-foreground">About</Link>
+          <span aria-hidden="true" className="px-2">·</span>
+          <Link to="/consent-safety" className="hover:text-foreground">Consent, safety &amp; analytics</Link>
+        </footer>
+      )}
 
       {!hideNav && (
         <nav className="fixed bottom-4 left-4 right-4 z-40 max-w-3xl mx-auto">
