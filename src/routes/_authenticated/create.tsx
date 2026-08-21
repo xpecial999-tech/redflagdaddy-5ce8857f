@@ -422,3 +422,26 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
     </motion.div>
   );
 }
+
+function RoleGroup({ label, roles, selected, onSelect }: { label: string; roles: readonly Role[]; selected: Role | ""; onSelect: (r: Role) => void }) {
+  return (
+    <div>
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</span>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        {roles.map((r) => {
+          const on = selected === r;
+          return (
+            <button
+              type="button"
+              key={r}
+              onClick={() => onSelect(r)}
+              className={`rounded-xl border px-3 py-2.5 text-xs font-medium transition text-left ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:border-primary/50"}`}
+            >
+              {r}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
