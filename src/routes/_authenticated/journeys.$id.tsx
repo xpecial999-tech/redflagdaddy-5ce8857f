@@ -387,6 +387,17 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
                 type="tel"
               />
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="rnote">Personal note (optional)</Label>
+              <Input
+                id="rnote"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Add a line of context for them"
+                maxLength={500}
+              />
+            </div>
+
           </div>
           <DialogFooter>
             <button
