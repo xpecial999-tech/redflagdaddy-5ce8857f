@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/journey/$code")({
-  component: JourneyInvitePage,
+  component: JourneyInviteRoute,
   errorComponent: ({ error }) => (
     
       <div className="glass rounded-2xl p-6 max-w-md mx-auto">
@@ -31,8 +31,7 @@ export const Route = createFileRoute("/journey/$code")({
   ),
 });
 
-function JourneyInvitePage() {
-  const { code } = Route.useParams();
+export function JourneyInvitePage({ code }: { code: string }) {
   const navigate = useNavigate();
   const validateFn = useServerFn(validateInvite);
   const startFn = useServerFn(startInvite);
@@ -216,4 +215,10 @@ function InvalidState({ title, description }: { title: string; description: stri
       </div>
     </div>
   );
+}
+
+
+function JourneyInviteRoute() {
+  const { code } = Route.useParams();
+  return <JourneyInvitePage code={code} />;
 }
