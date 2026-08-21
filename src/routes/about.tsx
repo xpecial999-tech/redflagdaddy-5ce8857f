@@ -49,7 +49,7 @@ export const Route = createFileRoute("/about")({
 const stats = [
   { value: "500+", label: "Curated questions" },
   { value: "23", label: "Assessment categories" },
-  { value: "3", label: "Role-aware tracks" },
+  { value: "20+", label: "Role-aware archetypes" },
   { value: "5", label: "Scoring dimensions" },
 ];
 
@@ -58,7 +58,7 @@ const flow = [
     icon: ClipboardCheck,
     title: "Create a journey",
     body:
-      "A guided 3-step wizard: name your assessment, pick the respondent's role (Dominant, submissive or switch), and add optional recipient details.",
+      "A guided wizard: name your assessment, pick the respondent's archetype (Dominant, submissive, switch, Master, brat, little, primal and more), and add optional recipient details.",
   },
   {
     icon: Users,
