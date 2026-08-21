@@ -14,17 +14,7 @@ export const Route = createFileRoute("/_authenticated/create")({
   component: Create,
 });
 
-const selfRoles = ["Dominant", "submissive", "switch"] as const;
-type SelfRole = (typeof selfRoles)[number];
-
-const participantTypes = [
-  { value: "Dominant", desc: "They lead in the dynamic." },
-  { value: "submissive", desc: "They follow in the dynamic." },
-  { value: "switch", desc: "They move between roles." },
-] as const;
-
 type Step = 1 | 2 | 3 | 4 | 5;
-type ParticipantType = (typeof participantTypes)[number]["value"];
 
 function Create() {
   const createFn = useServerFn(createJourney);
