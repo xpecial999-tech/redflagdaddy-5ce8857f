@@ -86,7 +86,7 @@ export const bulkSetAppliesTo = createServerFn({ method: "POST" })
     z
       .object({
         ids: z.array(z.string().uuid()).min(1).max(2000),
-        applies_to: z.array(RoleSchema).min(1).max(3),
+        applies_to: z.array(RoleSchema).min(1).max(20),
       })
       .parse(d),
   )
