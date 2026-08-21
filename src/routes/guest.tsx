@@ -67,10 +67,12 @@ function GuestPage() {
       <PartnerLinkView
         code={mutation.data.code}
         guestEmail={email}
+        guestPhone={phone}
         partnerType={partnerType}
       />
     );
   }
+
 
   return (
     <div className="py-2 sm:py-6">
