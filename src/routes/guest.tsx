@@ -137,19 +137,12 @@ function GuestPage() {
             <div>
               <span className="text-sm font-medium">Which assessment do you want to do?</span>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Is your partner a Dominant, submissive, or switch?
+                Choose the role that best matches your partner.
               </p>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {partnerRoles.map((r) => (
-                  <button
-                    type="button"
-                    key={r}
-                    onClick={() => setPartnerType(r)}
-                    className={`rounded-xl border px-2 py-3 text-xs font-medium transition ${partnerType === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:text-foreground"}`}
-                  >
-                    {r}
-                  </button>
-                ))}
+              <div className="mt-3 max-h-64 overflow-y-auto pr-1 space-y-3">
+                <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={partnerType} onSelect={setPartnerType} />
+                <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={partnerType} onSelect={setPartnerType} />
+                <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={partnerType} onSelect={setPartnerType} />
               </div>
             </div>
 
