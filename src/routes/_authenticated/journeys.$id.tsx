@@ -281,21 +281,58 @@ function ShareCard({
   email: string | null;
   title: string;
 }) {
-  const [copied, setCopied] = useState<"url" | "code" | null>(null);
-  const copy = (val: string, kind: "url" | "code") => {
-    navigator.clipboard.writeText(val);
-    setCopied(kind);
-    setTimeout(() => setCopied(null), 1500);
+  const [copied, setCopied] = useState(false);
+  const [modal, setModal] = useState<"email" | "sms" | null>(null);
+  const [recipientName, setRecipientName] = useState("");
+  const [contact, setContact] = useState("");
+  const [sending, setSending] = useState(false);
+  const sendFn = useServerFn(sendJourneyInvite);
+
+  const copy = () => {
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
-  const mailto = email
-    ? `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`RedFlagDaddy invite: ${title}`)}&body=${encodeURIComponent(`You've been invited to complete an assessment.\n\nOpen: ${url}\nOr enter code: ${code}\n\nThis link expires in 7 days.`)}`
-    : `mailto:?subject=${encodeURIComponent(`RedFlagDaddy invite: ${title}`)}&body=${encodeURIComponent(`Open: ${url}\nOr enter code: ${code}`)}`;
+
+  const openModal = (kind: "email" | "sms") => {
+    setContact(email ?? "");
+    setRecipientName("");
+    setModal(kind);
+  };
+
+  const submit = async () => {
+    setSending(true);
+    try {
+      const payload =
+        modal === "email"
+          ? { id: code === "" ? "" : "", recipientEmail: contact, recipientName }
+          : { id: "", recipientPhone: contact, recipientName };
+      // channel determined by modal; id resolved below
+      const res = await sendFn({
+        data: {
+          id: payload.id,
+          channel: modal,
+          recipientEmail: modal === "email" ? payload.recipientEmail : undefined,
+          recipientPhone: modal === "sms" ? payload.recipientPhone : undefined,
+          recipientName: payload.recipientName || undefined,
+        },
+      });
+      if (res.ok) {
+        toast.success(modal === "email" ? "Invite email sent" : "Invite sent by SMS");
+        setModal(null);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div className="glass rounded-2xl p-4 space-y-3">
       <div>
         <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-          <Link2 className="w-3.5 h-3.5" /> Invite URL
+          <Link2 className="w-3.5 h-3.5" /> Invite link
         </div>
         <div className="flex gap-2">
           <input
@@ -304,10 +341,10 @@ function ShareCard({
             className="flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-xs font-mono truncate"
           />
           <button
-            onClick={() => copy(url, "url")}
+            onClick={copy}
             className="rounded-xl bg-primary/15 text-primary px-3 text-xs font-medium inline-flex items-center gap-1.5 min-w-[88px] justify-center"
           >
-            {copied === "url" ? (
+            {copied ? (
               <>
                 <Check className="w-3.5 h-3.5" /> Copied
               </>
@@ -319,22 +356,70 @@ function ShareCard({
           </button>
         </div>
       </div>
-      <div>
-        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-          <KeyRound className="w-3.5 h-3.5" /> Invite code
-        </div>
-        <input
-          readOnly
-          value={code}
-          className="w-full rounded-xl bg-input border border-border px-3 py-2.5 text-sm font-mono tracking-[0.3em] text-center"
-        />
+
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => openModal("email")}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary/15 text-primary py-3 text-sm font-medium hover:bg-primary/25 transition"
+        >
+          <Mail className="w-4 h-4" /> Send by email
+        </button>
+        <button
+          onClick={() => openModal("sms")}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-aurora-1/15 text-aurora-1 py-3 text-sm font-medium hover:bg-aurora-1/25 transition"
+        >
+          <Send className="w-4 h-4" /> Send by SMS
+        </button>
       </div>
-      <a
-        href={mailto}
-        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30"
-      >
-        <Send className="w-4 h-4" /> {email ? `Email ${email}` : "Send by email"}
-      </a>
+
+      <Dialog open={modal !== null} onOpenChange={(o) => !o && setModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {modal === "email" ? "Send invite by email" : "Send invite by SMS"}
+            </DialogTitle>
+            <DialogDescription>
+              {modal === "email"
+                ? "Enter the recipient's email to send them the invite link."
+                : "Enter the recipient's mobile number to text them the invite link."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="rname">Recipient name (optional)</Label>
+              <Input
+                id="rname"
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                placeholder="e.g. Natasha"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="rcontact">
+                {modal === "email" ? "Recipient email" : "Recipient mobile number"}
+              </Label>
+              <Input
+                id="rcontact"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder={modal === "email" ? "name@example.com" : "+27123456789"}
+                inputMode={modal === "sms" ? "tel" : "email"}
+                type={modal === "sms" ? "tel" : "email"}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <button
+              onClick={submit}
+              disabled={sending || !contact.trim()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-50"
+            >
+              {sending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {modal === "email" ? "Send email" : "Send SMS"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
