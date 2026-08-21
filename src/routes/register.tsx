@@ -57,9 +57,13 @@ function Register() {
     setInfo(`We sent a 6-digit code to ${formatPhone(e164)}. Enter it below to finish.`);
   };
 
-  const onVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submittedRef = useRef<string | null>(null);
+
+  const onVerify = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (otp.length !== 6) return setError("Enter the 6-digit code.");
+    if (loading) return;
+    submittedRef.current = otp;
     setLoading(true);
     setError(null);
     const result = await verifyOtp({
