@@ -112,9 +112,6 @@ interface Option {
   value: string;
   score?: number;
 }
-type Role = "Dominant" | "submissive" | "switch";
-const ALL_ROLES: Role[] = ["Dominant", "submissive", "switch"];
-
 interface QuestionRow {
   id: string;
   category_id: string;
