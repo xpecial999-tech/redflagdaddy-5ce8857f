@@ -272,6 +272,7 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
   const [modal, setModal] = useState<"sms" | null>(null);
   const [recipientName, setRecipientName] = useState("");
   const [contact, setContact] = useState("");
+  const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
   const sendFn = useServerFn(sendJourneyInvite);
 
@@ -284,6 +285,7 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
   const openModal = (kind: "sms") => {
     setContact("");
     setRecipientName("");
+    setNote("");
     setModal(kind);
   };
 
@@ -296,7 +298,9 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
           channel: "sms" as const,
           recipientPhone: contact,
           recipientName: recipientName || undefined,
+          notes: note || undefined,
         },
+
       });
       if (res.ok) {
         toast.success("Invite sent by SMS");
