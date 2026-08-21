@@ -358,26 +358,9 @@ export const completeAssessment = createServerFn({ method: "POST" })
     try {
       const { data: owner } = await supabaseAdmin
         .from("journeys")
-        .select("creator_id, guest_email, guest_phone")
+        .select("creator_id, guest_phone")
         .eq("id", journey.id)
         .maybeSingle();
-
-      let ownerEmail: string | null = (owner?.guest_email as string | null) ?? null;
-      if (!ownerEmail && owner?.creator_id) {
-        // Phone-based accounts may have no auth email; fall back to the optional profile email.
-        const { data: profile } = await supabaseAdmin
-          .from("users")
-          .select("email")
-          .eq("id", owner.creator_id as string)
-          .maybeSingle();
-        ownerEmail = (profile?.email as string | null) ?? null;
-        if (!ownerEmail) {
-          const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(
-            owner.creator_id as string,
-          );
-          ownerEmail = userRes?.user?.email ?? null;
-        }
-      }
 
       // Guest journeys have no dashboard: mint a private shareable report link.
       let guestReportUrl: string | null = null;
@@ -402,26 +385,12 @@ export const completeAssessment = createServerFn({ method: "POST" })
         }
       }
 
-      if (ownerEmail) {
-        const { sendAppEmail } = await import("./email/queue.server");
-        await sendAppEmail({
-          templateName: "assessment-complete",
-          to: ownerEmail,
-          idempotencyKey: `assessment-complete-${journey.id}`,
-          templateData: {
-            journeyTitle: journey.title,
-            resultsUrl: owner?.creator_id
-              ? `https://redflagdaddy.com/results/${journey.id}`
-              : (guestReportUrl ?? "https://redflagdaddy.com"),
-          },
-        });
-      }
+      const { sendClickatellSms } = await import("./phone-auth.server");
 
       // Text the guest their downloadable report link.
       const guestPhone = (owner?.guest_phone as string | null) ?? null;
       if (!owner?.creator_id && guestPhone && guestReportUrl) {
         try {
-          const { sendClickatellSms } = await import("./phone-auth.server");
           await sendClickatellSms(
             guestPhone,
             `RedFlagDaddy: your assessment report is ready. View or download it here: ${guestReportUrl}`,
@@ -430,8 +399,28 @@ export const completeAssessment = createServerFn({ method: "POST" })
           console.error("Report SMS failed:", e);
         }
       }
+
+      // Notify signed-in owners on their mobile that the report is ready.
+      if (owner?.creator_id) {
+        try {
+          const { data: ownerUser } = await supabaseAdmin
+            .from("users")
+            .select("phone")
+            .eq("id", owner.creator_id as string)
+            .maybeSingle();
+          const ownerPhone = (ownerUser?.phone as string | null) ?? null;
+          if (ownerPhone) {
+            await sendClickatellSms(
+              ownerPhone,
+              `RedFlagDaddy: your "${String(journey.title)}" report is ready. View it here: https://redflagdaddy.com/results/${journey.id}`,
+            );
+          }
+        } catch (e) {
+          console.error("Owner report SMS failed:", e);
+        }
+      }
     } catch (e) {
-      console.error("Completion email failed:", e);
+      console.error("Completion notification failed:", e);
     }
 
 

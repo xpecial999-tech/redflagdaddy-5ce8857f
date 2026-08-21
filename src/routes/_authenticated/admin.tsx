@@ -1254,7 +1254,6 @@ function JourneysTab() {
                   <div className="min-w-0">
                     <h3 className="font-display font-semibold break-words">{j.title}</h3>
                     <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                      {j.recipient_email && <div>{j.recipient_email}</div>}
                       <div className="font-mono">{j.invite_code}</div>
                       <div>{new Date(j.created_at).toLocaleString()}</div>
                     </div>
