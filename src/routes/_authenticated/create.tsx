@@ -310,6 +310,36 @@ function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phon
   const createFn = useServerFn(createJourney);
   const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
   const [selfType, setSelfType] = useState<Role | "">(opposite);
+  const sendFn = useServerFn(sendJourneyInvite);
+  const [smsOpen, setSmsOpen] = useState(false);
+  const [rName, setRName] = useState(recipientName ?? "");
+  const [rPhone, setRPhone] = useState(phone ?? "");
+  const [rNote, setRNote] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const submitSms = async () => {
+    setSending(true);
+    try {
+      const res = await sendFn({
+        data: {
+          id: journeyId,
+          channel: "sms" as const,
+          recipientPhone: rPhone.trim() ? toE164(rPhone.trim()) : "",
+          recipientName: rName.trim() || undefined,
+          notes: rNote.trim() || undefined,
+        },
+      });
+      if (res.ok) {
+        toast.success("Invite sent by SMS");
+        setSmsOpen(false);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSending(false);
+    }
+  };
+
 
   const selfMutation = useMutation({
     mutationFn: () =>
