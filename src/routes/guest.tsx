@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   UserCircle2,
-  Mail,
+  Smartphone,
   ClipboardList,
   Copy,
   Check,
