@@ -30,7 +30,9 @@ export const verifyPhoneOtp = createServerFn({ method: "POST" })
     const metadata: OtpMetadata | undefined = data.metadata
       ? {
           ...(typeof data.metadata.name === "string" ? { name: data.metadata.name.trim().slice(0, 80) } : {}),
-          ...(data.metadata.role ? { role: data.metadata.role } : {}),
+          ...(["Dominant", "submissive", "switch"].includes(data.metadata.role as string)
+            ? { role: data.metadata.role }
+            : {}),
         }
       : undefined;
     return { phone: normalized, code, metadata };
