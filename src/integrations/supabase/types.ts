@@ -479,6 +479,42 @@ export type Database = {
           },
         ]
       }
+      sms_log: {
+        Row: {
+          content_preview: string | null
+          created_at: string
+          error: string | null
+          id: string
+          phone: string
+          provider_message_id: string | null
+          purpose: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          content_preview?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          phone: string
+          provider_message_id?: string | null
+          purpose?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          content_preview?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          phone?: string
+          provider_message_id?: string | null
+          purpose?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
