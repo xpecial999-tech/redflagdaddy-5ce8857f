@@ -110,27 +110,10 @@ function Create() {
         {step === 2 && (
           <StepWrap key="2">
             <h2 className="font-semibold mb-3">Their role in the dynamic</h2>
-            <div className="space-y-2">
-              {participantTypes.map((t) => {
-                const on = participantType === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    onClick={() => setParticipantType(t.value)}
-                    className={`w-full text-left rounded-2xl p-4 border transition ${on ? "border-primary/60 bg-primary/10" : "border-border bg-input"}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{t.value}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">{t.desc}</div>
-                      </div>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${on ? "bg-primary border-primary" : "border-border"}`}>
-                        {on && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={participantType} onSelect={setParticipantType} />
+              <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={participantType} onSelect={setParticipantType} />
+              <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={participantType} onSelect={setParticipantType} />
             </div>
           </StepWrap>
         )}
