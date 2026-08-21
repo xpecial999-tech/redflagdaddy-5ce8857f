@@ -124,7 +124,11 @@ function Register() {
 
                 <label className="flex items-start gap-2 text-xs text-muted-foreground pt-2">
                   <input type="checkbox" required className="mt-0.5 accent-primary" />
-                  I confirm I am 18+ and agree to the consent & safety guidelines.
+                  I confirm I am 18+ and agree to the{" "}
+                  <Link to="/consent-safety" className="text-primary underline hover:text-foreground">
+                    consent & safety guidelines
+                  </Link>
+                  .
                 </label>
 
                 {error && <p className="text-xs text-destructive">{error}</p>}

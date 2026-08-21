@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <img
                 src={logoAsset.url}
                 alt="RedFlagDaddy"
-                className="h-14 w-auto"
+                className="h-12 w-auto"
               />
             </Link>
             {hideNav && (

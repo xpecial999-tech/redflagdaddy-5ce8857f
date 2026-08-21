@@ -53,12 +53,6 @@ function Landing() {
           >
             Continue as guest
           </Link>
-          <Link
-            to="/login"
-            className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition"
-          >
-            I have an account
-          </Link>
         </motion.div>
 
         <motion.div

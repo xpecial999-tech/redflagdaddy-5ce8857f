@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as GuestRouteImport } from './routes/guest'
 import { Route as DemoReportRouteImport } from './routes/demo-report'
+import { Route as ConsentSafetyRouteImport } from './routes/consent-safety'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -69,6 +70,11 @@ const GuestRoute = GuestRouteImport.update({
 const DemoReportRoute = DemoReportRouteImport.update({
   id: '/demo-report',
   path: '/demo-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsentSafetyRoute = ConsentSafetyRouteImport.update({
+  id: '/consent-safety',
+  path: '/consent-safety',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -206,6 +212,7 @@ const ApiPublicPeachWebhookRoute = ApiPublicPeachWebhookRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/consent-safety': typeof ConsentSafetyRoute
   '/demo-report': typeof DemoReportRoute
   '/guest': typeof GuestRoute
   '/join': typeof JoinRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/consent-safety': typeof ConsentSafetyRoute
   '/demo-report': typeof DemoReportRoute
   '/guest': typeof GuestRoute
   '/join': typeof JoinRoute
@@ -272,6 +280,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/consent-safety': typeof ConsentSafetyRoute
   '/demo-report': typeof DemoReportRoute
   '/guest': typeof GuestRoute
   '/join': typeof JoinRoute
@@ -306,6 +315,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/consent-safety'
     | '/demo-report'
     | '/guest'
     | '/join'
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/consent-safety'
     | '/demo-report'
     | '/guest'
     | '/join'
@@ -371,6 +382,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/consent-safety'
     | '/demo-report'
     | '/guest'
     | '/join'
@@ -405,6 +417,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  ConsentSafetyRoute: typeof ConsentSafetyRoute
   DemoReportRoute: typeof DemoReportRoute
   GuestRoute: typeof GuestRoute
   JoinRoute: typeof JoinRoute
@@ -466,6 +479,13 @@ declare module '@tanstack/react-router' {
       path: '/demo-report'
       fullPath: '/demo-report'
       preLoaderRoute: typeof DemoReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consent-safety': {
+      id: '/consent-safety'
+      path: '/consent-safety'
+      fullPath: '/consent-safety'
+      preLoaderRoute: typeof ConsentSafetyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -691,6 +711,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  ConsentSafetyRoute: ConsentSafetyRoute,
   DemoReportRoute: DemoReportRoute,
   GuestRoute: GuestRoute,
   JoinRoute: JoinRoute,
