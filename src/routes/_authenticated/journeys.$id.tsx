@@ -9,7 +9,6 @@ import {
   Clock,
   Copy,
   Link2,
-  KeyRound,
   Mail,
   Send,
   Loader2,
