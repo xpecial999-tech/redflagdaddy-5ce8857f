@@ -6,7 +6,12 @@ import { RoleSelector } from "@/components/RoleSelector";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check, Copy, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap, MessageSquare } from "lucide-react";
-import { createJourney } from "@/lib/journeys.functions";
+import { createJourney, sendJourneyInvite } from "@/lib/journeys.functions";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 
