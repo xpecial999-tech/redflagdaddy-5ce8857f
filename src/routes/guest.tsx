@@ -51,7 +51,7 @@ function GuestPage() {
   const createFn = useServerFn(createGuestJourney);
 
   const [phone, setPhone] = useState("");
-  const [partnerType, setPartnerType] = useState<typeof partnerRoles[number] | "">("");
+  const [partnerType, setPartnerType] = useState<Role | "">("");
 
   const mutation = useMutation({
     mutationFn: () =>
