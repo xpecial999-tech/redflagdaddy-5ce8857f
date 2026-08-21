@@ -51,24 +51,28 @@ function GuestPage() {
   const createFn = useServerFn(createGuestJourney);
 
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [partnerType, setPartnerType] = useState<typeof partnerRoles[number] | "">("");
 
   const mutation = useMutation({
     mutationFn: () =>
       createFn({
-        data: { guestEmail: email, partnerEmail: "", partnerType },
+        data: { guestEmail: email, guestPhone: phone, partnerEmail: "", partnerType },
       }),
   });
+
 
   if (mutation.data) {
     return (
       <PartnerLinkView
         code={mutation.data.code}
         guestEmail={email}
+        guestPhone={phone}
         partnerType={partnerType}
       />
     );
   }
+
 
   return (
     <div className="py-2 sm:py-6">
@@ -130,6 +134,17 @@ function GuestPage() {
               placeholder="you@example.com"
             />
 
+            <Field
+              label="Your mobile number (optional)"
+              hint="We'll text you a private download link to your report when it's ready."
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="071 234 5678"
+            />
+
+
             <div>
               <span className="text-sm font-medium">Which assessment do you want to do?</span>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -180,10 +195,12 @@ function GuestPage() {
 function PartnerLinkView({
   code,
   guestEmail,
+  guestPhone,
   partnerType,
 }: {
   code: string;
   guestEmail: string;
+  guestPhone?: string;
   partnerType: string;
 }) {
   const navigate = useNavigate();
@@ -200,7 +217,8 @@ function PartnerLinkView({
 
   const selfMutation = useMutation({
     mutationFn: () =>
-      createFn({ data: { guestEmail, partnerEmail: "", partnerType: selfType as typeof partnerRoles[number], isSelf: true } }),
+      createFn({ data: { guestEmail, guestPhone: guestPhone ?? "", partnerEmail: "", partnerType: selfType as typeof partnerRoles[number], isSelf: true } }),
+
     onSuccess: (res) => {
       navigate({ to: "/journey/$code", params: { code: res.code } });
     },

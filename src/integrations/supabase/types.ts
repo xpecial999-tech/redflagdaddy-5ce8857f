@@ -187,6 +187,7 @@ export type Database = {
           created_at: string
           creator_id: string | null
           guest_email: string | null
+          guest_phone: string | null
           id: string
           invite_code: string
           invite_url: string | null
@@ -202,6 +203,7 @@ export type Database = {
           created_at?: string
           creator_id?: string | null
           guest_email?: string | null
+          guest_phone?: string | null
           id?: string
           invite_code?: string
           invite_url?: string | null
@@ -217,6 +219,7 @@ export type Database = {
           created_at?: string
           creator_id?: string | null
           guest_email?: string | null
+          guest_phone?: string | null
           id?: string
           invite_code?: string
           invite_url?: string | null
