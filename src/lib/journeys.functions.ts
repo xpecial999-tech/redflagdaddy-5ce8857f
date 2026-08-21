@@ -191,6 +191,85 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
     };
   });
 
+export const sendJourneyInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        channel: z.enum(["email", "sms"]),
+        recipientName: z.string().trim().max(120).optional().nullable(),
+        recipientEmail: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
+        recipientPhone: z
+          .string()
+          .trim()
+          .regex(/^\+[1-9]\d{7,14}$/, "Enter a valid mobile number, e.g. +27123456789")
+          .optional()
+          .nullable()
+          .or(z.literal("")),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: journey, error: jErr } = await supabase
+      .from("journeys")
+      .select("id, title, invite_url, invite_code, creator_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (jErr) throw new Error(jErr.message);
+    if (!journey) throw new Error("Journey not found");
+    if (journey.creator_id !== userId) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: adminRow } = await supabaseAdmin
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!adminRow) throw new Error("Not authorized");
+    }
+
+    const inviteUrl = journey.invite_url ?? `${originFromRequest()}/journey/${journey.invite_code}`;
+
+    if (data.channel === "sms") {
+      const phone = data.recipientPhone?.trim();
+      if (!phone) throw new Error("Enter a valid mobile number.");
+      const { sendClickatellSms } = await import("./phone-auth.server");
+      await sendClickatellSms(
+        phone,
+        `You've been invited to a RedFlagDaddy assessment: "${journey.title}". Start here: ${inviteUrl}`,
+      );
+      const { error: updErr } = await supabase
+        .from("journeys")
+        .update({ guest_phone: phone })
+        .eq("id", journey.id);
+      if (updErr) console.error("Failed to store guest phone:", updErr.message);
+      return { ok: true as const, channel: "sms" as const };
+    }
+
+    const email = data.recipientEmail?.trim();
+    if (!email) throw new Error("Enter a valid email address.");
+    const { sendAppEmail } = await import("./email/queue.server");
+    const result = await sendAppEmail({
+      templateName: "journey-invite",
+      to: email,
+      templateData: {
+        inviterName: data.recipientName ?? undefined,
+        journeyTitle: journey.title,
+        inviteUrl,
+        inviteCode: journey.invite_code,
+      },
+    });
+    if (!result.ok) throw new Error("The invite email could not be sent. Please try again.");
+    const { error: updErr } = await supabase
+      .from("journeys")
+      .update({ recipient_email: email })
+      .eq("id", journey.id);
+    if (updErr) console.error("Failed to store recipient email:", updErr.message);
+    return { ok: true as const, channel: "email" as const };
+  });
+
 export const deleteJourney = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => JourneyIdSchema.parse(data))
