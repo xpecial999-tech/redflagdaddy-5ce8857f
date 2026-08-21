@@ -183,12 +183,10 @@ function GuestPage() {
 
 function PartnerLinkView({
   code,
-  guestEmail,
   guestPhone,
   partnerType,
 }: {
   code: string;
-  guestEmail: string;
   guestPhone?: string;
   partnerType: string;
 }) {
@@ -206,7 +204,7 @@ function PartnerLinkView({
 
   const selfMutation = useMutation({
     mutationFn: () =>
-      createFn({ data: { guestEmail, guestPhone: guestPhone ?? "", partnerEmail: "", partnerType: selfType as typeof partnerRoles[number], isSelf: true } }),
+      createFn({ data: { guestPhone: guestPhone ?? "", partnerEmail: "", partnerType: selfType as typeof partnerRoles[number], isSelf: true } }),
 
     onSuccess: (res) => {
       navigate({ to: "/journey/$code", params: { code: res.code } });
