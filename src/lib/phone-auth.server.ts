@@ -4,9 +4,18 @@ import type { Database } from "@/integrations/supabase/types";
 
 const OTP_REQUEST_WINDOW_MS = 10 * 60 * 1000;
 const MAX_OTP_REQUESTS_PER_WINDOW = 3;
+const RESEND_COOLDOWN_MS = 60 * 1000;
+const DAILY_WINDOW_MS = 24 * 60 * 60 * 1000;
+const MAX_OTP_REQUESTS_PER_DAY = 8;
+const IP_WINDOW_MS = 60 * 60 * 1000;
+const MAX_OTP_REQUESTS_PER_IP = 10;
 const MAX_VERIFY_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000;
 const OTP_EXPIRY_MINUTES = 5;
 const CLICKATELL_URL = "https://platform.clickatell.com/v1/message";
+
+/** Generic, non-enumerating copy: never reveals whether an account exists. */
+const GENERIC_VERIFY_ERROR = "That code is invalid or has expired. Request a new one.";
 
 export type OtpMetadata = {
   name?: string;
