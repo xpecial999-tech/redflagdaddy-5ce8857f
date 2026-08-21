@@ -17,6 +17,7 @@ import {
   MessageCircle,
   MessageSquare,
 } from "lucide-react";
+import { ALL_ROLES, TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role, getBroadFamily, oppositeRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/guest")({
   head: () => ({ meta: [{ title: "Continue as guest — RedFlagDaddy" }] }),
