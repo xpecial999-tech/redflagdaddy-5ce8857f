@@ -61,17 +61,18 @@ function getSupabaseSignInClient() {
 async function logSms(entry: {
   phone: string;
   purpose: string;
-  content: string;
   providerMessageId?: string | null;
   status: string;
   error?: string | null;
 }) {
   try {
     const supabaseAdmin = await getSupabaseAdmin();
-    await (supabaseAdmin.from("sms_log") as any).insert({
+    await supabaseAdmin.from("sms_log").insert({
       phone: entry.phone,
       purpose: entry.purpose,
-      content_preview: entry.content.slice(0, 160),
+      // SMS bodies can contain OTPs, private notes, and bearer-token links.
+      // Store delivery metadata only.
+      content_preview: null,
       provider_message_id: entry.providerMessageId ?? null,
       status: entry.status,
       error: entry.error ?? null,
@@ -100,8 +101,8 @@ export async function sendClickatellSms(phone: string, content: string, purpose 
 
   const body = await response.text();
   if (!response.ok) {
-    console.error(`[clickatell-sms] Provider error ${response.status} to ${to}: ${body}`);
-    await logSms({ phone: to, purpose, content, status: "failed", error: `HTTP ${response.status}: ${body.slice(0, 300)}` });
+    console.error("[clickatell-sms] Provider request failed", { status: response.status, purpose });
+    await logSms({ phone: to, purpose, status: "failed", error: `HTTP ${response.status}` });
     throw new Error(`Clickatell error: ${response.status}`);
   }
 
@@ -119,25 +120,27 @@ export async function sendClickatellSms(phone: string, content: string, purpose 
     parsed = JSON.parse(body) as typeof parsed;
   } catch {
     console.error("[clickatell-sms] Invalid provider response");
-    await logSms({ phone: to, purpose, content, status: "failed", error: "Invalid provider response" });
+    await logSms({ phone: to, purpose, status: "failed", error: "Invalid provider response" });
     throw new Error("Clickatell returned an invalid response");
   }
 
   const message = parsed.messages?.[0];
   if (!message || message.accepted !== true || !message.apiMessageId) {
-    console.error("[clickatell-sms] Message was not accepted:", body);
+    console.error("[clickatell-sms] Message was not accepted", {
+      purpose,
+      errorCode: message?.errorCode ?? null,
+    });
     await logSms({
       phone: to,
       purpose,
-      content,
       status: "rejected",
-      error: message?.errorDescription ?? body.slice(0, 300),
+      error: message?.errorCode ? `Provider code ${message.errorCode}` : "Provider rejected message",
     });
     throw new Error(message?.errorDescription || "SMS provider did not accept the message");
   }
 
-  console.log(`[clickatell-sms] Accepted message ${message.apiMessageId} to ${to} (${purpose})`);
-  await logSms({ phone: to, purpose, content, providerMessageId: message.apiMessageId, status: "accepted" });
+  console.log("[clickatell-sms] Message accepted", { providerMessageId: message.apiMessageId, purpose });
+  await logSms({ phone: to, purpose, providerMessageId: message.apiMessageId, status: "accepted" });
   return message.apiMessageId;
 }
 

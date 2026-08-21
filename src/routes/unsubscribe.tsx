@@ -5,6 +5,7 @@ export const Route = createFileRoute("/unsubscribe")({
   head: () => ({
     meta: [
       { title: "Unsubscribe — RedFlagDaddy" },
+      { name: "robots", content: "noindex,nofollow,noarchive" },
       { name: "description", content: "Stop receiving notification emails from RedFlagDaddy." },
       { property: "og:title", content: "Unsubscribe — RedFlagDaddy" },
       { property: "og:description", content: "Manage your RedFlagDaddy email preferences." },

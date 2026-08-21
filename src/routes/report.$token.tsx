@@ -8,7 +8,12 @@ import { getSharedReport } from "@/lib/analysis.functions";
 import { ReportView } from "@/components/ReportView";
 
 export const Route = createFileRoute("/report/$token")({
-  head: () => ({ meta: [{ title: "Shared Report — RedFlagDaddy" }] }),
+  head: () => ({
+    meta: [
+      { title: "Shared Report — RedFlagDaddy" },
+      { name: "robots", content: "noindex,nofollow,noarchive" },
+    ],
+  }),
   component: SharedReportPage,
   errorComponent: ({ error }) => (
     <div className="min-h-screen flex items-center justify-center p-4">

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { KeyRound, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/join")({
+  head: () => ({ meta: [{ name: "robots", content: "noindex,nofollow,noarchive" }] }),
   component: JoinPage,
   errorComponent: ({ error }) => (
     

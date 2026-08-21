@@ -78,6 +78,11 @@ export const createJourney = createServerFn({ method: "POST" })
     let smsSent = false;
     if (data.recipientPhone) {
       try {
+        const { consumeRateLimits } = await import("./rate-limit.server");
+        await consumeRateLimits([
+          { action: "account_invite_user", value: userId, windowSeconds: 60 * 60, maxEvents: 10 },
+          { action: "account_invite_phone", value: data.recipientPhone, windowSeconds: 24 * 60 * 60, maxEvents: 5 },
+        ]);
         const { sendClickatellSms } = await import("./phone-auth.server");
         const { data: me } = await supabase.from("users").select("name").eq("id", userId).maybeSingle();
         await sendClickatellSms(
@@ -228,6 +233,11 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
 
       const phone = data.recipientPhone?.trim();
       if (!phone) throw new Error("Enter a valid mobile number.");
+      const { consumeRateLimits } = await import("./rate-limit.server");
+      await consumeRateLimits([
+        { action: "account_invite_user", value: userId, windowSeconds: 60 * 60, maxEvents: 10 },
+        { action: "account_invite_phone", value: phone, windowSeconds: 24 * 60 * 60, maxEvents: 5 },
+      ]);
       const { sendClickatellSms } = await import("./phone-auth.server");
       const { data: me } = await supabase.from("users").select("name").eq("id", userId).maybeSingle();
       await sendClickatellSms(

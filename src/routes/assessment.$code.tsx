@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/assessment/$code")({
+  head: () => ({ meta: [{ name: "robots", content: "noindex,nofollow,noarchive" }] }),
   component: AssessmentPage,
   errorComponent: ({ error }) => (
     
