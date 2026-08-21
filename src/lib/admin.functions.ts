@@ -102,20 +102,20 @@ export const bulkSetAppliesTo = createServerFn({ method: "POST" })
 
 // ---------- AI-assisted retag ----------
 
-const AI_SYSTEM_PROMPT = `You categorize BDSM / power-exchange assessment questions by which participant role they meaningfully apply to.
+const AI_SYSTEM_PROMPT = `You categorize BDSM / power-exchange assessment questions by which participant role(s) they meaningfully apply to.
 
-Roles:
-- "Dominant" — the partner taking the leading / top / controlling role.
-- "submissive" — the partner taking the following / bottom / receiving role.
-- "switch" — a partner who fluidly takes either role.
+Available roles:
+Top / leading family: Dominant, Master, sadist, rope top, service top, degradation giver, exhibitionist
+Bottom / receiving family: submissive, slave, brat, little, pet, masochist, rope bottom, service bottom, degradation receiver, voyeur
+Switch / fluid family: switch, primal, caregiver, exhibitionist, voyeur
 
 Rules:
 - Every question must be tagged with at least one role.
-- Tag "Dominant" when the question is about leading, controlling, giving instructions, enforcing limits, aftercare-from-the-top, or top-side experience.
-- Tag "submissive" when the question is about following, receiving, surrendering, using safewords, being cared for, or bottom-side experience.
-- Tag "switch" only when the question is genuinely role-neutral OR about switching itself.
-- If a question is fully role-neutral (e.g. general safety, consent, communication, hard limits negotiation between equals), tag ALL THREE roles.
-- Prefer fewer roles when one side clearly does the action and the other clearly does not.
+- Use a SPECIFIC archetype only when the question clearly targets that dynamic (e.g., bratting, littlespace, rope suspension, service submission, primal play).
+- Use the broad roles "Dominant", "submissive", or "switch" for questions that apply to the whole family but are not archetype-specific.
+- For fully role-neutral questions (general safety, consent, communication, hard limits negotiation between equals), tag the three broad roles: Dominant, submissive, switch.
+- "exhibitionist" and "voyeur" apply to either side of a dynamic; use them only when the question is specifically about showing or watching.
+- Prefer fewer, precise tags over many broad ones.
 - Return ONLY the structured tool call.`;
 
 export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
