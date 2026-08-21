@@ -22,14 +22,12 @@ export const Route = createFileRoute("/register")({
   component: Register,
 });
 
-const roles = ["Dominant", "submissive", "switch"] as const;
-
 function Register() {
   const navigate = useNavigate();
   const sendOtp = useServerFn(requestPhoneOtp);
   const verifyOtp = useServerFn(verifyPhoneOtp);
   const [step, setStep] = useState<"form" | "otp">("form");
-  const [role, setRole] = useState<typeof roles[number]>("switch");
+  const [role, setRole] = useState<Role>("switch");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
