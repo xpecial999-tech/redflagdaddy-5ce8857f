@@ -33,7 +33,7 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "How RedFlagDaddy works: structured assessments for Dominants, submissives and switches with research-grounded questions, safety scoring, real-time journey tracking and end-to-end privacy.",
+          "How RedFlagDaddy works: structured, role-aware assessments for Dominants, submissives, switches and the full spectrum of BDSM archetypes, with research-grounded questions, safety scoring, real-time journey tracking and end-to-end privacy.",
       },
       { property: "og:title", content: "About — RedFlagDaddy" },
       {
