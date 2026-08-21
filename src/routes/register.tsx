@@ -3,7 +3,7 @@ import { RoleSelector } from "@/components/RoleSelector";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/phone-auth.functions";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -57,9 +57,13 @@ function Register() {
     setInfo(`We sent a 6-digit code to ${formatPhone(e164)}. Enter it below to finish.`);
   };
 
-  const onVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submittedRef = useRef<string | null>(null);
+
+  const onVerify = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (otp.length !== 6) return setError("Enter the 6-digit code.");
+    if (loading) return;
+    submittedRef.current = otp;
     setLoading(true);
     setError(null);
     const result = await verifyOtp({
@@ -88,6 +92,14 @@ function Register() {
     setLoading(false);
     navigate({ to: "/dashboard" });
   };
+
+  useEffect(() => {
+    if (step !== "otp") return;
+    if (otp.length !== 6 || loading) return;
+    if (submittedRef.current === otp) return;
+    void onVerify();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp, step, loading]);
 
   return (
     <div className="max-w-sm mx-auto pt-8 space-y-8">
