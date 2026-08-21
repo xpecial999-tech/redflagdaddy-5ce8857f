@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Compass, LayoutDashboard, Plus, User, Shield, LogIn } from "lucide-react";
+import { LayoutDashboard, Plus, User, Shield, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { useMe } from "@/hooks/use-me";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 const baseNavItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -29,10 +30,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-40 bg-background border-b border-white/5">
           <div className="px-4 py-3 flex items-center justify-between max-w-3xl mx-auto">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-aurora-1 to-aurora-2 flex items-center justify-center">
-                <Compass className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-display text-lg font-semibold tracking-tight">RedFlagDaddy</span>
+              <img
+                src={logoAsset.url}
+                alt="RedFlagDaddy"
+                className="h-8 w-auto"
+              />
             </Link>
             {hideNav && (
               <Link
