@@ -275,6 +275,8 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          ip_hash: string | null
+          locked_until: string | null
           phone: string
           updated_at: string
           used: boolean
@@ -285,6 +287,8 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          ip_hash?: string | null
+          locked_until?: string | null
           phone: string
           updated_at?: string
           used?: boolean
@@ -295,6 +299,8 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          ip_hash?: string | null
+          locked_until?: string | null
           phone?: string
           updated_at?: string
           used?: boolean
