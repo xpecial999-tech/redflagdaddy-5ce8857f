@@ -19,8 +19,8 @@ import {
   ArrowRight,
   Activity,
   Settings,
-  Mail,
-  Shield,
+  Smartphone,
+  Link2,
   Timer,
   Monitor,
   Bell,
@@ -119,8 +119,8 @@ const privacy = [
 ];
 
 const security = [
-  { icon: Mail, title: "Verified accounts only", body: "Email verification is required before sign-in. No anonymous sign-ups that bypass accountability." },
-  { icon: Shield, title: "Admin route guards", body: "Admin pages are protected by server-side role checks before any data ever reaches the client." },
+  { icon: Smartphone, title: "Verified mobile accounts only", body: "Mobile verification via SMS OTP is required before sign-in. No anonymous sign-ups that bypass accountability." },
+  { icon: Link2, title: "Secure shareable reports", body: "Report share links are authenticated and scoped to their owner. Only intended recipients can access completed results." },
   { icon: KeyRound, title: "Service-to-service auth", body: "Analysis and result endpoints verify the caller's identity on every request, not just at login." },
   { icon: Lock, title: "No public result leaks", body: "Result pages require authentication. Share links are for respondents to answer, not for anyone to browse outcomes." },
 ];
