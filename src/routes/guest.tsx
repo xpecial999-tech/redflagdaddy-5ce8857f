@@ -290,8 +290,8 @@ function PartnerLinkView({
               <li>Share the link using one of the buttons below — your contacts stay on your device.</li>
               <li>They open the link, confirm they're 18+, and complete the assessment.</li>
               <li>
-                Once they finish, we'll email the combined report to you:{" "}
-                <span className="text-foreground">{guestEmail}</span>
+                Once they finish, we'll text the combined report link to:{" "}
+                <span className="text-foreground">{formatPhone(guestPhone) || guestPhone}</span>
               </li>
             </ol>
           </div>
