@@ -75,11 +75,8 @@ function Profile() {
           {role}
           {me.isAdmin ? " · admin" : ""}
         </p>
-        <p className="text-xs text-muted-foreground mt-1">{formatPhone(me.phone) || me.email}</p>
+        <p className="text-xs text-muted-foreground mt-1">{formatPhone(me.phone)}</p>
       </motion.section>
-
-      <ContactEmailCard userId={me.id} initialEmail={me.email} />
-
 
       <section className="space-y-2">
         {settings.map((s) => (
