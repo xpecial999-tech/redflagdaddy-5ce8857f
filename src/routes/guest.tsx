@@ -123,22 +123,13 @@ function GuestPage() {
             }}
           >
             <Field
-              label="Your email address"
-              hint="Only used to send your completed report."
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="you@example.com"
-            />
-
-            <Field
-              label="Your mobile number (optional)"
-              hint="We'll text you a private download link to your report when it's ready."
+              label="Your mobile number"
+              hint="We'll text your private report link here when the assessment is done."
               type="tel"
               inputMode="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              required
               placeholder="071 234 5678"
             />
 
