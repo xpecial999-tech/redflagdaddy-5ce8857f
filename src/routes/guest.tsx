@@ -50,14 +50,13 @@ const steps = [
 function GuestPage() {
   const createFn = useServerFn(createGuestJourney);
 
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [partnerType, setPartnerType] = useState<typeof partnerRoles[number] | "">("");
 
   const mutation = useMutation({
     mutationFn: () =>
       createFn({
-        data: { guestEmail: email, guestPhone: phone, partnerEmail: "", partnerType },
+        data: { guestPhone: phone, partnerEmail: "", partnerType },
       }),
   });
 
@@ -66,7 +65,6 @@ function GuestPage() {
     return (
       <PartnerLinkView
         code={mutation.data.code}
-        guestEmail={email}
         guestPhone={phone}
         partnerType={partnerType}
       />
