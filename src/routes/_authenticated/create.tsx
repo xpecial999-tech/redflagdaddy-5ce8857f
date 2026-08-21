@@ -411,12 +411,46 @@ function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phon
       </div>
 
 
-      <a
-        href={`sms:${phone ?? ""}${/(iPhone|iPad|Mac)/.test(typeof navigator !== "undefined" ? navigator.userAgent : "") ? "&" : "?"}body=${encodeURIComponent(`You've been invited to a RedFlagDaddy assessment: "${title}". Start here: ${url}`)}`}
+      <button
+        onClick={() => setSmsOpen(true)}
         className="block w-full inline-flex items-center justify-center gap-2 rounded-xl bg-input border border-border py-3 text-sm font-medium"
       >
         <MessageSquare className="w-4 h-4" /> Send by SMS
-      </a>
+      </button>
+
+      <Dialog open={smsOpen} onOpenChange={(o) => !o && setSmsOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send invite by SMS</DialogTitle>
+            <DialogDescription>We'll text the invite link straight to their phone.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="s-name">Recipient name (optional)</Label>
+              <Input id="s-name" value={rName} onChange={(e) => setRName(e.target.value)} placeholder="e.g. Natasha" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-phone">Recipient mobile number</Label>
+              <Input id="s-phone" value={rPhone} onChange={(e) => setRPhone(e.target.value)} placeholder="+27123456789" inputMode="tel" type="tel" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-note">Personal note (optional)</Label>
+              <Input id="s-note" value={rNote} onChange={(e) => setRNote(e.target.value)} placeholder="Add a line of context for them" maxLength={500} />
+            </div>
+          </div>
+          <DialogFooter>
+            <button
+              onClick={submitSms}
+              disabled={sending || !rPhone.trim()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-50"
+            >
+              {sending && <Loader2 className="w-4 h-4 animate-spin" />}
+              Send SMS
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <div className="glass-strong rounded-3xl p-6 text-center space-y-4">
         <div className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-br from-aurora-1 to-aurora-2 items-center justify-center mx-auto">
