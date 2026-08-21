@@ -304,20 +304,19 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
   );
 }
 
-function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }: { url: string; code: string; email: string | null; title: string; partnerType: SelfRole; smsSent?: boolean; phone?: string | null }) {
+function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }: { url: string; code: string; email: string | null; title: string; partnerType: Role; smsSent?: boolean; phone?: string | null }) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
   const navigate = useNavigate();
   const createFn = useServerFn(createJourney);
-  const opposite: SelfRole | "" =
-    partnerType === "Dominant" ? "submissive" : partnerType === "submissive" ? "Dominant" : "";
-  const [selfType, setSelfType] = useState<SelfRole | "">(opposite);
+  const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
+  const [selfType, setSelfType] = useState<Role | "">(opposite);
 
   const selfMutation = useMutation({
     mutationFn: () =>
       createFn({
         data: {
           title: "My self-assessment",
-          participantType: selfType as SelfRole,
+          participantType: selfType as Role,
           recipientName: null,
           recipientEmail: null,
           notes: null,
