@@ -363,3 +363,23 @@ function Field({
     </label>
   );
 }
+
+function RoleGroup({ label, roles, selected, onSelect }: { label: string; roles: readonly Role[]; selected: Role | ""; onSelect: (r: Role) => void }) {
+  return (
+    <div>
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</span>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        {roles.map((r) => (
+          <button
+            type="button"
+            key={r}
+            onClick={() => onSelect(r)}
+            className={`rounded-xl border px-2 py-2.5 text-xs font-medium transition text-left ${selected === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:border-primary/50"}`}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
