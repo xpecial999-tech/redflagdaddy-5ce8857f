@@ -195,14 +195,18 @@ export function ActionRow({
   label,
   desc,
   destructive,
+  onClick,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   desc: string;
   destructive?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <button
+      type="button"
+      onClick={onClick}
       className={`w-full text-left glass rounded-2xl p-4 flex items-center gap-3 hover:bg-white/5 transition ${
         destructive ? "border border-destructive/30" : ""
       }`}
