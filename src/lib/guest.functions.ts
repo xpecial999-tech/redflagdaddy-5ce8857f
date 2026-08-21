@@ -1,9 +1,22 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateInviteCode } from "./utils.server";
+import { isValidE164, toE164 } from "./phone";
 
 const CreateGuestSchema = z.object({
   guestEmail: z.string().trim().email().max(255),
+  guestPhone: z
+    .string()
+    .trim()
+    .max(24)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => {
+      if (!v) return "";
+      const normalized = toE164(v);
+      if (!isValidE164(normalized)) throw new Error("Enter a valid mobile number with country code.");
+      return normalized;
+    }),
   partnerEmail: z
     .string()
     .trim()
@@ -21,6 +34,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const code = generateInviteCode();
     const partnerEmail = data.partnerEmail && data.partnerEmail.length > 0 ? data.partnerEmail : null;
+    const guestPhone = data.guestPhone && data.guestPhone.length > 0 ? data.guestPhone : null;
 
     const { data: journey, error } = await supabaseAdmin
       .from("journeys")
@@ -31,11 +45,13 @@ export const createGuestJourney = createServerFn({ method: "POST" })
         invite_code: code,
         recipient_email: partnerEmail,
         guest_email: data.guestEmail,
+        guest_phone: guestPhone,
         status: "pending",
       })
       .select("id, invite_code")
       .single();
     if (error) throw new Error(error.message);
+
 
     const { error: iErr } = await supabaseAdmin.from("invites").insert({
       journey_id: journey.id,
