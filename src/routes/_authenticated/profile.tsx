@@ -56,7 +56,7 @@ function Profile() {
     );
   }
 
-  const displayName = me.name || formatPhone(me.phone) || me.email?.split("@")[0] || "Member";
+  const displayName = me.name || formatPhone(me.phone) || "Member";
   const initial = displayName.charAt(0).toUpperCase();
   const role = me.role || "member";
 
