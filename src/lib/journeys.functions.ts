@@ -141,7 +141,15 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!journey) throw new Error("Journey not found");
-    if (journey.creator_id !== userId) throw new Error("Not authorized");
+    if (journey.creator_id !== userId) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: adminRow } = await supabaseAdmin
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!adminRow) throw new Error("Not authorized");
+    }
 
     const [{ data: invite }, { count: responseCount }] = await Promise.all([
       supabase
