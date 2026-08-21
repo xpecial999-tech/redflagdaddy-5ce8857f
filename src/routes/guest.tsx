@@ -320,17 +320,16 @@ function PartnerLinkView({
             Send the invite
           </span>
           <p className="text-xs text-muted-foreground">
-            Open your messaging app with the invite pre-filled. Pick the contact yourself —
-            nothing is sent until you hit send.
+            Send the invite by SMS from RedFlagDaddy — just enter their number — or share it on WhatsApp yourself.
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <a
-              href={smsHref}
+            <button
+              onClick={() => setSmsOpen(true)}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium hover:bg-white/5 transition"
             >
               <MessageSquare className="w-4 h-4" />
               SMS
-            </a>
+            </button>
             <a
               href={whatsappHref}
               target="_blank"
@@ -341,7 +340,40 @@ function PartnerLinkView({
               WhatsApp
             </a>
           </div>
+
+          <Dialog open={smsOpen} onOpenChange={(o) => !o && setSmsOpen(false)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Send invite by SMS</DialogTitle>
+                <DialogDescription>We'll text the invite link straight to their phone.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="g-name">Recipient name (optional)</Label>
+                  <Input id="g-name" value={rName} onChange={(e) => setRName(e.target.value)} placeholder="e.g. Natasha" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="g-phone">Recipient mobile number</Label>
+                  <Input id="g-phone" value={rPhone} onChange={(e) => setRPhone(e.target.value)} placeholder="+27123456789" inputMode="tel" type="tel" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="g-note">Personal note (optional)</Label>
+                  <Input id="g-note" value={rNote} onChange={(e) => setRNote(e.target.value)} placeholder="Add a line of context for them" maxLength={500} />
+                </div>
+              </div>
+              <DialogFooter>
+                <button
+                  onClick={submitSms}
+                  disabled={sending || !rPhone.trim()}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-50"
+                >
+                  {sending ? "Sending…" : "Send SMS"}
+                </button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </section>
+
 
         <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-4">
           <h3 className="font-display text-lg font-semibold tracking-tight">
