@@ -1,13 +1,14 @@
+import { oppositeRole, type Role } from "@/lib/roles";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
+import { RoleSelector } from "@/components/RoleSelector";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap, MessageSquare } from "lucide-react";
 import { createJourney } from "@/lib/journeys.functions";
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
-import { TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role, oppositeRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
@@ -111,9 +112,7 @@ function Create() {
           <StepWrap key="2">
             <h2 className="font-semibold mb-3">Their role in the dynamic</h2>
             <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-              <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={participantType} onSelect={setParticipantType} />
-              <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={participantType} onSelect={setParticipantType} />
-              <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={participantType} onSelect={setParticipantType} />
+                <RoleSelector value={participantType} onChange={setParticipantType} />
             </div>
           </StepWrap>
         )}
@@ -403,9 +402,7 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
         <div>
           <span className="text-xs uppercase tracking-wider text-muted-foreground">I am a…</span>
           <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
-            <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={selfType} onSelect={setSelfType} />
-            <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={selfType} onSelect={setSelfType} />
-            <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={selfType} onSelect={setSelfType} />
+                <RoleSelector value={selfType} onChange={setSelfType} />
           </div>
         </div>
         {selfMutation.error && (
@@ -423,25 +420,3 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
   );
 }
 
-function RoleGroup({ label, roles, selected, onSelect }: { label: string; roles: readonly Role[]; selected: Role | ""; onSelect: (r: Role) => void }) {
-  return (
-    <div>
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</span>
-      <div className="mt-1 grid grid-cols-2 gap-2">
-        {roles.map((r) => {
-          const on = selected === r;
-          return (
-            <button
-              type="button"
-              key={r}
-              onClick={() => onSelect(r)}
-              className={`rounded-xl border px-3 py-2.5 text-xs font-medium transition text-left ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:border-primary/50"}`}
-            >
-              {r}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
