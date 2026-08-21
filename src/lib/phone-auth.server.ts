@@ -100,7 +100,8 @@ export async function sendClickatellSms(phone: string, content: string, purpose 
 
   const body = await response.text();
   if (!response.ok) {
-    console.error(`[clickatell-sms] Provider error ${response.status}: ${body}`);
+    console.error(`[clickatell-sms] Provider error ${response.status} to ${to}: ${body}`);
+    await logSms({ phone: to, purpose, content, status: "failed", error: `HTTP ${response.status}: ${body.slice(0, 300)}` });
     throw new Error(`Clickatell error: ${response.status}`);
   }
 
@@ -118,16 +119,26 @@ export async function sendClickatellSms(phone: string, content: string, purpose 
     parsed = JSON.parse(body) as typeof parsed;
   } catch {
     console.error("[clickatell-sms] Invalid provider response");
+    await logSms({ phone: to, purpose, content, status: "failed", error: "Invalid provider response" });
     throw new Error("Clickatell returned an invalid response");
   }
 
   const message = parsed.messages?.[0];
   if (!message || message.accepted !== true || !message.apiMessageId) {
     console.error("[clickatell-sms] Message was not accepted:", body);
+    await logSms({
+      phone: to,
+      purpose,
+      content,
+      status: "rejected",
+      error: message?.errorDescription ?? body.slice(0, 300),
+    });
     throw new Error(message?.errorDescription || "SMS provider did not accept the message");
   }
 
-  console.log(`[clickatell-sms] Accepted message ${message.apiMessageId}`);
+  console.log(`[clickatell-sms] Accepted message ${message.apiMessageId} to ${to} (${purpose})`);
+  await logSms({ phone: to, purpose, content, providerMessageId: message.apiMessageId, status: "accepted" });
+  return message.apiMessageId;
 }
 
 /** Hash the caller IP so we can rate-limit without storing raw addresses. */
