@@ -437,9 +437,9 @@ function About() {
         </h2>
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
           Our library is informed by established consent frameworks, BDSM safety literature and
-          community-vetted compatibility checklists — then tagged by role so Dominants,
-          submissives and switches only see what's relevant. Admins can refine tagging with
-          AI-assisted suggestions to keep the library sharp.
+          community-vetted compatibility checklists — then tagged by archetype so Dominants,
+          submissives, switches, Masters, brats, littles and every other role only see what's
+          relevant. Admins can refine tagging with AI-assisted suggestions to keep the library sharp.
         </p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
           {[
