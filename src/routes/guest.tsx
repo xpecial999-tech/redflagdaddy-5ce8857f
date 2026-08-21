@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { formatPhone } from "@/lib/phone";
+import { captureMarketingEvent } from "@/lib/marketing-attribution";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -64,6 +65,9 @@ function GuestPage() {
       createFn({
         data: { guestPhone: phone, partnerType },
       }),
+    onSuccess: () => {
+      void captureMarketingEvent("core_action_completed", "guest", { once: true });
+    },
   });
 
 
@@ -423,4 +427,3 @@ function Field({
     </label>
   );
 }
-

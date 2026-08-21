@@ -500,6 +500,45 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_events: {
+        Row: {
+          environment: string
+          event_name: string
+          flow: string
+          id: number
+          occurred_at: string
+          session_id: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          environment: string
+          event_name: string
+          flow: string
+          id?: number
+          occurred_at?: string
+          session_id: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          environment?: string
+          event_name?: string
+          flow?: string
+          id?: number
+          occurred_at?: string
+          session_id?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       sms_log: {
         Row: {
           content_preview: string | null

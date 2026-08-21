@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/AppShell";
 import { ScrollToTop } from "../components/ScrollToTop";
+import { AnalyticsConsent } from "../components/AnalyticsConsent";
 
 function NotFoundComponent() {
   return (
@@ -120,6 +121,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ScrollToTop />
+      <AnalyticsConsent />
       <AppShell>
         <Outlet />
       </AppShell>
