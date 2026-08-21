@@ -6,7 +6,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "RedFlagDaddy — Consent, Compatibility & Safety" },
-      { name: "description", content: "Structured assessments for Dominants, submissives and switches." },
+      { name: "description", content: "Structured assessments for Dominants, submissives, switches and the full spectrum of BDSM archetypes." },
     ],
   }),
   component: Landing,
