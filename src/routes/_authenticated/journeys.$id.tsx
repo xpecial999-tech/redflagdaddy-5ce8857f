@@ -322,9 +322,12 @@ function ShareCard({
   return (
     <div className="glass rounded-2xl p-4 space-y-3">
       <div>
-        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-          <Link2 className="w-3.5 h-3.5" /> Invite link
+        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1">
+          <Link2 className="w-3.5 h-3.5" /> Invite URL
         </div>
+        <p className="text-xs text-muted-foreground/80 mb-1.5">
+          This link is unique to this journey — simply share it directly with your respondent.
+        </p>
         <div className="flex gap-2">
           <input
             readOnly

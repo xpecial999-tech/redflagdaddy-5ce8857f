@@ -21,6 +21,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportTokenRouteImport } from './routes/report.$token'
 import { Route as JourneyCodeRouteImport } from './routes/journey.$code'
+import { Route as JCodeRouteImport } from './routes/j.$code'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AssessmentCodeRouteImport } from './routes/assessment.$code'
 import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
@@ -99,6 +100,11 @@ const ReportTokenRoute = ReportTokenRouteImport.update({
 const JourneyCodeRoute = JourneyCodeRouteImport.update({
   id: '/journey/$code',
   path: '/journey/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JCodeRoute = JCodeRouteImport.update({
+  id: '/j/$code',
+  path: '/j/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/j/$code': typeof JCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/report/$token': typeof ReportTokenRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/j/$code': typeof JCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/report/$token': typeof ReportTokenRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/j/$code': typeof JCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
   '/report/$token': typeof ReportTokenRoute
   '/_authenticated/journeys/$id': typeof AuthenticatedJourneysIdRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/upgrade'
     | '/assessment/$code'
     | '/email/unsubscribe'
+    | '/j/$code'
     | '/journey/$code'
     | '/report/$token'
     | '/journeys/$id'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/upgrade'
     | '/assessment/$code'
     | '/email/unsubscribe'
+    | '/j/$code'
     | '/journey/$code'
     | '/report/$token'
     | '/journeys/$id'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/_authenticated/upgrade'
     | '/assessment/$code'
     | '/email/unsubscribe'
+    | '/j/$code'
     | '/journey/$code'
     | '/report/$token'
     | '/_authenticated/journeys/$id'
@@ -426,6 +438,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   AssessmentCodeRoute: typeof AssessmentCodeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  JCodeRoute: typeof JCodeRoute
   JourneyCodeRoute: typeof JourneyCodeRoute
   ReportTokenRoute: typeof ReportTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -521,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/journey/$code'
       fullPath: '/journey/$code'
       preLoaderRoute: typeof JourneyCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/j/$code': {
+      id: '/j/$code'
+      path: '/j/$code'
+      fullPath: '/j/$code'
+      preLoaderRoute: typeof JCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -720,6 +740,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   AssessmentCodeRoute: AssessmentCodeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  JCodeRoute: JCodeRoute,
   JourneyCodeRoute: JourneyCodeRoute,
   ReportTokenRoute: ReportTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,

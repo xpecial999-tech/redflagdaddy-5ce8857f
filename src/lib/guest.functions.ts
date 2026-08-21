@@ -73,7 +73,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
         idempotencyKey: `journey-invite-${journey.id}`,
         templateData: {
           journeyTitle: data.isSelf ? "Self-assessment" : "Guest assessment",
-          inviteUrl: `https://redflagdaddy.com/journey/${code}`,
+          inviteUrl: `https://redflagdaddy.com/j/${code}`,
           inviteCode: code,
         },
       });

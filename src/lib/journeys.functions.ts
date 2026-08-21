@@ -49,7 +49,7 @@ export const createJourney = createServerFn({ method: "POST" })
 
     const code = generateInviteCode();
     const origin = originFromRequest();
-    const inviteUrl = `${origin}/journey/${code}`;
+    const inviteUrl = `${origin}/j/${code}`;
 
     const { data: journey, error } = await supabase
       .from("journeys")
@@ -230,7 +230,7 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
       if (!adminRow) throw new Error("Not authorized");
     }
 
-    const inviteUrl = journey.invite_url ?? `${originFromRequest()}/journey/${journey.invite_code}`;
+    const inviteUrl = journey.invite_url ?? `${originFromRequest()}/j/${journey.invite_code}`;
 
     if (data.channel === "sms") {
       const phone = data.recipientPhone?.trim();
