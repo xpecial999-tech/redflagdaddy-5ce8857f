@@ -48,7 +48,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
         participant_type: data.partnerType,
         invite_code: code,
         recipient_email: partnerEmail,
-        guest_email: data.guestEmail,
+        guest_email: data.guestEmail || null,
         guest_phone: guestPhone,
         status: "pending",
       })
