@@ -111,13 +111,10 @@ function Register() {
 
                 <div>
                   <span className="text-xs text-muted-foreground">Primary identity</span>
-                  <div className="mt-1 grid grid-cols-3 gap-2">
-                    {roles.map((r) => (
-                      <button type="button" key={r} onClick={() => setRole(r)}
-                        className={`rounded-xl border px-2 py-2.5 text-xs font-medium transition ${role === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground"}`}>
-                        {r}
-                      </button>
-                    ))}
+                  <div className="mt-2 space-y-3 max-h-64 overflow-y-auto pr-1">
+                    <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={role} onSelect={setRole} />
+                    <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={role} onSelect={setRole} />
+                    <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={role} onSelect={setRole} />
                   </div>
                 </div>
 
