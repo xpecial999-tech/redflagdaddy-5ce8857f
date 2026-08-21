@@ -34,8 +34,6 @@ export const Route = createFileRoute("/guest")({
   ),
 });
 
-const partnerRoles = ["Dominant", "submissive", "switch"] as const;
-
 const steps = [
   {
     icon: Smartphone,
@@ -45,7 +43,7 @@ const steps = [
   {
     icon: ClipboardList,
     title: "Pick the dynamic you're assessing",
-    body: "Is your partner a Dominant, submissive, or switch? This shapes the questions they will answer.",
+    body: "Choose the role that best matches your partner. This shapes the questions they will answer.",
   },
 ];
 
