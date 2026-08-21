@@ -10,9 +10,11 @@ export const Route = createFileRoute("/consent-safety")({
       { name: "description", content: "RedFlagDaddy's consent-first safety guidelines for adults exploring dynamics." },
       { property: "og:title", content: "Consent & Safety Guidelines — RedFlagDaddy" },
       { property: "og:description", content: "Read our consent-first safety guidelines." },
+      { property: "og:url", content: "https://redflagdaddy.com/consent-safety" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://redflagdaddy.com/consent-safety" }],
   }),
   component: ConsentSafety,
 });

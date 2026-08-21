@@ -7,7 +7,11 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "RedFlagDaddy — Consent, Compatibility & Safety" },
       { name: "description", content: "Structured assessments for Dominants, submissives, switches and the full spectrum of BDSM archetypes." },
+      { property: "og:title", content: "RedFlagDaddy — Navigate dynamics with clarity" },
+      { property: "og:description", content: "Role-aware conversation prompts for consent, compatibility, safety practices and potential red flags." },
+      { property: "og:url", content: "https://redflagdaddy.com/" },
     ],
+    links: [{ rel: "canonical", href: "https://redflagdaddy.com/" }],
   }),
   component: Landing,
 });
@@ -32,7 +36,7 @@ function Landing() {
           className="text-muted-foreground max-w-md mx-auto"
         >
           RedFlagDaddy helps Dominants, submissives, switches and the full spectrum
-          of BDSM archetypes assess consent, compatibility, safety and red flags
+          of BDSM archetypes discuss consent, compatibility, safety practices and potential red flags
           — with structure, not guesswork.
         </motion.p>
 
@@ -55,6 +59,11 @@ function Landing() {
             Continue as guest
           </Link>
         </motion.div>
+
+        <p className="text-xs text-muted-foreground max-w-lg mx-auto">
+          For adults 18+. RedFlagDaddy is a structured conversation aid, not a diagnosis, identity
+          check, emergency service or guarantee of safety.
+        </p>
 
         <motion.div
           initial={{ opacity: 0 }}

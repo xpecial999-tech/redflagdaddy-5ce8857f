@@ -17,6 +17,7 @@ export const Route = createFileRoute("/login")({
       { property: "og:description", content: "Sign in with your mobile number and a one-time SMS code." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex,nofollow,noarchive" },
     ],
   }),
   component: Login,

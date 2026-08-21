@@ -24,6 +24,16 @@ type DynamicReadiness = {
 };
 
 export const Route = createFileRoute("/demo-report")({
+  head: () => ({
+    meta: [
+      { title: "Synthetic demo report — RedFlagDaddy" },
+      { name: "description", content: "Explore a synthetic RedFlagDaddy report with example scores, strengths, risks and discussion prompts." },
+      { property: "og:title", content: "Synthetic demo report — RedFlagDaddy" },
+      { property: "og:description", content: "See how a RedFlagDaddy assessment report is structured using fictional example data." },
+      { property: "og:url", content: "https://redflagdaddy.com/demo-report" },
+    ],
+    links: [{ rel: "canonical", href: "https://redflagdaddy.com/demo-report" }],
+  }),
   component: DemoReportPage,
 });
 
@@ -183,6 +193,11 @@ function DemoReportPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 p-4">
+      <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-sm">
+        <span className="font-medium">Synthetic example:</span>{" "}
+        every name, answer, score and narrative on this page is fictional and exists only to
+        demonstrate the report format.
+      </div>
       <header className="text-center space-y-2">
         <h1 className="font-display text-3xl font-semibold tracking-tight">Assessment Results</h1>
         <p className="text-sm text-muted-foreground">
@@ -218,8 +233,8 @@ function DemoReportPage() {
         <CardContent className="text-sm text-muted-foreground leading-relaxed">
           {a.overall_note}
           <p className="mt-4 text-xs italic">
-            This analysis is an assessment summary, not a clinical or medical evaluation.
-            No diagnosis is made or implied.
+            This summary is a conversation prompt, not a clinical, medical, legal or safety
+            evaluation. It cannot verify identity, diagnose a person or predict their behaviour.
           </p>
         </CardContent>
       </Card>

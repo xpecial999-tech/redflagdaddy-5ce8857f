@@ -16,3 +16,5 @@ Disallow: /unsubscribe
 Disallow: /email/
 Disallow: /api/
 Disallow: /lovable/
+
+Sitemap: https://redflagdaddy.com/sitemap.xml
