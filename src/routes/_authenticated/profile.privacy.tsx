@@ -13,6 +13,34 @@ function Privacy() {
   const [share, setShare] = useState(true);
   const [analytics, setAnalytics] = useState(false);
   const [discoverable, setDiscoverable] = useState(false);
+  const runExport = useServerFn(exportMyData);
+  const [json, setJson] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleExport = async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const res = await runExport({});
+      setJson(res.json);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not load your data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const download = () => {
+    if (!json) return;
+    const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "redflagdaddy-data.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6">
