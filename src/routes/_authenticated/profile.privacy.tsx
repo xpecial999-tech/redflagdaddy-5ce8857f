@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Lock, Download, Trash2, Eye, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Lock, Download, Trash2, Eye, ShieldCheck, Loader2, Check } from "lucide-react";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { exportMyData } from "@/lib/data-export.functions";
 
 export const Route = createFileRoute("/_authenticated/profile/privacy")({
   head: () => ({ meta: [{ title: "Privacy & data — RedFlagDaddy" }] }),
@@ -11,6 +13,34 @@ function Privacy() {
   const [share, setShare] = useState(true);
   const [analytics, setAnalytics] = useState(false);
   const [discoverable, setDiscoverable] = useState(false);
+  const runExport = useServerFn(exportMyData);
+  const [json, setJson] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleExport = async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const res = await runExport({});
+      setJson(res.json);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not load your data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const download = () => {
+    if (!json) return;
+    const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "redflagdaddy-data.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6">
@@ -50,10 +80,41 @@ function Privacy() {
 
       <section className="space-y-2">
         <ActionRow
-          icon={Download}
-          label="Export my data"
-          desc="Download every journey, response and result as JSON."
+          icon={loading ? Loader2 : Download}
+          label={loading ? "Loading your data…" : "View / export my data"}
+          desc="See every journey, response and result as raw JSON."
+          onClick={handleExport}
         />
+        {err && <p className="text-xs text-destructive px-1">{err}</p>}
+        {json && (
+          <div className="glass rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-medium">Your data (JSON)</div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(json);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  }}
+                  className="rounded-xl bg-white/5 px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5" /> : null}
+                  {copied ? "Copied" : "Copy"}
+                </button>
+                <button
+                  onClick={download}
+                  className="rounded-xl bg-primary/15 text-primary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download
+                </button>
+              </div>
+            </div>
+            <pre className="max-h-96 overflow-auto rounded-xl bg-input border border-border p-3 text-[11px] leading-relaxed font-mono whitespace-pre">
+              {json}
+            </pre>
+          </div>
+        )}
         <ActionRow
           icon={Trash2}
           label="Delete account"
@@ -134,14 +195,18 @@ export function ActionRow({
   label,
   desc,
   destructive,
+  onClick,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   desc: string;
   destructive?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <button
+      type="button"
+      onClick={onClick}
       className={`w-full text-left glass rounded-2xl p-4 flex items-center gap-3 hover:bg-white/5 transition ${
         destructive ? "border border-destructive/30" : ""
       }`}
