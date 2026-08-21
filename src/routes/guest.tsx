@@ -185,6 +185,33 @@ function PartnerLinkView({
   const navigate = useNavigate();
   const createFn = useServerFn(createGuestJourney);
   const [copied, setCopied] = useState(false);
+  const sendInviteFn = useServerFn(sendGuestInvite);
+  const [smsOpen, setSmsOpen] = useState(false);
+  const [rName, setRName] = useState("");
+  const [rPhone, setRPhone] = useState("");
+  const [rNote, setRNote] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const submitSms = async () => {
+    setSending(true);
+    try {
+      await sendInviteFn({
+        data: {
+          code,
+          recipientPhone: rPhone.trim(),
+          recipientName: rName.trim() || undefined,
+          notes: rNote.trim() || undefined,
+        },
+      });
+      toast.success("Invite sent by SMS");
+      setSmsOpen(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSending(false);
+    }
+  };
+
 
   const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
   const [selfType, setSelfType] = useState<Role | "">(opposite);
