@@ -84,6 +84,14 @@ function Login() {
     navigate({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
   };
 
+  useEffect(() => {
+    if (step !== "otp") return;
+    if (otp.length !== 6 || loading) return;
+    if (submittedRef.current === otp) return;
+    void onVerify();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp, step, loading]);
+
   return (
     <div className="max-w-sm mx-auto pt-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-strong rounded-3xl p-6">
