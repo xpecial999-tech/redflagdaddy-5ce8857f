@@ -161,7 +161,7 @@ function JourneyTracker() {
       {/* Share & send */}
       <section className="space-y-3">
         <SectionLabel>Send to respondent</SectionLabel>
-        <ShareCard url={url} code={code} email={recipient} title={journey.title} />
+        <ShareCard journeyId={journey.id} url={url} email={recipient} />
       </section>
 
       {/* View results / continue actions */}
