@@ -80,10 +80,41 @@ function Privacy() {
 
       <section className="space-y-2">
         <ActionRow
-          icon={Download}
-          label="Export my data"
-          desc="Download every journey, response and result as JSON."
+          icon={loading ? Loader2 : Download}
+          label={loading ? "Loading your data…" : "View / export my data"}
+          desc="See every journey, response and result as raw JSON."
+          onClick={handleExport}
         />
+        {err && <p className="text-xs text-destructive px-1">{err}</p>}
+        {json && (
+          <div className="glass rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-medium">Your data (JSON)</div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(json);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  }}
+                  className="rounded-xl bg-white/5 px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5" /> : null}
+                  {copied ? "Copied" : "Copy"}
+                </button>
+                <button
+                  onClick={download}
+                  className="rounded-xl bg-primary/15 text-primary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download
+                </button>
+              </div>
+            </div>
+            <pre className="max-h-96 overflow-auto rounded-xl bg-input border border-border p-3 text-[11px] leading-relaxed font-mono whitespace-pre">
+              {json}
+            </pre>
+          </div>
+        )}
         <ActionRow
           icon={Trash2}
           label="Delete account"
