@@ -107,29 +107,86 @@ export async function sendClickatellSms(phone: string, content: string) {
   console.log(`[clickatell-sms] Accepted message ${message.apiMessageId}`);
 }
 
-async function countRecentRequests(supabaseAdmin: SupabaseAdminClient, phone: string) {
-  const since = new Date(Date.now() - OTP_REQUEST_WINDOW_MS).toISOString();
+/** Hash the caller IP so we can rate-limit without storing raw addresses. */
+export function hashIp(ip: string | null | undefined): string | null {
+  if (!ip) return null;
+  const secret = process.env["OTP_SECRET"];
+  if (!secret) return null;
+  return createHmac("sha256", secret).update(ip).digest("hex").slice(0, 32);
+}
+
+async function countSince(
+  supabaseAdmin: SupabaseAdminClient,
+  column: "phone" | "ip_hash",
+  value: string,
+  windowMs: number,
+) {
+  const since = new Date(Date.now() - windowMs).toISOString();
   const { count, error } = await supabaseAdmin
     .from("phone_otps")
     .select("*", { count: "exact", head: true })
-    .eq("phone", phone)
+    .eq(column, value)
     .gte("created_at", since);
   if (error) throw error;
   return count ?? 0;
 }
 
-export async function requestPhoneOtpHandler(data: { phone: string }) {
+/** Latest row for a phone, used for cooldown + lockout checks. */
+async function latestForPhone(supabaseAdmin: SupabaseAdminClient, phone: string) {
+  const { data } = await supabaseAdmin
+    .from("phone_otps")
+    .select("id, created_at, locked_until")
+    .eq("phone", phone)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  return data?.[0] ?? null;
+}
+
+export async function requestPhoneOtpHandler(data: { phone: string; ip?: string | null }) {
   const supabaseAdmin = await getSupabaseAdmin();
-  const recent = await countRecentRequests(supabaseAdmin, data.phone);
+  const ipHash = hashIp(data.ip);
+
+  const latest = await latestForPhone(supabaseAdmin, data.phone);
+  if (latest?.locked_until && new Date(latest.locked_until) > new Date()) {
+    return { error: "This number is temporarily locked. Please try again in 15 minutes." };
+  }
+  if (latest && Date.now() - new Date(latest.created_at).getTime() < RESEND_COOLDOWN_MS) {
+    const wait = Math.ceil((RESEND_COOLDOWN_MS - (Date.now() - new Date(latest.created_at).getTime())) / 1000);
+    return { error: `Please wait ${wait}s before requesting another code.` };
+  }
+
+  const [recent, daily, perIp] = await Promise.all([
+    countSince(supabaseAdmin, "phone", data.phone, OTP_REQUEST_WINDOW_MS),
+    countSince(supabaseAdmin, "phone", data.phone, DAILY_WINDOW_MS),
+    ipHash ? countSince(supabaseAdmin, "ip_hash", ipHash, IP_WINDOW_MS) : Promise.resolve(0),
+  ]);
+
   if (recent >= MAX_OTP_REQUESTS_PER_WINDOW) {
     return { error: "Too many code requests. Please wait 10 minutes and try again." };
   }
+  if (daily >= MAX_OTP_REQUESTS_PER_DAY) {
+    return { error: "Daily code limit reached for this number. Please try again tomorrow." };
+  }
+  if (perIp >= MAX_OTP_REQUESTS_PER_IP) {
+    console.warn("[phone-otp] IP rate limit hit");
+    return { error: "Too many code requests from this device. Please try again later." };
+  }
+
+  // Only one live code per number: retire any outstanding ones first.
+  await supabaseAdmin.from("phone_otps").update({ used: true }).eq("phone", data.phone).eq("used", false);
 
   const code = generateSixDigitCode();
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
   const { data: stored, error: insertError } = await supabaseAdmin
     .from("phone_otps")
-    .insert({ phone: data.phone, code_hash: hashCode(code), expires_at: expiresAt, attempts: 0, used: false })
+    .insert({
+      phone: data.phone,
+      code_hash: hashCode(code),
+      expires_at: expiresAt,
+      attempts: 0,
+      used: false,
+      ip_hash: ipHash,
+    })
     .select("id")
     .single();
 
@@ -139,7 +196,10 @@ export async function requestPhoneOtpHandler(data: { phone: string }) {
   }
 
   try {
-    await sendClickatellSms(data.phone, `Your RedFlagDaddy code is ${code}.`);
+    await sendClickatellSms(
+      data.phone,
+      `Your RedFlagDaddy code is ${code}. It expires in ${OTP_EXPIRY_MINUTES} minutes. Never share it with anyone.`,
+    );
   } catch (error) {
     await supabaseAdmin.from("phone_otps").update({ used: true }).eq("id", stored.id);
     console.error("[phone-otp] Clickatell send failed:", error);
