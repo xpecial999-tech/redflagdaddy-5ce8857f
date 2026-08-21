@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Shield, UserX, Siren, KeyRound, AlertTriangle, Phone } from "lucide-react";
 import { useState } from "react";
-import { SubpageHeader, Toggle, ActionRow } from "./profile.privacy";
+import { SubpageHeader, Toggle, ActionRow } from "@/components/profile-settings";
 
 export const Route = createFileRoute("/_authenticated/profile/safety")({
   head: () => ({ meta: [{ title: "Safety center — RedFlagDaddy" }] }),

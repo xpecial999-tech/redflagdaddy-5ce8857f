@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { HelpCircle, BookOpen, MessageSquare, ShieldCheck, Compass, ExternalLink } from "lucide-react";
-import { SubpageHeader } from "./profile.privacy";
+import { SubpageHeader } from "@/components/profile-settings";
 
 export const Route = createFileRoute("/_authenticated/profile/help")({
   head: () => ({ meta: [{ title: "Help & consent guides — RedFlagDaddy" }] }),
