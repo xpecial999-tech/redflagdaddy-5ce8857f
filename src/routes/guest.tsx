@@ -36,9 +36,9 @@ const partnerRoles = ["Dominant", "submissive", "switch"] as const;
 
 const steps = [
   {
-    icon: Mail,
+    icon: Smartphone,
     title: "Tell us where to send your report",
-    body: "We'll email your completed compatibility, safety and red-flag report to you when the assessment is done.",
+    body: "We'll text your completed compatibility, safety and red-flag report link to your mobile number when the assessment is done.",
   },
   {
     icon: ClipboardList,
