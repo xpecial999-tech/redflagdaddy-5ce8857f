@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { JourneyInvitePage } from "@/components/JourneyInvite";
 
-export const Route = createFileRoute("/journey/$code")({
-  component: JourneyInviteRoute,
+export const Route = createFileRoute("/j/$code")({
+  component: ShortInviteRoute,
 });
 
-function JourneyInviteRoute() {
+function ShortInviteRoute() {
   const { code } = Route.useParams();
   return <JourneyInvitePage code={code} />;
 }
