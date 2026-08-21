@@ -197,6 +197,9 @@ function Create() {
         {step === 4 && (
           <StepWrap key="4">
             <h2 className="font-semibold mb-3">Respondent details</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Leave email and mobile blank if you prefer — the next step will generate a unique link you can share directly with your respondent.
+            </p>
             <Field label="Participant name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Optional" />
             <Field label="Participant email" type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} placeholder="Optional, for invite" />
             <Field
