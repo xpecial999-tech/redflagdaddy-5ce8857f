@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/phone-auth.functions";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
-import { TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role } from "@/lib/roles";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -112,9 +111,7 @@ function Register() {
                 <div>
                   <span className="text-xs text-muted-foreground">Primary identity</span>
                   <div className="mt-2 space-y-3 max-h-64 overflow-y-auto pr-1">
-                    <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={role} onSelect={setRole} />
-                    <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={role} onSelect={setRole} />
-                    <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={role} onSelect={setRole} />
+                <RoleSelector value={role} onChange={setRole} />
                   </div>
                 </div>
 
@@ -200,22 +197,3 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
   );
 }
 
-function RoleGroup({ label, roles, selected, onSelect }: { label: string; roles: readonly Role[]; selected: Role; onSelect: (r: Role) => void }) {
-  return (
-    <div>
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</span>
-      <div className="mt-1 grid grid-cols-2 gap-2">
-        {roles.map((r) => (
-          <button
-            type="button"
-            key={r}
-            onClick={() => onSelect(r)}
-            className={`rounded-xl border px-2 py-2.5 text-xs font-medium transition text-left ${selected === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:border-primary/50"}`}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}

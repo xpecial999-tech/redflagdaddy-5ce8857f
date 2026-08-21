@@ -17,7 +17,6 @@ import {
   MessageCircle,
   MessageSquare,
 } from "lucide-react";
-import { TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role, oppositeRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/guest")({
   head: () => ({ meta: [{ title: "Continue as guest — RedFlagDaddy" }] }),
@@ -140,9 +139,7 @@ function GuestPage() {
                 Choose the role that best matches your partner.
               </p>
               <div className="mt-3 max-h-64 overflow-y-auto pr-1 space-y-3">
-                <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={partnerType} onSelect={setPartnerType} />
-                <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={partnerType} onSelect={setPartnerType} />
-                <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={partnerType} onSelect={setPartnerType} />
+                <RoleSelector value={partnerType} onChange={setPartnerType} />
               </div>
             </div>
 
@@ -324,9 +321,7 @@ function PartnerLinkView({
               I am a…
             </span>
             <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
-              <RoleGroup label="Top / leading" roles={TOP_ROLES} selected={selfType} onSelect={setSelfType} />
-              <RoleGroup label="Bottom / receiving" roles={BOTTOM_ROLES} selected={selfType} onSelect={setSelfType} />
-              <RoleGroup label="Switch / fluid" roles={SWITCH_ROLES} selected={selfType} onSelect={setSelfType} />
+                <RoleSelector value={selfType} onChange={setSelfType} />
             </div>
           </div>
           {selfMutation.error && (
@@ -364,22 +359,3 @@ function Field({
   );
 }
 
-function RoleGroup({ label, roles, selected, onSelect }: { label: string; roles: readonly Role[]; selected: Role | ""; onSelect: (r: Role) => void }) {
-  return (
-    <div>
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</span>
-      <div className="mt-1 grid grid-cols-2 gap-2">
-        {roles.map((r) => (
-          <button
-            type="button"
-            key={r}
-            onClick={() => onSelect(r)}
-            className={`rounded-xl border px-2 py-2.5 text-xs font-medium transition text-left ${selected === r ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-muted-foreground hover:border-primary/50"}`}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
