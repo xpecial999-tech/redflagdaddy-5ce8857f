@@ -144,7 +144,7 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
     setDeleting(true);
     setErr(null);
     try {
-      await runDelete({ data: {} });
+      await runDelete();
       await supabase.auth.signOut();
       toast.success("Your account has been deleted");
       navigate({ to: "/login", replace: true });
