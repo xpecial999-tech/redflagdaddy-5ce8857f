@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RoleSelector } from "@/components/RoleSelector";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Copy, Mail, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap, MessageSquare } from "lucide-react";
+import { Check, Copy, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap, MessageSquare } from "lucide-react";
 import { createJourney } from "@/lib/journeys.functions";
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
@@ -31,7 +31,6 @@ function Create() {
   const [mode, setMode] = useState<"full" | "quick" | "deep">("full");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [recipientName, setRecipientName] = useState("");
-  const [recipientEmail, setRecipientEmail] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -42,7 +41,6 @@ function Create() {
           title: title.trim(),
           participantType,
           recipientName: recipientName.trim() || null,
-          recipientEmail: recipientEmail.trim() || null,
           recipientPhone: recipientPhone.trim() ? toE164(recipientPhone.trim()) : null,
           notes: notes.trim() || null,
           categoryIds: mode === "deep" && categoryIds.length > 0 ? categoryIds : null,
@@ -198,10 +196,9 @@ function Create() {
           <StepWrap key="4">
             <h2 className="font-semibold mb-3">Respondent details</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Leave email and mobile blank if you prefer — the next step will generate a unique link you can share directly with your respondent.
+              Leave the mobile number blank if you prefer — the next step will generate a unique link you can share directly with your respondent.
             </p>
             <Field label="Participant name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Optional" />
-            <Field label="Participant email" type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} placeholder="Optional, for invite" />
             <Field
               label="Participant mobile (SMS invite)"
               type="tel"
@@ -234,7 +231,6 @@ function Create() {
             key="5"
             url={mutation.data.journey.invite_url ?? ""}
             code={mutation.data.journey.invite_code}
-            email={mutation.data.journey.recipient_email}
             title={mutation.data.journey.title}
             partnerType={mutation.data.journey.participant_type as Role}
             smsSent={mutation.data.smsSent}
@@ -267,7 +263,7 @@ function Create() {
 
       {step === 5 && mutation.data && (
         <div className="flex gap-3">
-          <button onClick={() => { setStep(1); setTitle(""); setNotes(""); setRecipientEmail(""); setRecipientName(""); setMode("full"); setCategoryIds([]); mutation.reset(); }} className="flex-1 rounded-xl glass py-3 text-sm font-medium">
+          <button onClick={() => { setStep(1); setTitle(""); setNotes(""); setRecipientName(""); setMode("full"); setCategoryIds([]); mutation.reset(); }} className="flex-1 rounded-xl glass py-3 text-sm font-medium">
             Create another
           </button>
           <Link
@@ -306,7 +302,7 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
   );
 }
 
-function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }: { url: string; code: string; email: string | null; title: string; partnerType: Role; smsSent?: boolean; phone?: string | null }) {
+function SuccessScreen({ url, code, title, partnerType, smsSent, phone }: { url: string; code: string; title: string; partnerType: Role; smsSent?: boolean; phone?: string | null }) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
   const navigate = useNavigate();
   const createFn = useServerFn(createJourney);
@@ -320,7 +316,6 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
           title: "My self-assessment",
           participantType: selfType as Role,
           recipientName: null,
-          recipientEmail: null,
           notes: null,
           categoryIds: null,
         },
@@ -335,9 +330,6 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
     setCopied(kind);
     setTimeout(() => setCopied(null), 1500);
   };
-  const mailto = email
-    ? `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`RedFlagDaddy invite: ${title}`)}&body=${encodeURIComponent(`You've been invited to complete an assessment.\n\nOpen: ${url}\nOr enter code: ${code}\n\nThis link expires in 7 days.`)}`
-    : `mailto:?subject=${encodeURIComponent(`RedFlagDaddy invite: ${title}`)}&body=${encodeURIComponent(`Open: ${url}\nOr enter code: ${code}`)}`;
 
   return (
     <motion.div
@@ -381,9 +373,6 @@ function SuccessScreen({ url, code, email, title, partnerType, smsSent, phone }:
         </div>
       </div>
 
-      <a href={mailto} className="block w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30">
-        <Mail className="w-4 h-4" /> Send by email
-      </a>
 
       <a
         href={`sms:${phone ?? ""}${/(iPhone|iPad|Mac)/.test(typeof navigator !== "undefined" ? navigator.userAgent : "") ? "&" : "?"}body=${encodeURIComponent(`You've been invited to a RedFlagDaddy assessment: "${title}". Start here: ${url}`)}`}

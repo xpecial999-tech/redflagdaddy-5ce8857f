@@ -9,7 +9,6 @@ const CreateJourneySchema = z.object({
   title: z.string().trim().min(1).max(120),
   participantType: z.enum(ALL_ROLES),
   recipientName: z.string().trim().max(120).optional().nullable(),
-  recipientEmail: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
   recipientPhone: z
     .string()
     .trim()
@@ -59,7 +58,6 @@ export const createJourney = createServerFn({ method: "POST" })
         participant_type: data.participantType,
         invite_code: code,
         invite_url: inviteUrl,
-        recipient_email: data.recipientEmail || null,
         status: "pending",
         category_ids: categoryIds,
         question_limit: questionLimit,
@@ -72,24 +70,8 @@ export const createJourney = createServerFn({ method: "POST" })
     const { error: inviteErr } = await supabase.from("invites").insert({
       journey_id: journey.id,
       code,
-      email: data.recipientEmail || null,
     });
     if (inviteErr) throw new Error(inviteErr.message);
-
-    if (data.recipientEmail) {
-      const { sendAppEmail } = await import("./email/queue.server");
-      await sendAppEmail({
-        templateName: "journey-invite",
-        to: data.recipientEmail,
-        idempotencyKey: `journey-invite-${journey.id}`,
-        templateData: {
-          inviterName: data.recipientName ?? null,
-          journeyTitle: journey.title,
-          inviteUrl,
-          inviteCode: code,
-        },
-      });
-    }
 
     let smsSent = false;
     if (data.recipientPhone) {
@@ -197,9 +179,8 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        channel: z.enum(["email", "sms"]),
+        channel: z.literal("sms").default("sms"),
         recipientName: z.string().trim().max(120).optional().nullable(),
-        recipientEmail: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
         recipientPhone: z
           .string()
           .trim()
@@ -232,7 +213,6 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
 
     const inviteUrl = journey.invite_url ?? `${originFromRequest()}/j/${journey.invite_code}`;
 
-    if (data.channel === "sms") {
       const phone = data.recipientPhone?.trim();
       if (!phone) throw new Error("Enter a valid mobile number.");
       const { sendClickatellSms } = await import("./phone-auth.server");
@@ -245,29 +225,7 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
         .update({ guest_phone: phone })
         .eq("id", journey.id);
       if (updErr) console.error("Failed to store guest phone:", updErr.message);
-      return { ok: true as const, channel: "sms" as const };
-    }
-
-    const email = data.recipientEmail?.trim();
-    if (!email) throw new Error("Enter a valid email address.");
-    const { sendAppEmail } = await import("./email/queue.server");
-    const result = await sendAppEmail({
-      templateName: "journey-invite",
-      to: email,
-      templateData: {
-        inviterName: data.recipientName ?? undefined,
-        journeyTitle: journey.title,
-        inviteUrl,
-        inviteCode: journey.invite_code,
-      },
-    });
-    if (!result.ok) throw new Error("The invite email could not be sent. Please try again.");
-    const { error: updErr } = await supabase
-      .from("journeys")
-      .update({ recipient_email: email })
-      .eq("id", journey.id);
-    if (updErr) console.error("Failed to store recipient email:", updErr.message);
-    return { ok: true as const, channel: "email" as const };
+    return { ok: true as const, channel: "sms" as const };
   });
 
 export const deleteJourney = createServerFn({ method: "POST" })

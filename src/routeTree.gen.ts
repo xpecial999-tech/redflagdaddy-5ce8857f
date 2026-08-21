@@ -33,7 +33,6 @@ import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/em
 import { Route as AuthenticatedResultsIdRouteImport } from './routes/_authenticated/results.$id'
 import { Route as AuthenticatedProfileSafetyRouteImport } from './routes/_authenticated/profile.safety'
 import { Route as AuthenticatedProfilePrivacyRouteImport } from './routes/_authenticated/profile.privacy'
-import { Route as AuthenticatedProfileNotificationsRouteImport } from './routes/_authenticated/profile.notifications'
 import { Route as AuthenticatedProfileHelpRouteImport } from './routes/_authenticated/profile.help'
 import { Route as AuthenticatedJourneysIdRouteImport } from './routes/_authenticated/journeys.$id'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -164,12 +163,6 @@ const AuthenticatedProfilePrivacyRoute =
     path: '/privacy',
     getParentRoute: () => AuthenticatedProfileRoute,
   } as any)
-const AuthenticatedProfileNotificationsRoute =
-  AuthenticatedProfileNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AuthenticatedProfileRoute,
-  } as any)
 const AuthenticatedProfileHelpRoute =
   AuthenticatedProfileHelpRouteImport.update({
     id: '/help',
@@ -237,7 +230,6 @@ export interface FileRoutesByFullPath {
   '/report/$token': typeof ReportTokenRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/profile/help': typeof AuthenticatedProfileHelpRoute
-  '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
   '/results/$id': typeof AuthenticatedResultsIdRoute
@@ -271,7 +263,6 @@ export interface FileRoutesByTo {
   '/report/$token': typeof ReportTokenRoute
   '/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/profile/help': typeof AuthenticatedProfileHelpRoute
-  '/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/profile/safety': typeof AuthenticatedProfileSafetyRoute
   '/results/$id': typeof AuthenticatedResultsIdRoute
@@ -307,7 +298,6 @@ export interface FileRoutesById {
   '/report/$token': typeof ReportTokenRoute
   '/_authenticated/journeys/$id': typeof AuthenticatedJourneysIdRoute
   '/_authenticated/profile/help': typeof AuthenticatedProfileHelpRoute
-  '/_authenticated/profile/notifications': typeof AuthenticatedProfileNotificationsRoute
   '/_authenticated/profile/privacy': typeof AuthenticatedProfilePrivacyRoute
   '/_authenticated/profile/safety': typeof AuthenticatedProfileSafetyRoute
   '/_authenticated/results/$id': typeof AuthenticatedResultsIdRoute
@@ -343,7 +333,6 @@ export interface FileRouteTypes {
     | '/report/$token'
     | '/journeys/$id'
     | '/profile/help'
-    | '/profile/notifications'
     | '/profile/privacy'
     | '/profile/safety'
     | '/results/$id'
@@ -377,7 +366,6 @@ export interface FileRouteTypes {
     | '/report/$token'
     | '/journeys/$id'
     | '/profile/help'
-    | '/profile/notifications'
     | '/profile/privacy'
     | '/profile/safety'
     | '/results/$id'
@@ -412,7 +400,6 @@ export interface FileRouteTypes {
     | '/report/$token'
     | '/_authenticated/journeys/$id'
     | '/_authenticated/profile/help'
-    | '/_authenticated/profile/notifications'
     | '/_authenticated/profile/privacy'
     | '/_authenticated/profile/safety'
     | '/_authenticated/results/$id'
@@ -620,13 +607,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfilePrivacyRouteImport
       parentRoute: typeof AuthenticatedProfileRoute
     }
-    '/_authenticated/profile/notifications': {
-      id: '/_authenticated/profile/notifications'
-      path: '/notifications'
-      fullPath: '/profile/notifications'
-      preLoaderRoute: typeof AuthenticatedProfileNotificationsRouteImport
-      parentRoute: typeof AuthenticatedProfileRoute
-    }
     '/_authenticated/profile/help': {
       id: '/_authenticated/profile/help'
       path: '/help'
@@ -688,15 +668,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedProfileRouteChildren {
   AuthenticatedProfileHelpRoute: typeof AuthenticatedProfileHelpRoute
-  AuthenticatedProfileNotificationsRoute: typeof AuthenticatedProfileNotificationsRoute
   AuthenticatedProfilePrivacyRoute: typeof AuthenticatedProfilePrivacyRoute
   AuthenticatedProfileSafetyRoute: typeof AuthenticatedProfileSafetyRoute
 }
 
 const AuthenticatedProfileRouteChildren: AuthenticatedProfileRouteChildren = {
   AuthenticatedProfileHelpRoute: AuthenticatedProfileHelpRoute,
-  AuthenticatedProfileNotificationsRoute:
-    AuthenticatedProfileNotificationsRoute,
   AuthenticatedProfilePrivacyRoute: AuthenticatedProfilePrivacyRoute,
   AuthenticatedProfileSafetyRoute: AuthenticatedProfileSafetyRoute,
 }

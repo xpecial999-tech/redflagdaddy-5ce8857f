@@ -85,11 +85,10 @@ function JourneyTracker() {
   const { journey, invite, progress, isExpired } = data;
   const effectiveStatus = isExpired && journey.status !== "completed" ? "expired" : journey.status;
   const url = journey.invite_url ?? "";
-  const recipient = journey.recipient_email;
 
   const steps = buildSteps({
     createdAt: journey.created_at,
-    sentAt: recipient ? journey.created_at : null,
+    sentAt: null,
     startedAt: progress.answered > 0 ? journey.updated_at : null,
     completedAt: invite?.completed_at ?? null,
     status: effectiveStatus,
@@ -159,7 +158,7 @@ function JourneyTracker() {
       {/* Share & send */}
       <section className="space-y-3">
         <SectionLabel>Send to respondent</SectionLabel>
-        <ShareCard journeyId={journey.id} url={url} email={recipient} />
+        <ShareCard journeyId={journey.id} url={url} />
       </section>
 
       {/* View results / continue actions */}
@@ -210,7 +209,7 @@ function buildSteps(p: {
     { label: "Journey created", desc: "You set the title, role and details.", state: "done", at: p.createdAt },
     {
       label: "Invite sent",
-      desc: p.sentAt ? "Invite link delivered." : "Share the link or email it below.",
+      desc: p.sentAt ? "Invite link delivered." : "Share the link or text it below.",
       state: p.sentAt ? "done" : "active",
       at: p.sentAt,
     },
@@ -268,17 +267,9 @@ function TimelineRow({ step, last }: { step: Step; last: boolean }) {
   );
 }
 
-function ShareCard({
-  journeyId,
-  url,
-  email,
-}: {
-  journeyId: string;
-  url: string;
-  email: string | null;
-}) {
+function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
   const [copied, setCopied] = useState(false);
-  const [modal, setModal] = useState<"email" | "sms" | null>(null);
+  const [modal, setModal] = useState<"sms" | null>(null);
   const [recipientName, setRecipientName] = useState("");
   const [contact, setContact] = useState("");
   const [sending, setSending] = useState(false);
@@ -290,8 +281,8 @@ function ShareCard({
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const openModal = (kind: "email" | "sms") => {
-    setContact(email ?? "");
+  const openModal = (kind: "sms") => {
+    setContact("");
     setRecipientName("");
     setModal(kind);
   };
@@ -302,14 +293,13 @@ function ShareCard({
       const res = await sendFn({
         data: {
           id: journeyId,
-          channel: modal as "email" | "sms",
-          recipientEmail: modal === "email" ? contact : undefined,
-          recipientPhone: modal === "sms" ? contact : undefined,
+          channel: "sms" as const,
+          recipientPhone: contact,
           recipientName: recipientName || undefined,
         },
       });
       if (res.ok) {
-        toast.success(modal === "email" ? "Invite email sent" : "Invite sent by SMS");
+        toast.success("Invite sent by SMS");
         setModal(null);
       }
     } catch (e) {
@@ -351,13 +341,7 @@ function ShareCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          onClick={() => openModal("email")}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary/15 text-primary py-3 text-sm font-medium hover:bg-primary/25 transition"
-        >
-          <Mail className="w-4 h-4" /> Send by email
-        </button>
+      <div className="grid grid-cols-1 gap-2">
         <button
           onClick={() => openModal("sms")}
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-aurora-1/15 text-aurora-1 py-3 text-sm font-medium hover:bg-aurora-1/25 transition"
@@ -370,12 +354,10 @@ function ShareCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {modal === "email" ? "Send invite by email" : "Send invite by SMS"}
+              Send invite by SMS
             </DialogTitle>
             <DialogDescription>
-              {modal === "email"
-                ? "Enter the recipient's email to send them the invite link."
-                : "Enter the recipient's mobile number to text them the invite link."}
+              Enter the recipient's mobile number to text them the invite link.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -390,15 +372,15 @@ function ShareCard({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="rcontact">
-                {modal === "email" ? "Recipient email" : "Recipient mobile number"}
+                Recipient mobile number
               </Label>
               <Input
                 id="rcontact"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
-                placeholder={modal === "email" ? "name@example.com" : "+27123456789"}
-                inputMode={modal === "sms" ? "tel" : "email"}
-                type={modal === "sms" ? "tel" : "email"}
+                placeholder="+27123456789"
+                inputMode="tel"
+                type="tel"
               />
             </div>
           </div>
@@ -409,7 +391,7 @@ function ShareCard({
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-50"
             >
               {sending && <Loader2 className="w-4 h-4 animate-spin" />}
-              {modal === "email" ? "Send email" : "Send SMS"}
+              Send SMS
             </button>
           </DialogFooter>
         </DialogContent>
