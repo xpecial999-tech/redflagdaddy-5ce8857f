@@ -206,7 +206,7 @@ function PartnerLinkView({
 
   const link = useMemo(() => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return `${origin}/journey/${code}`;
+    return `${origin}/j/${code}`;
   }, [code]);
 
   const shareMessage = useMemo(

@@ -67,7 +67,7 @@ export const template = {
   previewData: {
     inviterName: 'Alex',
     journeyTitle: 'Getting to know each other',
-    inviteUrl: 'https://redflagdaddy.com/journey/ABC123',
+    inviteUrl: 'https://redflagdaddy.com/j/ABC123',
     inviteCode: 'ABC123',
   },
 } satisfies TemplateEntry
