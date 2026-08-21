@@ -145,6 +145,7 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
 
+    const roleEnum = ALL_ROLES as unknown as string[];
     const tool = {
       type: "function",
       function: {
@@ -161,7 +162,7 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
                   id: { type: "string" },
                   applies_to: {
                     type: "array",
-                    items: { type: "string", enum: ["Dominant", "submissive", "switch"] },
+                    items: { type: "string", enum: roleEnum },
                   },
                 },
                 required: ["id", "applies_to"],
@@ -180,7 +181,7 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
     const CHUNK = 40;
     for (let i = 0; i < items.length; i += CHUNK) chunks.push(items.slice(i, i + CHUNK));
 
-    const suggestions = new Map<string, ("Dominant" | "submissive" | "switch")[]>();
+    const suggestions = new Map<string, Role[]>();
     for (const chunk of chunks) {
       const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -205,12 +206,12 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
       const call = json?.choices?.[0]?.message?.tool_calls?.[0];
       if (!call?.function?.arguments) throw new Error("AI did not return structured tags.");
       const parsed = JSON.parse(call.function.arguments) as {
-        results: { id: string; applies_to: ("Dominant" | "submissive" | "switch")[] }[];
+        results: { id: string; applies_to: string[] }[];
       };
       for (const r of parsed.results ?? []) {
-        const roles = Array.from(new Set(r.applies_to)).filter((x) =>
-          ["Dominant", "submissive", "switch"].includes(x),
-        ) as ("Dominant" | "submissive" | "switch")[];
+        const roles = Array.from(new Set(r.applies_to)).filter((x): x is Role =>
+          (ALL_ROLES as readonly string[]).includes(x),
+        );
         if (roles.length > 0) suggestions.set(r.id, roles);
       }
     }
@@ -225,7 +226,7 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
         groups.get(k)!.push(id);
       }
       for (const [k, ids] of groups) {
-        const roles = k.split("|") as ("Dominant" | "submissive" | "switch")[];
+        const roles = k.split("|") as Role[];
         const { error: uErr } = await sb
           .from("questions")
           .update({ applies_to: roles })
