@@ -18,12 +18,10 @@ import {
   Scale,
   ArrowRight,
   Activity,
-  Settings,
   Smartphone,
   Link2,
   Timer,
   Monitor,
-  Bell,
 } from "lucide-react";
 
 export const Route = createFileRoute("/about")({
@@ -33,25 +31,20 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "How RedFlagDaddy works: structured, role-aware assessments for Dominants, submissives, switches and the full spectrum of BDSM archetypes, with research-grounded questions, safety scoring, real-time journey tracking and end-to-end privacy.",
+          "How RedFlagDaddy works: structured, role-aware assessment journeys for adults, with private invite links, five score dimensions and owner-controlled report sharing.",
       },
       { property: "og:title", content: "About — RedFlagDaddy" },
       {
         property: "og:description",
         content:
-          "Research-grounded consent, compatibility and safety assessments for D/s dynamics with real-time tracking and authenticated results.",
+          "Structured consent, compatibility and red-flag conversation prompts for adults exploring D/s dynamics.",
       },
+      { property: "og:url", content: "https://redflagdaddy.com/about" },
     ],
+    links: [{ rel: "canonical", href: "https://redflagdaddy.com/about" }],
   }),
   component: About,
 });
-
-const stats = [
-  { value: "500+", label: "Curated questions" },
-  { value: "23", label: "Assessment categories" },
-  { value: "20+", label: "Role-aware archetypes" },
-  { value: "5", label: "Scoring dimensions" },
-];
 
 const flow = [
   {
@@ -64,19 +57,19 @@ const flow = [
     icon: Users,
     title: "Invite a respondent",
     body:
-      "Share a secure, single-use link or invite code. No account required for guests. They answer privately, on their own time.",
+      "Share a private, single-use invite link or code. No account is required to respond, and the invite stops working after completion or expiry.",
   },
   {
     icon: Brain,
-    title: "Adaptive questioning",
+    title: "Role-aware questions",
     body:
-      "Questions branch based on role and prior answers, so people only see what's relevant to their dynamic.",
+      "The question set is filtered by the selected role and assessment mode, with optional category-focused journeys.",
   },
   {
     icon: Sparkles,
     title: "Structured results",
     body:
-      "We weight, score and summarise across five dimensions. You get a clear read on safety, alignment and green/red flags — not vibes.",
+      "Responses are weighted across five dimensions and summarised as conversation prompts—not a diagnosis, safety guarantee or decision about another person.",
   },
 ];
 
@@ -84,22 +77,22 @@ const tracking = [
   {
     icon: Activity,
     title: "Real-time status",
-    body: "Your dashboard shows every journey's status at a glance: active, completed or expired. Click through for live detail.",
+    body: "Your dashboard shows whether each journey is pending, in progress, completed or expired.",
   },
   {
     icon: Timer,
     title: "Step-by-step progress",
-    body: "The journey tracker visualises exactly where a respondent is: invited, started or finished — with timestamps for every stage.",
+    body: "The journey tracker shows answered-question progress and the available created, started and completed timestamps.",
   },
   {
     icon: Monitor,
     title: "Polls while active",
-    body: "The tracker automatically refreshes while a journey is open, so you see completions as they happen without reloading.",
+    body: "The tracker refreshes periodically while a journey is open, so progress updates without a manual page reload.",
   },
   {
     icon: ShieldCheck,
     title: "Authenticated results",
-    body: "Results live inside your authenticated account. Only the journey owner can view or regenerate an analysis.",
+    body: "Account journey results require an owner session. Optional report sharing is a separate, explicit action.",
   },
 ];
 
@@ -112,23 +105,23 @@ const scoring = [
 ];
 
 const privacy = [
-  { icon: Lock, title: "Encrypted in transit & at rest", body: "All traffic served over TLS; data stored on encrypted infrastructure." },
-  { icon: EyeOff, title: "You control visibility", body: "Only you and your invited respondent ever see your results — never indexed, never sold." },
-  { icon: KeyRound, title: "Row-level access control", body: "Every record is scoped to its owner at the database layer, not just the UI." },
-  { icon: Database, title: "Minimal data, deletable", body: "We collect what's needed to score a journey. You can delete a journey and its responses at any time." },
+  { icon: Lock, title: "Owner access checks", body: "Account journeys and results are checked against the signed-in owner on the server and at the database layer." },
+  { icon: KeyRound, title: "Private links act like keys", body: "Anyone who receives an active invite or shared-report link may be able to open it. Share private links only with intended recipients." },
+  { icon: EyeOff, title: "Sensitive pages are not for search", body: "Account, invite, assessment and shared-report routes are marked to prevent normal search indexing." },
+  { icon: Database, title: "Export and deletion controls", body: "Account holders can download their stored account data, delete journeys, or permanently delete their account." },
 ];
 
 const security = [
-  { icon: Smartphone, title: "Verified mobile accounts only", body: "Mobile verification via SMS OTP is required before sign-in. No anonymous sign-ups that bypass accountability." },
-  { icon: Link2, title: "Secure shareable reports", body: "Report share links are authenticated and scoped to their owner. Only intended recipients can access completed results." },
-  { icon: KeyRound, title: "Service-to-service auth", body: "Analysis and result endpoints verify the caller's identity on every request, not just at login." },
-  { icon: Lock, title: "No public result leaks", body: "Result pages require authentication. Share links are for respondents to answer, not for anyone to browse outcomes." },
+  { icon: Smartphone, title: "One-time-code account access", body: "Signed-in accounts use an SMS one-time code. This verifies control of a phone number, not a person's identity or trustworthiness." },
+  { icon: Link2, title: "Expiring, single-use invites", body: "Invite codes stop accepting answers after they expire or the assessment is completed." },
+  { icon: KeyRound, title: "Server-side authorization", body: "Owner-only journey, analysis and result actions verify the signed-in user on the server." },
+  { icon: Lock, title: "Token-gated report sharing", body: "Anonymous database reads are disabled. An enabled shared report is returned only when its full bearer token matches." },
 ];
 
 const controls = [
-  { icon: Settings, title: "Privacy & data", body: "Control what's stored, manage notification preferences, and review your active journeys from one place." },
-  { icon: ShieldCheck, title: "Safety center", body: "Access consent guides, safety resources and block-list features from your profile." },
-  { icon: Bell, title: "Notification settings", body: "Choose how and when you hear about journey updates." },
+  { icon: Database, title: "Download your data", body: "Export a JSON copy of your profile, journeys, responses, results and preferences." },
+  { icon: ClipboardCheck, title: "Delete journeys", body: "Remove a journey and its associated responses and results from the journey tracker." },
+  { icon: EyeOff, title: "Consent-led analytics", body: "Anonymous funnel analytics are off by default and can be allowed or refused on this device." },
   { icon: Activity, title: "Secure sign-out", body: "Sign out from your account at any time. Your session is cleared immediately." },
 ];
 
@@ -151,7 +144,7 @@ function About() {
           transition={{ delay: 0.1 }}
           className="text-4xl md:text-5xl font-display font-semibold leading-[1.05]"
         >
-          A serious instrument for <span className="text-gradient">serious dynamics</span>.
+          A structured conversation tool for <span className="text-gradient">serious dynamics</span>.
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 12 }}
@@ -161,22 +154,9 @@ function About() {
         >
           RedFlagDaddy replaces guesswork with structure. We help Dominants, submissives,
           switches and the full spectrum of BDSM archetypes assess consent, compatibility,
-          safety and red flags — using a research-grounded question library, transparent scoring,
-          and real-time journey tracking.
+          safety practices and potential red flags through role-aware questions, weighted scores
+          and journey tracking.
         </motion.p>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto pt-4">
-          {stats.map((s) => (
-            <div key={s.label} className="glass rounded-2xl p-4">
-              <div className="text-2xl md:text-3xl font-display font-semibold text-gradient">
-                {s.value}
-              </div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
-                {s.label}
-              </div>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* How it works */}
@@ -371,8 +351,8 @@ function About() {
       <section className="space-y-6">
         <SectionHeader
           eyebrow="Security architecture"
-          title="Engineered for accountability"
-          sub="We don't just claim security — we enforce it at every layer of the stack."
+          title="Clear access boundaries"
+          sub="Account sessions protect owner actions; private invite and report links must be treated like passwords."
         />
         <div className="grid md:grid-cols-2 gap-3">
           {security.map((s, i) => (
@@ -403,7 +383,7 @@ function About() {
         <SectionHeader
           eyebrow="Your account"
           title="Everything under your control"
-          sub="A dashboard and profile system that puts you in charge of your data and your safety."
+          sub="Practical controls for access, stored data and anonymous analytics."
         />
         <div className="grid md:grid-cols-2 gap-3">
           {controls.map((c, i) => (
@@ -429,17 +409,16 @@ function About() {
         </div>
       </section>
 
-      {/* Library brag */}
+      {/* Question library */}
       <section className="glass-strong rounded-3xl p-8 text-center space-y-4">
         <Workflow className="w-8 h-8 text-primary mx-auto" />
         <h2 className="text-2xl font-display font-semibold">
-          500+ questions. 23 categories. Constantly refined.
+          A role-aware question library
         </h2>
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-          Our library is informed by established consent frameworks, BDSM safety literature and
-          community-vetted compatibility checklists — then tagged by archetype so Dominants,
-          submissives, switches, Masters, brats, littles and every other role only see what's
-          relevant. Admins can refine tagging with AI-assisted suggestions to keep the library sharp.
+          Questions are tagged by category, risk level, weight and applicable roles. The selected
+          assessment mode determines whether a journey uses a broad, shorter or category-focused
+          question set.
         </p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
           {[
@@ -469,6 +448,10 @@ function About() {
       {/* CTA */}
       <section className="text-center space-y-4">
         <h2 className="text-2xl font-display font-semibold">Ready to navigate with clarity?</h2>
+        <p className="text-xs text-muted-foreground max-w-lg mx-auto">
+          RedFlagDaddy cannot verify another person's identity, diagnose them or guarantee your
+          safety. In an emergency, contact local emergency services or a trusted crisis resource.
+        </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             to="/register"
