@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Lock, Download, Trash2, Eye, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Lock, Download, Trash2, Eye, ShieldCheck, Loader2, Check } from "lucide-react";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { exportMyData } from "@/lib/data-export.functions";
 
 export const Route = createFileRoute("/_authenticated/profile/privacy")({
   head: () => ({ meta: [{ title: "Privacy & data — RedFlagDaddy" }] }),
