@@ -22,6 +22,7 @@ in the separate migration task.
 - [ ] Approve a public support contact and an owner-run abuse, threat, stalking, self-harm and emergency escalation procedure.
 - [ ] Approve named local crisis/emergency resources for each launch country; until then, keep guidance generic.
 - [ ] Approve the production analytics flag after staging payload verification.
+- [ ] Approve price, currency, refund terms and live Peach Payments credentials; keep paid mode off until the production checkout and signed webhook are verified.
 - [ ] Approve a brand kit and 1200×630 social-sharing image; the obsolete Lovable preview image has been removed.
 - [ ] Confirm all public account handles, MFA, recovery codes and credential ownership.
 
@@ -33,6 +34,7 @@ in the separate migration task.
 - [ ] Test guest and account journey creation, invite expiry and single-use completion.
 - [ ] Test owner results, explicit report sharing, sharing disablement and unauthorized access.
 - [ ] Test SMS provider failure, rate-limit messages and log redaction.
+- [ ] Complete a Peach sandbox checkout and verify payment ownership, amount/currency matching, signed webhook delivery, duplicate delivery and wrong-user checkout rejection.
 - [ ] Verify sitemap, robots directives, canonical tags and `noindex` output on the deployed staging site.
 - [ ] Run keyboard, screen-reader, responsive-layout and reduced-motion checks on every public conversion path.
 - [ ] Record go/no-go approval with the exact deployed commit and migration set.
