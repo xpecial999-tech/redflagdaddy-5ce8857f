@@ -14,6 +14,8 @@ in the separate migration task.
 - Public sitemap and canonical metadata added.
 - Unsupported product, research, identity-verification and privacy claims removed.
 - The public demo is clearly labelled as synthetic and non-diagnostic.
+- External AI analysis is disabled by default behind an explicit server-side
+  approval switch.
 
 ## Blocking owner decisions and artifacts
 
@@ -22,6 +24,9 @@ in the separate migration task.
 - [ ] Approve a public support contact and an owner-run abuse, threat, stalking, self-harm and emergency escalation procedure.
 - [ ] Approve named local crisis/emergency resources for each launch country; until then, keep guidance generic.
 - [ ] Approve the production analytics flag after staging payload verification.
+- [ ] Approve the AI processor, questionnaire data categories, disclosure,
+  retention and user-consent requirements before setting
+  `AI_ANALYSIS_MODE=enabled`; a `LOVABLE_API_KEY` is also required.
 - [ ] Approve price, currency, refund terms and live Peach Payments credentials; keep paid mode off until the production checkout and signed webhook are verified.
 - [ ] Approve a brand kit and 1200×630 social-sharing image; the obsolete Lovable preview image has been removed.
 - [ ] Confirm all public account handles, MFA, recovery codes and credential ownership.
@@ -30,6 +35,9 @@ in the separate migration task.
 
 - [ ] Apply all Supabase migrations in timestamp order before deploying matching app code.
 - [ ] Complete the analytics checklist in `docs/marketing-analytics.md` with synthetic users.
+- [ ] With synthetic answers, verify disabled mode sends no AI request; after
+  owner and legal approval, verify enabled mode sends only the documented
+  score bundle and high-risk answer digest.
 - [ ] Test account registration, sign-in, sign-out and account deletion.
 - [ ] Test guest and account journey creation, invite expiry and single-use completion.
 - [ ] Test owner results, explicit report sharing, sharing disablement and unauthorized access.

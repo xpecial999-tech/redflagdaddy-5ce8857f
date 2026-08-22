@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { runWhenAiAnalysisEnabled } from "@/lib/ai-analysis-config";
 import { expandRoleForFiltering } from "./roles";
 
 const CodeSchema = z.object({ code: z.string().trim().min(4).max(64) });
@@ -346,10 +347,13 @@ export const completeAssessment = createServerFn({ method: "POST" })
     await supabaseAdmin.from("invites").update({ completed_at: new Date().toISOString() }).eq("id", invite.id);
     await supabaseAdmin.from("journeys").update({ status: "completed" }).eq("id", journey.id);
 
-    // Best-effort AI analysis. Don't block completion on AI errors.
+    // Best-effort AI analysis. Processing is default-off until the owner has
+    // approved the external processor and explicitly enables it.
     try {
-      const { runAnalysisInternal } = await import("./analysis.functions");
-      await runAnalysisInternal(journey.id);
+      await runWhenAiAnalysisEnabled(async () => {
+        const { runAnalysisInternal } = await import("./analysis.functions");
+        return runAnalysisInternal(journey.id);
+      });
     } catch (e) {
       console.error("AI analysis failed:", e);
     }
