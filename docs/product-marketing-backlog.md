@@ -127,6 +127,18 @@ Pilot deliverables:
 
 ## Next product and marketing improvements
 
+- [ ] Standardise all six mobile-number inputs on one international phone
+      component (sign-in, registration, account journey, account resend, guest
+      journey and guest resend).
+  - Silently use Cloudflare's request country hint to preselect the likely
+    country; do not call an external IP-geolocation service or store the IP or
+    inferred country.
+  - Fall back to South Africa when the country hint is absent or unsupported,
+    and always let the user change the country.
+  - Normalise valid numbers to E.164 before validation, storage, rate limiting
+    or SMS delivery, while displaying a familiar national format during entry.
+  - Keep detection failure invisible and non-blocking, and cover country
+    selection, international input and E.164 output with regression tests.
 - [ ] Turn recurring, non-sensitive support and community questions into an
       approved education backlog.
 - [ ] Add product walkthrough material to the public site once the final flow
