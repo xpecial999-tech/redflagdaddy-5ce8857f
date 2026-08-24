@@ -136,6 +136,26 @@ Pilot deliverables:
 
 ## Next product and marketing improvements
 
+- [ ] Add a purely anonymous guest-journey option with no phone number, email or
+      account.
+  - Let the creator choose `No notifications — I'll return with a code`, then
+    create the journey without storing communication details.
+  - Show a clear completion card containing the partner assessment link and a
+    separate private owner lookup code; never reuse the partner's invite code
+    as the report-access credential.
+  - Explain that the owner will receive no completion message, must save the
+    private code and cannot recover it if it is lost. Offer copy and print/save
+    actions without sending the code to third parties.
+  - Add a `Check a journey code` input on the guest surface. Submit the code in
+    a request body rather than a URL, return a generic response for invalid or
+    expired codes, and show pending, in-progress or completed status.
+  - When complete, allow the valid owner code to retrieve the report without
+    exposing it to the respondent or creating an account.
+  - Store only a strong hash of the owner code, use enough random entropy,
+    rate-limit lookups, keep routes out of search indexes and never include the
+    code in analytics, logs or referrers.
+  - Define and display the anonymous journey/report expiry period before
+    implementation, then delete expired anonymous records automatically.
 - [ ] Redesign administration as a dedicated, readable workspace.
   - Show a clear `Admin` button only to authorised administrators after sign-in;
     keep their personal profile and ordinary user dashboard separate.
