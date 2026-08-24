@@ -6,8 +6,19 @@ ALTER FUNCTION public.read_email_batch(text, integer, integer) SET search_path =
 
 -- 2. Revoke public/anon/authenticated EXECUTE on SECURITY DEFINER functions.
 --    These are invoked by cron (postgres) and by internal triggers, never by clients.
-REVOKE ALL ON FUNCTION public.email_queue_dispatch() FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.email_queue_wake() FROM PUBLIC, anon, authenticated;
+DO $$
+BEGIN
+  IF to_regprocedure('public.email_queue_dispatch()') IS NOT NULL THEN
+    EXECUTE 'REVOKE ALL ON FUNCTION public.email_queue_dispatch() FROM PUBLIC, anon, authenticated';
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.email_queue_dispatch() TO postgres, service_role';
+  END IF;
+
+  IF to_regprocedure('public.email_queue_wake()') IS NOT NULL THEN
+    EXECUTE 'REVOKE ALL ON FUNCTION public.email_queue_wake() FROM PUBLIC, anon, authenticated';
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.email_queue_wake() TO postgres, service_role';
+  END IF;
+END;
+$$;
 REVOKE ALL ON FUNCTION public.delete_email(text, bigint) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.enqueue_email(text, jsonb) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.move_to_dlq(text, text, bigint, jsonb) FROM PUBLIC, anon, authenticated;
@@ -16,8 +27,6 @@ REVOKE ALL ON FUNCTION public.cleanup_expired_phone_otps() FROM PUBLIC, anon, au
 REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.prevent_role_self_escalation() FROM PUBLIC, anon, authenticated;
 
-GRANT EXECUTE ON FUNCTION public.email_queue_dispatch() TO postgres, service_role;
-GRANT EXECUTE ON FUNCTION public.email_queue_wake() TO postgres, service_role;
 GRANT EXECUTE ON FUNCTION public.delete_email(text, bigint) TO postgres, service_role;
 GRANT EXECUTE ON FUNCTION public.enqueue_email(text, jsonb) TO postgres, service_role;
 GRANT EXECUTE ON FUNCTION public.move_to_dlq(text, text, bigint, jsonb) TO postgres, service_role;
