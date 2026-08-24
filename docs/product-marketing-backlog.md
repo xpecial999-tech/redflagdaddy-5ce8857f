@@ -71,6 +71,20 @@ list.
 
 ## Launch positioning and conversion decisions
 
+- [ ] Adopt a plain-language product glossary and update all user-facing copy.
+  - Use `partner` instead of `respondent`, `recipient` or `participant` in the
+    normal journey flow: for example, `Send the assessment link to your
+partner` and `Your partner has started`.
+  - Prefer `you`, `your partner`, `their role` and `partner progress`; use
+    `person` when relationship-neutral safety or privacy wording is clearer.
+  - Apply the language consistently across the creation wizard, journey
+    tracker, dashboard, About page, reports, demo content, empty states, SMS
+    dialogs, messages and relevant email copy.
+  - Keep technical database fields, APIs, delivery infrastructure and internal
+    admin terminology unchanged unless a rename provides a concrete benefit;
+    this is primarily a clarity improvement, not a data migration.
+  - Add a public-copy regression check so jargon does not drift back into the
+    main user journey.
 - [ ] Confirm the primary audience and minimum age.
 - [ ] Confirm launch countries.
 - [ ] Confirm brand voice and prohibited topics.
