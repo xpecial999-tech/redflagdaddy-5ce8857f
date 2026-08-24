@@ -40,7 +40,7 @@ list.
 
 - [x] Restore visible SMS action feedback: sending state plus global success and
       error notifications for journey invite requests.
-- [ ] Fix the broken header logo after the Cloudflare migration.
+- [x] Fix the broken header logo after the Cloudflare migration.
   - Replace the Lovable-only `/__l5e/assets-v1/...` reference with a real,
     full-resolution logo stored in the repository's public assets.
   - Keep the existing 64 x 64 favicon for browser icons rather than stretching

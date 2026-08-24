@@ -29,4 +29,15 @@ describe("public launch surface", () => {
       /research-grounded|end-to-end privacy|Verified mobile accounts only|Adaptive questioning/,
     );
   });
+
+  it("serves the full-size header logo from local public assets", () => {
+    const shell = source("src/components/AppShell.tsx");
+    const logo = readFileSync(new URL("../../public/logo.png", import.meta.url));
+
+    expect(shell).toContain('src="/logo.png"');
+    expect(shell).not.toContain("/__l5e/");
+    expect(logo.subarray(1, 4).toString("ascii")).toBe("PNG");
+    expect(logo.readUInt32BE(16)).toBe(1200);
+    expect(logo.readUInt32BE(20)).toBe(400);
+  });
 });
