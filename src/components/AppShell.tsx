@@ -3,7 +3,6 @@ import { LayoutDashboard, Plus, User, Shield, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { useMe } from "@/hooks/use-me";
-import logoAsset from "@/assets/logo.png.asset.json";
 
 const baseNavItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -42,8 +41,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="px-4 py-3 flex items-center justify-between max-w-3xl mx-auto">
             <Link to="/" className="flex items-center gap-2">
               <img
-                src={logoAsset.url}
+                src="/logo.png"
                 alt="RedFlagDaddy"
+                width={1200}
+                height={400}
+                loading="eager"
                 className="h-12 w-auto"
               />
             </Link>
