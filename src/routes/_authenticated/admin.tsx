@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { getAdminSettings, setPaidMode } from "@/lib/entitlement.functions";
+import { formatCheckoutPrice } from "@/lib/payments.shared";
 
 import {
   listQuestions,
@@ -210,6 +211,7 @@ function SettingsTab() {
     },
   });
   const enabled = !!q.data?.paid_mode_enabled;
+  const price = formatCheckoutPrice(q.data?.price_cents ?? 100, q.data?.currency ?? "USD");
   return (
     <div className="space-y-4 max-w-2xl">
       <div className="glass-strong rounded-2xl p-5 space-y-4">
@@ -218,13 +220,13 @@ function SettingsTab() {
             <h3 className="font-semibold">Paid mode</h3>
             <p className="text-xs text-muted-foreground mt-1">
               Off: every user has full access (current behaviour).<br />
-              On: free users get 20-question journeys, 2 journeys max, and no PDF/share. $1 one-time unlocks full access via Peach Payments.
+              On: free users get 20-question journeys, 2 journeys max, and no print/share access. A {price} one-time payment unlocks full access via Peach Payments.
             </p>
           </div>
           <Switch checked={enabled} disabled={m.isPending || q.isLoading} onCheckedChange={(v) => m.mutate(v)} />
         </div>
         <div className="text-xs text-muted-foreground border-t border-border pt-3">
-          Price: <span className="font-mono">${((q.data?.price_cents ?? 100) / 100).toFixed(2)} {q.data?.currency ?? "USD"}</span>
+          Price: <span className="font-mono">{price}</span>
         </div>
       </div>
     </div>
@@ -342,7 +344,8 @@ function QuestionsTab() {
   const toggleSelected = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -358,7 +361,8 @@ function QuestionsTab() {
   const toggleBulkRole = (r: Role) => {
     setBulkRoles((prev) => {
       const next = new Set(prev);
-      next.has(r) ? next.delete(r) : next.add(r);
+      if (next.has(r)) next.delete(r);
+      else next.add(r);
       return next;
     });
   };
@@ -1165,7 +1169,8 @@ function JourneysTab() {
   const toggle = (id: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   const toggleAll = () =>

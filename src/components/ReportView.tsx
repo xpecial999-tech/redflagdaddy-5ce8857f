@@ -87,7 +87,8 @@ export function ReportView({
       ) : (
         <Card>
           <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            The AI analysis hasn't been generated for this report yet.
+            Detailed analysis is not available for this report. The score
+            summary above remains available.
           </CardContent>
         </Card>
       )}
