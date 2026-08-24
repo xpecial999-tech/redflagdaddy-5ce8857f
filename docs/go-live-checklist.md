@@ -16,6 +16,8 @@ in the separate migration task.
 - The public demo is clearly labelled as synthetic and non-diagnostic.
 - External AI analysis is disabled by default behind an explicit server-side
   approval switch.
+- Assessment submissions are restricted to their assigned visible questions,
+  and answer values are validated before scoring.
 
 ## Blocking owner decisions and artifacts
 
@@ -40,6 +42,8 @@ in the separate migration task.
   score bundle and high-risk answer digest.
 - [ ] Test account registration, sign-in, sign-out and account deletion.
 - [ ] Test guest and account journey creation, invite expiry and single-use completion.
+- [ ] Verify an assessment cannot submit an unassigned question, an invalid
+  answer value or a completion request while a visible answer is still unsaved.
 - [ ] Test owner results, explicit report sharing, sharing disablement and unauthorized access.
 - [ ] Test SMS provider failure, rate-limit messages and log redaction.
 - [ ] Complete a Peach sandbox checkout and verify payment ownership, amount/currency matching, signed webhook delivery, duplicate delivery and wrong-user checkout rejection.

@@ -7,6 +7,12 @@ import {
   saveResponse,
   completeAssessment,
 } from "@/lib/assessment.functions";
+import {
+  hasAssessmentAnswer,
+  visibleAssessmentQuestions,
+  type AnswerOption as Option,
+  type AssessmentQuestion as Question,
+} from "@/lib/assessment-questions";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,17 +46,6 @@ export const Route = createFileRoute("/assessment/$code")({
     
   ),
 });
-
-type Option = { label: string; value: string; score?: number };
-type Question = {
-  id: string;
-  question: string;
-  question_type: string;
-  answer_options: Option[] | { min: number; max: number; step?: number }[];
-  weight: number;
-  order_index: number;
-  branch_logic: { if?: { answer: string; goto_order: number }[] } | Record<string, never>;
-};
 
 function AssessmentPage() {
   const { code } = Route.useParams();
@@ -98,33 +93,16 @@ function AssessmentPage() {
 
   const questions = useMemo(() => (data?.questions ?? []) as unknown as Question[], [data]);
 
-  // Compute the visible ordered list with conditional branching applied.
-  const visible = useMemo(() => {
-    if (!questions.length) return [] as Question[];
-    const byOrder = [...questions].sort((a, b) => a.order_index - b.order_index);
-    const skipOrders = new Set<number>();
-
-    // Walk through and apply branch_logic.if rules
-    for (const q of byOrder) {
-      const ans = answers[q.id];
-      const rules = q.branch_logic?.if ?? [];
-      for (const rule of rules) {
-        if (ans !== undefined && String(ans) === rule.answer) {
-          // This rule says: if answered X, jump to goto_order — skip questions in-between
-          for (const candidate of byOrder) {
-            if (candidate.order_index > q.order_index && candidate.order_index < rule.goto_order) {
-              skipOrders.add(candidate.order_index);
-            }
-          }
-        }
-      }
-    }
-    return byOrder.filter((q) => !skipOrders.has(q.order_index));
-  }, [questions, answers]);
+  const visible = useMemo(
+    () => visibleAssessmentQuestions(questions, answers),
+    [questions, answers],
+  );
 
   const current = visible[cursor];
   const total = visible.length;
-  const answeredCount = visible.filter((q) => answers[q.id] !== undefined && answers[q.id] !== "").length;
+  const answeredCount = visible.filter((q) =>
+    hasAssessmentAnswer(answers[q.id]),
+  ).length;
   const progress = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
 
   const saveMutation = useMutation({
@@ -198,7 +176,7 @@ function AssessmentPage() {
   }
 
   const isLast = cursor === total - 1;
-  const hasAnswer = answers[current.id] !== undefined && answers[current.id] !== "";
+  const hasAnswer = hasAssessmentAnswer(answers[current.id]);
 
   return (
     
@@ -266,17 +244,35 @@ function AssessmentPage() {
           {isLast ? (
             <Button
               onClick={() => completeMutation.mutate()}
-              disabled={!hasAnswer || completeMutation.isPending}
+              disabled={
+                !hasAnswer ||
+                saveMutation.isPending ||
+                completeMutation.isPending
+              }
             >
-              {completeMutation.isPending ? "Submitting…" : "Submit"}
+              {saveMutation.isPending
+                ? "Saving…"
+                : completeMutation.isPending
+                  ? "Submitting…"
+                  : "Submit"}
               <CheckCircle2 className="w-4 h-4 ml-1" />
             </Button>
           ) : (
-            <Button onClick={goNext} disabled={!hasAnswer}>
-              Next <ArrowRight className="w-4 h-4 ml-1" />
+            <Button
+              onClick={goNext}
+              disabled={!hasAnswer || saveMutation.isPending}
+            >
+              {saveMutation.isPending ? "Saving…" : "Next"}{" "}
+              <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           )}
         </div>
+
+        {saveMutation.error && (
+          <p className="text-sm text-destructive mt-3 text-center">
+            {(saveMutation.error as Error).message}
+          </p>
+        )}
 
         {completeMutation.error && (
           <p className="text-sm text-destructive mt-3 text-center">
