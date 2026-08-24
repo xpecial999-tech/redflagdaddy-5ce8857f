@@ -38,6 +38,13 @@ list.
 
 ## Go-live product and trust work
 
+- [ ] Fix the broken header logo after the Cloudflare migration.
+  - Replace the Lovable-only `/__l5e/assets-v1/...` reference with a real,
+    full-resolution logo stored in the repository's public assets.
+  - Keep the existing 64 x 64 favicon for browser icons rather than stretching
+    it into the header.
+  - Verify the header logo on public, authenticated and mobile layouts, and
+    confirm a missing image never leaves an unlabelled control.
 - [ ] Publish an approved privacy notice and terms for the launch countries.
 - [ ] Add the approved public support contact throughout the relevant help,
       safety and account surfaces.
