@@ -134,6 +134,20 @@ Pilot deliverables:
 
 ## Next product and marketing improvements
 
+- [ ] Redesign administration as a dedicated, readable workspace.
+  - Show a clear `Admin` button only to authorised administrators after sign-in;
+    keep their personal profile and ordinary user dashboard separate.
+  - Give `/admin` its own wider responsive shell instead of squeezing admin
+    tools into the normal user layout and bottom navigation.
+  - Open on an overview dashboard with useful status cards and clear routes to
+    Questions, Categories, Journeys, Analytics and Settings.
+  - Use a desktop sidebar or section navigation and a compact mobile admin menu,
+    with an obvious `Return to app` action.
+  - Break the current five-tab monolith into focused, scannable sections with
+    consistent headings, search/filter controls, loading/empty/error states and
+    protected destructive actions.
+  - Preserve both route-level and server-side admin authorization, and verify
+    that non-admin users cannot see the entry point or access any admin data.
 - [ ] Standardise all six mobile-number inputs on one international phone
       component (sign-in, registration, account journey, account resend, guest
       journey and guest resend).
