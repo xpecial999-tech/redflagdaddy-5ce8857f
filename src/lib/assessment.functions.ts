@@ -1,6 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { runWhenAiAnalysisEnabled } from "@/lib/ai-analysis-config";
+import {
+  hasAssessmentAnswer,
+  requireAssignedAssessmentQuestion,
+  selectAssessmentQuestions,
+  validateAssessmentAnswer,
+  visibleAssessmentQuestions,
+  type AnswerOption,
+  type AssessmentQuestion,
+} from "@/lib/assessment-questions";
 import { expandRoleForFiltering } from "./roles";
 
 const CodeSchema = z.object({ code: z.string().trim().min(4).max(64) });
@@ -23,8 +32,6 @@ const SaveSchema = z.object({
 });
 
 const CompleteSchema = z.object({ code: z.string().trim().min(4).max(64) });
-
-type AnswerOption = { label: string; value: string; score?: number };
 
 async function loadInviteContext(code: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -51,6 +58,61 @@ async function loadInviteContext(code: string) {
   }
 
   return { supabaseAdmin, journey, invite };
+}
+
+async function loadAssignedQuestions(
+  supabaseAdmin: import("@supabase/supabase-js").SupabaseClient,
+  journey: { id: string; participant_type: string },
+): Promise<AssessmentQuestion[]> {
+  const { data: journeySettings, error: settingsError } = await supabaseAdmin
+    .from("journeys")
+    .select("category_ids, question_limit, creator_id")
+    .eq("id", journey.id)
+    .maybeSingle();
+  if (settingsError) throw new Error(settingsError.message);
+  if (!journeySettings) throw new Error("Journey not found.");
+
+  const storedCategoryIds = journeySettings.category_ids as string[] | null;
+  const categoryIds =
+    storedCategoryIds && storedCategoryIds.length > 0
+      ? storedCategoryIds
+      : null;
+  let limit = journeySettings.question_limit as number | null;
+
+  if (limit == null && journeySettings.creator_id) {
+    const { loadEntitlement } = await import("./entitlement.functions");
+    const entitlement = await loadEntitlement(
+      journeySettings.creator_id as string,
+    );
+    if (!categoryIds) limit = entitlement.questionLimit;
+  } else if (limit == null && !categoryIds) {
+    limit = 100;
+  }
+
+  let query = supabaseAdmin
+    .from("questions")
+    .select(
+      "id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic, applies_to",
+    )
+    .eq("active", true);
+
+  if (journey.participant_type && journey.participant_type !== "any") {
+    const expanded = expandRoleForFiltering(journey.participant_type);
+    query = query.or(
+      expanded.map((role) => `applies_to.cs.{${role}}`).join(","),
+    );
+  }
+
+  if (categoryIds) query = query.in("category_id", categoryIds);
+  const { data: questions, error } = await query.order("order_index", {
+    ascending: true,
+  });
+  if (error) throw new Error(error.message);
+
+  const available = (questions ?? []) as unknown as AssessmentQuestion[];
+  return limit != null && !categoryIds
+    ? selectAssessmentQuestions(available, limit, journey.id)
+    : available;
 }
 
 function computeScore(qType: string, options: AnswerOption[], weight: number, answer: unknown): number | null {
@@ -82,140 +144,33 @@ function computeScore(qType: string, options: AnswerOption[], weight: number, an
   }
 }
 
-// Deterministic PRNG seeded by string
-function mulberry32(seed: number) {
-  return function () {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = seed;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function seedFromString(s: string) {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-const RISK_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
-
-function selectQuestions<T extends { id: string; category_id: string; weight: number | string; risk_level: string }>(
-  questions: T[],
-  limit: number,
-  seedKey: string,
-): T[] {
-  if (questions.length <= limit) return questions;
-  const byCat = new Map<string, T[]>();
-  for (const q of questions) {
-    const arr = byCat.get(q.category_id) ?? [];
-    arr.push(q);
-    byCat.set(q.category_id, arr);
-  }
-  const rand = mulberry32(seedFromString(seedKey));
-  const sortedByCat = new Map<string, T[]>();
-  for (const [k, list] of byCat) {
-    const tagged = list.map((q) => ({
-      q,
-      score: (Number(q.weight) || 1) * 10 + (RISK_RANK[q.risk_level] ?? 1),
-      r: rand(),
-    }));
-    tagged.sort((a, b) => b.score - a.score || a.r - b.r);
-    sortedByCat.set(k, tagged.map((t) => t.q));
-  }
-  const total = questions.length;
-  const allocations = new Map<string, number>();
-  let allocated = 0;
-  for (const [k, list] of sortedByCat) {
-    const n = Math.max(1, Math.floor((list.length / total) * limit));
-    allocations.set(k, Math.min(n, list.length));
-    allocated += allocations.get(k)!;
-  }
-  const cats = Array.from(sortedByCat.keys());
-  while (allocated > limit) {
-    const k = cats[Math.floor(rand() * cats.length)];
-    if ((allocations.get(k) ?? 0) > 1) {
-      allocations.set(k, (allocations.get(k) ?? 0) - 1);
-      allocated--;
-    }
-  }
-  while (allocated < limit) {
-    const k = cats[Math.floor(rand() * cats.length)];
-    const cur = allocations.get(k) ?? 0;
-    if (cur < (sortedByCat.get(k)?.length ?? 0)) {
-      allocations.set(k, cur + 1);
-      allocated++;
-    }
-  }
-  const selected: T[] = [];
-  for (const [k, n] of allocations) {
-    selected.push(...(sortedByCat.get(k) ?? []).slice(0, n));
-  }
-  return selected;
-}
-
 export const getAssessment = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => CodeSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code);
-
-    const { data: jExt } = await supabaseAdmin
-      .from("journeys")
-      .select("category_ids, question_limit, creator_id")
-      .eq("id", journey.id)
-      .maybeSingle();
-    const categoryIds = (jExt?.category_ids ?? null) as string[] | null;
-    let limit = (jExt?.question_limit ?? null) as number | null;
-
-    if (limit == null && jExt?.creator_id) {
-      const { loadEntitlement } = await import("./entitlement.functions");
-      const ent = await loadEntitlement(jExt.creator_id as string);
-      if (!categoryIds) limit = ent.questionLimit;
-    } else if (limit == null && !categoryIds) {
-      limit = 100;
-    }
-
-    let qy = supabaseAdmin
-      .from("questions")
-      .select("id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic, applies_to")
-      .eq("active", true);
-
-    // Expand the participant's archetype into its broad family + specific tags
-    if (journey.participant_type && journey.participant_type !== "any") {
-      const expanded = expandRoleForFiltering(journey.participant_type);
-      qy = qy.or(expanded.map((r) => `applies_to.cs.{${r}}`).join(","));
-    }
-
-    if (categoryIds && categoryIds.length > 0) qy = qy.in("category_id", categoryIds);
-    const { data: allQuestions, error: qErr } = await qy.order("order_index", { ascending: true });
-    if (qErr) throw new Error(qErr.message);
-
-    const questions =
-      limit && !categoryIds
-        ? selectQuestions(allQuestions ?? [], limit, journey.id)
-        : (allQuestions ?? []);
+    const questions = await loadAssignedQuestions(supabaseAdmin, journey);
+    const assignedIds = questions.map(({ id }) => id);
 
     const { data: categories, error: cErr } = await supabaseAdmin
       .from("question_categories")
       .select("id, name");
     if (cErr) throw new Error(cErr.message);
 
-    const { data: responses, error: rErr } = await supabaseAdmin
-      .from("responses")
-      .select("id, question_id, answer, score")
-      .eq("journey_id", journey.id);
-    if (rErr) throw new Error(rErr.message);
+    const responses = assignedIds.length
+      ? await supabaseAdmin
+          .from("responses")
+          .select("id, question_id, answer, score")
+          .eq("journey_id", journey.id)
+          .in("question_id", assignedIds)
+      : { data: [], error: null };
+    if (responses.error) throw new Error(responses.error.message);
 
     return {
       journey,
       invite,
       questions,
       categories: categories ?? [],
-      responses: responses ?? [],
+      responses: responses.data ?? [],
     };
   });
 
@@ -223,14 +178,15 @@ export const saveResponse = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => SaveSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin, journey } = await loadInviteContext(data.code);
-
-    const { data: question, error: qErr } = await supabaseAdmin
-      .from("questions")
-      .select("question_type, answer_options, weight")
-      .eq("id", data.questionId)
-      .maybeSingle();
-    if (qErr) throw new Error(qErr.message);
-    if (!question) throw new Error("Question not found.");
+    const assignedQuestions = await loadAssignedQuestions(
+      supabaseAdmin,
+      journey,
+    );
+    const question = requireAssignedAssessmentQuestion(
+      assignedQuestions,
+      data.questionId,
+    );
+    validateAssessmentAnswer(question, data.answer);
 
     const score = computeScore(
       question.question_type,
@@ -265,7 +221,11 @@ export const saveResponse = createServerFn({ method: "POST" })
 
     // Move journey to in_progress on first save
     if (journey.status === "pending") {
-      await supabaseAdmin.from("journeys").update({ status: "in_progress" }).eq("id", journey.id);
+      const { error } = await supabaseAdmin
+        .from("journeys")
+        .update({ status: "in_progress" })
+        .eq("id", journey.id);
+      if (error) throw new Error(error.message);
     }
 
     return { ok: true as const, score };
@@ -275,21 +235,63 @@ export const completeAssessment = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => CompleteSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code);
+    const assignedQuestions = await loadAssignedQuestions(
+      supabaseAdmin,
+      journey,
+    );
+    if (assignedQuestions.length === 0) {
+      throw new Error("No questions are available for this assessment.");
+    }
+    const assignedIds = assignedQuestions.map(({ id }) => id);
 
-    // Aggregate scores by category — recorded responses
-    const { data: rows, error } = await supabaseAdmin
+    const { data: storedRows, error } = await supabaseAdmin
       .from("responses")
-      .select("score, questions!inner(risk_level, weight, category_id, question_categories(name))")
-      .eq("journey_id", journey.id);
+      .select(
+        "question_id, answer, score, questions!inner(risk_level, weight, category_id, question_categories(name))",
+      )
+      .eq("journey_id", journey.id)
+      .in("question_id", assignedIds);
     if (error) throw new Error(error.message);
 
-    // Single grouped query for max-possible per relevant category.
+    type ResponseScoreRow = {
+      question_id: string;
+      answer: unknown;
+      score: number | string | null;
+      questions: {
+        question_categories: { name: string } | null;
+      } | null;
+    };
+    const assignedResponses = (storedRows ?? []) as unknown as ResponseScoreRow[];
+    const answers = Object.fromEntries(
+      assignedResponses.map((row) => [row.question_id, row.answer]),
+    );
+    const visibleQuestions = visibleAssessmentQuestions(
+      assignedQuestions,
+      answers,
+    );
+    const missingAnswers = visibleQuestions.filter(
+      ({ id }) => !hasAssessmentAnswer(answers[id]),
+    );
+    if (missingAnswers.length > 0) {
+      throw new Error(
+        "Answer every visible question and wait for it to save before submitting.",
+      );
+    }
+
+    const visibleIds = visibleQuestions.map(({ id }) => id);
+    const visibleIdSet = new Set(visibleIds);
+    const rows = assignedResponses.filter((row) =>
+      visibleIdSet.has(row.question_id),
+    );
+
+    // Calculate maxima from this assessment's visible question set rather than
+    // the global question bank.
     // Each "perfect" answer = 10, weighted. Red Flags weight encodes severity (low=1, med=2, high=4, crit=8).
     const RELEVANT = ["Green Flags", "BDSM Safety", "Red Flags"];
     const { data: maxRows, error: maxErr } = await supabaseAdmin
       .from("questions")
       .select("weight, question_categories!inner(name)")
-      .eq("active", true)
+      .in("id", visibleIds)
       .in("question_categories.name", RELEVANT);
     if (maxErr) throw new Error(maxErr.message);
 
@@ -307,11 +309,22 @@ export const completeAssessment = createServerFn({ method: "POST" })
     const redMax = maxes["Red Flags"];
 
     let safetyRaw = 0, compat = 0, redRaw = 0, redLegacy = 0, greenRaw = 0, exp = 0;
-    for (const row of (rows ?? []) as Array<{
-      score: number | string | null;
-      questions: { question_categories: { name: string } | null } | null;
-    }>) {
-      const s = Number(row.score) || 0;
+    const visibleQuestionById = new Map(
+      visibleQuestions.map((question) => [question.id, question]),
+    );
+    for (const row of rows) {
+      const question = visibleQuestionById.get(row.question_id);
+      if (!question) continue;
+      validateAssessmentAnswer(question, row.answer);
+      const s =
+        Number(
+          computeScore(
+            question.question_type,
+            (question.answer_options as AnswerOption[]) ?? [],
+            Number(question.weight) || 1,
+            row.answer,
+          ),
+        ) || 0;
       const cat = row.questions?.question_categories?.name ?? "";
       if (cat === "BDSM Safety" || cat === "Safety Practices") safetyRaw += s;
       if (cat === "Compatibility") compat += s;
@@ -329,7 +342,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
       ? Math.max(0, Math.min(100, (redRaw / redMax) * 100))
       : Math.min(100, redLegacy);
 
-    await supabaseAdmin
+    const { error: resultError } = await supabaseAdmin
       .from("results")
       .upsert(
         {
@@ -343,9 +356,19 @@ export const completeAssessment = createServerFn({ method: "POST" })
         },
         { onConflict: "journey_id" },
       );
+    if (resultError) throw new Error(resultError.message);
 
-    await supabaseAdmin.from("invites").update({ completed_at: new Date().toISOString() }).eq("id", invite.id);
-    await supabaseAdmin.from("journeys").update({ status: "completed" }).eq("id", journey.id);
+    const { error: journeyError } = await supabaseAdmin
+      .from("journeys")
+      .update({ status: "completed" })
+      .eq("id", journey.id);
+    if (journeyError) throw new Error(journeyError.message);
+
+    const { error: inviteError } = await supabaseAdmin
+      .from("invites")
+      .update({ completed_at: new Date().toISOString() })
+      .eq("id", invite.id);
+    if (inviteError) throw new Error(inviteError.message);
 
     // Best-effort AI analysis. Processing is default-off until the owner has
     // approved the external processor and explicitly enables it.
