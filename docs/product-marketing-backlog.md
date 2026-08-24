@@ -38,6 +38,8 @@ list.
 
 ## Go-live product and trust work
 
+- [x] Restore visible SMS action feedback: sending state plus global success and
+      error notifications for journey invite requests.
 - [ ] Fix the broken header logo after the Cloudflare migration.
   - Replace the Lovable-only `/__l5e/assets-v1/...` reference with a real,
     full-resolution logo stored in the repository's public assets.

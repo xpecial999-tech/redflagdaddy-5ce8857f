@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/AppShell";
 import { ScrollToTop } from "../components/ScrollToTop";
 import { AnalyticsConsent } from "../components/AnalyticsConsent";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -121,6 +122,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ScrollToTop />
+      <Toaster position="top-center" richColors closeButton />
       <AnalyticsConsent />
       <AppShell>
         <Outlet />
