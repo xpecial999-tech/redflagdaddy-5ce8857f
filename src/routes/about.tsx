@@ -119,7 +119,7 @@ const security = [
 ];
 
 const controls = [
-  { icon: Database, title: "Download your data", body: "Export a JSON copy of your profile, journeys, responses, results and preferences." },
+  { icon: Database, title: "Download your data", body: "Export a JSON copy of your profile, preferences, journeys, responses, results and payment history without active bearer tokens or raw provider payloads." },
   { icon: ClipboardCheck, title: "Delete journeys", body: "Remove a journey and its associated responses and results from the journey tracker." },
   { icon: EyeOff, title: "Consent-led analytics", body: "Anonymous funnel analytics are off by default and can be allowed or refused on this device." },
   { icon: Activity, title: "Secure sign-out", body: "Sign out from your account at any time. Your session is cleared immediately." },

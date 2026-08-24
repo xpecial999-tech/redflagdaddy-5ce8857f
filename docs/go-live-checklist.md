@@ -18,6 +18,8 @@ in the separate migration task.
   approval switch.
 - Assessment submissions are restricted to their assigned visible questions,
   and answer values are validated before scoring.
+- Account exports fail safely if incomplete, omit active bearer secrets and raw
+  payment payloads, and account deletion checks every cleanup step.
 
 ## Blocking owner decisions and artifacts
 
@@ -41,6 +43,9 @@ in the separate migration task.
   owner and legal approval, verify enabled mode sends only the documented
   score bundle and high-risk answer digest.
 - [ ] Test account registration, sign-in, sign-out and account deletion.
+- [ ] Verify the account export includes safe payment history, excludes invite
+  codes/share tokens/raw provider payloads, and fails without downloading a
+  partial file when any source query errors.
 - [ ] Test guest and account journey creation, invite expiry and single-use completion.
 - [ ] Verify an assessment cannot submit an unassigned question, an invalid
   answer value or a completion request while a visible answer is still unsaved.

@@ -1,22 +1,69 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  DELETE_FAILURE_MESSAGE,
+  EXPORT_FAILURE_MESSAGE,
+  INVITE_EXPORT_FIELDS,
+  JOURNEY_EXPORT_FIELDS,
+  PAYMENT_EXPORT_FIELDS,
+  PREFERENCES_EXPORT_FIELDS,
+  PROFILE_EXPORT_FIELDS,
+  requirePrivacyResult,
+  RESPONSE_EXPORT_FIELDS,
+  RESULT_EXPORT_FIELDS,
+  smsLogPhone,
+} from "@/lib/privacy-lifecycle";
 
 export const exportMyData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
-    const [profileRes, prefsRes, journeysRes] = await Promise.all([
-      supabase.from("users").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("user_preferences").select("*").eq("user_id", userId).maybeSingle(),
+    const [profileRes, prefsRes, journeysRes, paymentsRes] = await Promise.all([
+      supabase
+        .from("users")
+        .select(PROFILE_EXPORT_FIELDS)
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("user_preferences")
+        .select(PREFERENCES_EXPORT_FIELDS)
+        .eq("user_id", userId)
+        .maybeSingle(),
       supabase
         .from("journeys")
-        .select("*")
+        .select(JOURNEY_EXPORT_FIELDS)
         .eq("creator_id", userId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("payments")
+        .select(PAYMENT_EXPORT_FIELDS)
+        .eq("user_id", userId)
         .order("created_at", { ascending: false }),
     ]);
 
-    const journeys = journeysRes.data ?? [];
+    const profile = requirePrivacyResult(
+      profileRes,
+      "load profile for export",
+      EXPORT_FAILURE_MESSAGE,
+    );
+    const preferences = requirePrivacyResult(
+      prefsRes,
+      "load preferences for export",
+      EXPORT_FAILURE_MESSAGE,
+    );
+    const journeys =
+      requirePrivacyResult(
+        journeysRes,
+        "load journeys for export",
+        EXPORT_FAILURE_MESSAGE,
+      ) ?? [];
+    const payments =
+      requirePrivacyResult(
+        paymentsRes,
+        "load payments for export",
+        EXPORT_FAILURE_MESSAGE,
+      ) ?? [];
     const journeyIds = journeys.map((j) => j.id);
 
     let responses: unknown[] = [];
@@ -25,23 +72,52 @@ export const exportMyData = createServerFn({ method: "GET" })
 
     if (journeyIds.length > 0) {
       const [rRes, resRes, iRes] = await Promise.all([
-        supabase.from("responses").select("*").in("journey_id", journeyIds),
-        supabase.from("results").select("*").in("journey_id", journeyIds),
-        supabase.from("invites").select("*").in("journey_id", journeyIds),
+        supabase
+          .from("responses")
+          .select(RESPONSE_EXPORT_FIELDS)
+          .in("journey_id", journeyIds),
+        supabase
+          .from("results")
+          .select(RESULT_EXPORT_FIELDS)
+          .in("journey_id", journeyIds),
+        supabase
+          .from("invites")
+          .select(INVITE_EXPORT_FIELDS)
+          .in("journey_id", journeyIds),
       ]);
-      responses = rRes.data ?? [];
-      results = resRes.data ?? [];
-      invites = iRes.data ?? [];
+      responses =
+        requirePrivacyResult(
+          rRes,
+          "load responses for export",
+          EXPORT_FAILURE_MESSAGE,
+        ) ?? [];
+      results =
+        requirePrivacyResult(
+          resRes,
+          "load results for export",
+          EXPORT_FAILURE_MESSAGE,
+        ) ?? [];
+      invites =
+        requirePrivacyResult(
+          iRes,
+          "load invites for export",
+          EXPORT_FAILURE_MESSAGE,
+        ) ?? [];
     }
 
     const payload = {
+      schemaVersion: 1,
       exportedAt: new Date().toISOString(),
-      profile: profileRes.data ?? null,
-      preferences: prefsRes.data ?? null,
+      exportNotes: [
+        "Active invite codes, public share tokens, raw payment-provider payloads and authentication secrets are excluded.",
+      ],
+      profile: profile ?? null,
+      preferences: preferences ?? null,
       journeys,
       invites,
       responses,
       results,
+      payments,
     };
 
     return { json: JSON.stringify(payload, null, 2) };
@@ -54,17 +130,28 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Pull profile so we can clean up phone-scoped logs if possible
-    const { data: profile } = await supabaseAdmin
+    const profileResult = await supabaseAdmin
       .from("users")
       .select("phone")
       .eq("id", userId)
       .maybeSingle();
+    const profile = requirePrivacyResult(
+      profileResult,
+      "load profile for deletion",
+      DELETE_FAILURE_MESSAGE,
+    );
 
     // Collect all journeys owned by this user
-    const { data: journeys } = await supabaseAdmin
+    const journeysResult = await supabaseAdmin
       .from("journeys")
       .select("id")
       .eq("creator_id", userId);
+    const journeys =
+      requirePrivacyResult(
+        journeysResult,
+        "load journeys for deletion",
+        DELETE_FAILURE_MESSAGE,
+      ) ?? [];
     const journeyIds = (journeys ?? []).map((j) => j.id);
 
     // Clean up journey-related data first
@@ -73,25 +160,41 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
         .from("responses")
         .delete()
         .in("journey_id", journeyIds);
-      if (rErr) throw new Error(rErr.message);
+      requirePrivacyResult(
+        { data: null, error: rErr },
+        "delete responses",
+        DELETE_FAILURE_MESSAGE,
+      );
 
       const { error: resErr } = await supabaseAdmin
         .from("results")
         .delete()
         .in("journey_id", journeyIds);
-      if (resErr) throw new Error(resErr.message);
+      requirePrivacyResult(
+        { data: null, error: resErr },
+        "delete results",
+        DELETE_FAILURE_MESSAGE,
+      );
 
       const { error: iErr } = await supabaseAdmin
         .from("invites")
         .delete()
         .in("journey_id", journeyIds);
-      if (iErr) throw new Error(iErr.message);
+      requirePrivacyResult(
+        { data: null, error: iErr },
+        "delete invites",
+        DELETE_FAILURE_MESSAGE,
+      );
 
       const { error: jErr } = await supabaseAdmin
         .from("journeys")
         .delete()
         .in("id", journeyIds);
-      if (jErr) throw new Error(jErr.message);
+      requirePrivacyResult(
+        { data: null, error: jErr },
+        "delete journeys",
+        DELETE_FAILURE_MESSAGE,
+      );
     }
 
     // Clean up user-scoped tables
@@ -99,25 +202,54 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
       .from("payments")
       .delete()
       .eq("user_id", userId);
-    if (pErr) throw new Error(pErr.message);
+    requirePrivacyResult(
+      { data: null, error: pErr },
+      "delete payments",
+      DELETE_FAILURE_MESSAGE,
+    );
 
     const { error: prefsErr } = await supabaseAdmin
       .from("user_preferences")
       .delete()
       .eq("user_id", userId);
-    if (prefsErr) throw new Error(prefsErr.message);
+    requirePrivacyResult(
+      { data: null, error: prefsErr },
+      "delete preferences",
+      DELETE_FAILURE_MESSAGE,
+    );
 
     const { error: aErr } = await supabaseAdmin
       .from("admin_users")
       .delete()
       .eq("user_id", userId);
-    if (aErr) throw new Error(aErr.message);
+    requirePrivacyResult(
+      { data: null, error: aErr },
+      "delete admin membership",
+      DELETE_FAILURE_MESSAGE,
+    );
 
     // Clean up phone-scoped logs if we know the phone
     const phone = profile?.phone as string | undefined;
     if (phone) {
-      await supabaseAdmin.from("sms_log").delete().eq("phone", phone);
-      await supabaseAdmin.from("phone_otps").delete().eq("phone", phone);
+      const { error: smsError } = await supabaseAdmin
+        .from("sms_log")
+        .delete()
+        .eq("phone", smsLogPhone(phone));
+      requirePrivacyResult(
+        { data: null, error: smsError },
+        "delete SMS delivery logs",
+        DELETE_FAILURE_MESSAGE,
+      );
+
+      const { error: otpError } = await supabaseAdmin
+        .from("phone_otps")
+        .delete()
+        .eq("phone", phone);
+      requirePrivacyResult(
+        { data: null, error: otpError },
+        "delete phone verification records",
+        DELETE_FAILURE_MESSAGE,
+      );
     }
 
     // Finally remove the public profile and auth user
@@ -125,10 +257,18 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
       .from("users")
       .delete()
       .eq("id", userId);
-    if (uErr) throw new Error(uErr.message);
+    requirePrivacyResult(
+      { data: null, error: uErr },
+      "delete public profile",
+      DELETE_FAILURE_MESSAGE,
+    );
 
     const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(userId);
-    if (authErr) throw new Error(authErr.message);
+    requirePrivacyResult(
+      { data: null, error: authErr },
+      "delete authentication account",
+      DELETE_FAILURE_MESSAGE,
+    );
 
     return { ok: true as const };
   });

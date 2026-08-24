@@ -226,7 +226,8 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
           <div className="text-left">
             <div className="text-sm font-medium">Download your data</div>
             <div className="text-xs text-muted-foreground">
-              Get a JSON copy of journeys, responses and results.
+              Get a JSON copy of your profile, preferences, journeys, responses,
+              results and payment history.
             </div>
           </div>
           {exporting && <Loader2 className="w-4 h-4 ml-auto animate-spin" />}
@@ -242,7 +243,7 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
               <div className="text-left">
                 <div className="text-sm font-medium text-destructive">Delete your account</div>
                 <div className="text-xs text-muted-foreground">
-                  Permanently remove your account and all data.
+                  Permanently remove your account and associated product data.
                 </div>
               </div>
             </Button>
@@ -254,8 +255,8 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
                 Delete your account?
               </AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete your profile, journeys, responses, results and payment
-                history. Type{" "}
+                This will permanently delete your profile, preferences, journeys,
+                responses, results and payment history. Type{" "}
                 <span className="font-semibold text-foreground">delete my account</span> below to
                 confirm.
               </AlertDialogDescription>

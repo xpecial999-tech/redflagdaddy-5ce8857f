@@ -1,0 +1,175 @@
+# RedFlagDaddy product and marketing backlog
+
+This is the living list of product features, launch work and marketing ideas for
+RedFlagDaddy. It combines the owner's marketing plan with findings from the app
+audit. Hosting, DNS, Cloudflare and other architecture work remain outside this
+list.
+
+## How this list is used
+
+- `Built` means the capability exists in the application. It may still need
+  staging or production verification.
+- `Go-live` means it should be completed or explicitly accepted before public
+  promotion.
+- `Next` means it is a strong post-launch candidate.
+- `Later` means it should wait until the manual launch process has produced
+  enough evidence.
+- A backlog item may be included in a code batch when it directly fits the
+  batch, is low-risk and does not broaden the approved scope.
+- Anything involving claims, legal wording, public accounts, publishing,
+  credentials, spending, production analytics or user contact still requires
+  owner approval.
+
+## Product capabilities already built
+
+- [x] Account registration and sign-in.
+- [x] Account and guest assessment journeys.
+- [x] Role-aware questionnaires and compatibility/safety scoring.
+- [x] Email and SMS invitations with expiry and completion controls.
+- [x] Private owner results and explicitly enabled shared reports.
+- [x] A clearly labelled synthetic demo report.
+- [x] Profile preferences, help and safety surfaces.
+- [x] Payment/upgrade flow with server-side entitlement checks.
+- [x] Admin management surfaces.
+- [x] User data export and account deletion controls.
+- [x] Consent-led, first-party funnel analytics, disabled by default.
+- [x] External AI analysis behind a disabled-by-default approval gate.
+- [x] Public metadata, canonical URLs, sitemap and robots controls.
+
+## Go-live product and trust work
+
+- [ ] Publish an approved privacy notice and terms for the launch countries.
+- [ ] Add the approved public support contact throughout the relevant help,
+      safety and account surfaces.
+- [ ] Add the owner-approved abuse, threat, stalking, self-harm and emergency
+      escalation procedure.
+- [ ] Add approved country-specific crisis and emergency resources; keep the
+      current guidance generic until those resources are approved.
+- [ ] Complete end-to-end staging checks for registration, journeys,
+      assessments, result sharing, export, deletion, invitations and provider
+      failures using synthetic data.
+- [ ] Complete keyboard, screen-reader, reduced-motion and responsive checks on
+      every public conversion path, then fix the findings.
+- [ ] Approve and verify pricing, currency, refunds and production checkout
+      before enabling paid mode.
+- [ ] Decide whether external AI analysis will launch; if so, approve the
+      processor, disclosure, data categories, consent and retention first.
+- [ ] Approve production analytics only after the documented staging payload
+      inspection passes.
+- [ ] Replace the obsolete social preview with an approved 1200 x 630 brand
+      image and verify link previews.
+- [ ] Record final go/no-go approval against the exact deployed commit.
+
+## Launch positioning and conversion decisions
+
+- [ ] Confirm the primary audience and minimum age.
+- [ ] Confirm launch countries.
+- [ ] Confirm brand voice and prohibited topics.
+- [ ] Confirm the primary conversion action and CTA.
+- [ ] Confirm the canonical landing-page URL.
+- [ ] Confirm public claims and honest product limitations.
+- [ ] Review the landing, registration, demo and upgrade paths against the
+      approved audience and CTA; improve copy or friction where evidence supports
+      it.
+
+## Marketing foundation
+
+- [ ] Secure Gmail, TikTok, Instagram and Threads with MFA and recovery codes.
+- [ ] Create an ownership and credential inventory.
+- [ ] Build the brand kit: logo variants, colours, typography, caption style,
+      disclosure language and accessibility guidance.
+- [ ] Create moderation rules and the safety-escalation playbook.
+- [ ] Create the content tracker with idea, approval, consent, accessibility,
+      UTM, publishing and results fields from the marketing plan.
+- [ ] Record baseline followers, reach, visits, sign-ups and activations.
+- [ ] Create the weekly privacy-safe scorecard.
+
+## Four-week manual content pilot
+
+Target cadence: three strong posts and one community question per week, plus a
+weekly product demonstration once the product is launch-ready. Adapt ideas for
+each platform instead of publishing identical versions.
+
+Content mix:
+
+- 40% red-flag education: patterns, context and healthier alternatives.
+- 20% green flags and boundaries.
+- 15% interactive, non-diagnostic scenarios.
+- 15% product demonstrations, privacy controls and honest limitations.
+- 10% founder journey and community safety.
+
+Pilot deliverables:
+
+- [ ] Four-week content calendar.
+- [ ] Founder/mission introduction.
+- [ ] Educational red-flag and green-flag posts.
+- [ ] Weekly community questions that do not solicit private disclosures.
+- [ ] Privacy and product-expectations post.
+- [ ] Product walkthrough made only with synthetic data.
+- [ ] Hook and CTA experiments that change one variable at a time.
+- [ ] Platform-native scripts, captions, shot lists, alt text and thumbnails.
+- [ ] Exact human approval for every final asset, caption, link, account and
+      scheduled time.
+- [ ] Results recorded after 24 hours and seven days.
+- [ ] Pilot report covering winning pillars, formats, conversion quality,
+      workload, moderation risks and next experiments.
+
+## Measurement and attribution
+
+- [x] Canonical organic-social UTM allow-list implemented.
+- [x] First-touch attribution limited to the current browser tab.
+- [x] Anonymous funnel events implemented without user IDs or product content.
+- [x] Opt-out clears stored attribution and once-only markers.
+- [ ] Verify every UTM and event in staging with synthetic users.
+- [ ] Approve the 35-day analytics retention period and exact consent copy.
+- [ ] Enable production analytics only after explicit owner approval.
+- [ ] Use activation quality, not clicks alone, to judge campaigns.
+
+## Next product and marketing improvements
+
+- [ ] Turn recurring, non-sensitive support and community questions into an
+      approved education backlog.
+- [ ] Add product walkthrough material to the public site once the final flow
+      and brand assets are approved.
+- [ ] Review funnel results for avoidable landing-to-sign-up and
+      sign-up-to-core-action friction.
+- [ ] Review the usefulness and clarity of exports, deletion, sharing controls
+      and safety guidance after launch feedback.
+- [ ] Repurpose the strongest pilot concepts into new platform-native formats.
+- [ ] Consider YouTube only after ownership of the intended handle and the
+      ongoing production workload are confirmed.
+
+## Later: guarded automation
+
+Do not begin this phase until the manual content workflow and tracker statuses
+have operated reliably for at least four weeks.
+
+- [ ] Decide whether n8n and Buffer automation is justified by pilot workload.
+- [ ] Limit the first workflow to owner-approved content rows and Buffer drafts.
+- [ ] Require approver identity, approval time and a content hash.
+- [ ] Add least-privilege credentials, signed webhooks, idempotency, failure
+      alerts, an audit log and a manual kill switch.
+- [ ] Keep automatic publishing, replies and DMs disabled initially.
+- [ ] Prevent production data, private messages and support conversations from
+      reaching AI prompts.
+- [ ] Complete duplicate, failure, credential and kill-switch tests before use.
+
+## Non-negotiable content rules
+
+- Human approval is required for every post, campaign, reply, link and paid
+  action.
+- Do not diagnose people, guarantee safety or present content as medical,
+  legal, crisis or emergency advice.
+- Do not publish identifiable stories, screenshots, testimonials or DMs without
+  written consent.
+- Do not infer or target sensitive traits.
+- Do not send production data, profiles, answers, credentials, email lists,
+  private messages or support conversations to an AI model.
+- Collect only the analytics needed for the approved funnel.
+
+## Source documents
+
+- Owner-provided `writing-block.md` marketing plan.
+- `docs/go-live-checklist.md`.
+- `docs/marketing-analytics.md`.
+- Current repository product audit.
