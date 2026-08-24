@@ -92,7 +92,7 @@ CREATE TABLE public.journeys (
   creator_id       UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title            TEXT NOT NULL,
   participant_type public.participant_type NOT NULL DEFAULT 'any',
-  invite_code      TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(9), 'base64'),
+  invite_code      TEXT NOT NULL UNIQUE DEFAULT encode(extensions.gen_random_bytes(9), 'base64'),
   invite_url       TEXT,
   recipient_email  TEXT,
   status           public.journey_status NOT NULL DEFAULT 'draft',
@@ -122,7 +122,7 @@ CREATE POLICY "Admins read all journeys" ON public.journeys FOR SELECT TO authen
 CREATE TABLE public.invites (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   journey_id   UUID NOT NULL REFERENCES public.journeys(id) ON DELETE CASCADE,
-  code         TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(12), 'base64'),
+  code         TEXT NOT NULL UNIQUE DEFAULT encode(extensions.gen_random_bytes(12), 'base64'),
   email        TEXT,
   expires_at   TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '7 days'),
   completed_at TIMESTAMPTZ,
