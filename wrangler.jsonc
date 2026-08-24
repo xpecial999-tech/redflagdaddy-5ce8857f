@@ -16,7 +16,14 @@
       "name": "redflagdaddy-staging"
     },
     "production": {
-      "name": "redflagdaddy-production"
+      "name": "redflagdaddy-production",
+      "workers_dev": true,
+      "routes": [
+        {
+          "pattern": "redflagdaddy.com",
+          "custom_domain": true
+        }
+      ]
     }
   }
 }
