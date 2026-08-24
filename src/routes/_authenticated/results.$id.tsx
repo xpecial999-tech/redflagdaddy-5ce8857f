@@ -64,7 +64,7 @@ function ResultsPage() {
     return <p className="text-destructive">{(q.error as Error).message}</p>;
   }
 
-  const { result, analysis, journey, share } = q.data!;
+  const { result, analysis, analysisAvailable, journey, share } = q.data!;
   const scores = {
     safety: Number(result?.safety_score ?? 0),
     compatibility: Number(result?.compatibility_score ?? 0),
@@ -133,7 +133,7 @@ function ResultsPage() {
         </div>
       )}
 
-      {!analysis && (
+      {!analysis && analysisAvailable && (
         <Card className="no-print">
           <CardContent className="p-6 text-center space-y-3">
             <p className="text-sm text-muted-foreground">
@@ -157,6 +157,17 @@ function ResultsPage() {
         </Card>
       )}
 
+      {!analysis && !analysisAvailable && (
+        <Card className="no-print">
+          <CardContent className="p-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Detailed analysis is not available yet. Your score summary remains
+              available below.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <ReportView
         title={journey?.title ?? "Journey"}
         participantType={journey?.participant_type ?? ""}
@@ -164,7 +175,7 @@ function ResultsPage() {
         analysis={analysis}
       />
 
-      {analysis && (
+      {analysis && analysisAvailable && (
         <div className="text-center no-print">
           <Button
             variant="ghost"

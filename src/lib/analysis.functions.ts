@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isAiAnalysisEnabled } from "@/lib/ai-analysis-config";
 import { z } from "zod";
 
 const IdSchema = z.object({ journeyId: z.string().uuid() });
@@ -203,6 +204,10 @@ async function callGateway(scores: ScoreBundle, digest: unknown): Promise<Analys
  * (e.g. completeAssessment which validates the invite code).
  */
 export async function runAnalysisInternal(journeyId: string) {
+  if (!isAiAnalysisEnabled()) {
+    throw new Error("AI analysis is not enabled.");
+  }
+
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: result, error: rErr } = await supabaseAdmin
@@ -287,6 +292,7 @@ export const getResults = createServerFn({ method: "POST" })
       },
       result: result ?? null,
       analysis,
+      analysisAvailable: isAiAnalysisEnabled(),
       share: {
         enabled: Boolean(result?.share_enabled),
         token: (result?.share_token as string | null) ?? null,
@@ -362,4 +368,3 @@ export const getSharedReport = createServerFn({ method: "POST" })
       analysis,
     };
   });
-
