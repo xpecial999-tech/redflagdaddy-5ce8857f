@@ -150,6 +150,34 @@ Pilot deliverables:
 
 ## Next product and marketing improvements
 
+- [ ] Re-enable email and selected social sign-in directly through Supabase Auth;
+      do not introduce Clerk for the current product.
+  - Start with passwordless email OTP plus Google and Apple. Consider Facebook
+    only after audience evidence justifies its additional provider setup and
+    review burden.
+  - Keep phone sign-in available and present all methods on one clear sign-in
+    surface.
+  - Add a dedicated OAuth callback with an allow-listed post-auth destination,
+    separate staging/production provider credentials and exact approved
+    redirect URLs.
+  - Configure production custom SMTP before enabling email OTP; do not rely on
+    Supabase's restricted default mail service.
+  - Request only the minimum OAuth scopes needed for authentication and basic
+    profile display; never request contacts, posts, messages or social graphs.
+  - Require the 18+ and consent confirmation plus role onboarding after a new
+    email/social identity returns; a provider login does not prove age,
+    identity, safety or trustworthiness.
+  - Build an explicit account-linking flow for current phone users. Their Auth
+    records use synthetic email addresses, so never assume an OAuth login is
+    the same person based only on a profile email or display name.
+  - Let a signed-in user add and review login methods from Profile, prevent
+    removal of their final usable method, and verify deletion removes the Auth
+    user and all linked identities.
+  - Preserve the existing Supabase user ID, RLS ownership, admin membership,
+    journeys and payments when linking a new identity.
+  - Cover new signup, returning login, cancellation, denied consent, duplicate
+    email, existing phone-account linking, admin login, logout and account
+    deletion with staging tests before release.
 - [ ] Add a purely anonymous guest-journey option with no phone number, email or
       account.
   - Let the creator choose `No notifications — I'll return with a code`, then
