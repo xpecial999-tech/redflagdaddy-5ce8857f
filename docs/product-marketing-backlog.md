@@ -150,6 +150,32 @@ Pilot deliverables:
 
 ## Next product and marketing improvements
 
+- [ ] Add an administrator-controlled construction mode using the existing app
+      settings system.
+  - Add a clearly labelled, confirmed toggle in Admin Settings, record who
+    changed it and when, and make changes take effect without a deployment.
+  - While enabled, replace the normal public landing conversion area with the
+    supplied `Under Construction — We'll be back soon` artwork and equivalent
+    HTML text for accessibility; remove Sign in, Start a journey and Continue
+    as guest entry points.
+  - Enforce the mode on the server as well as the interface so direct visits to
+    public login, registration, guest creation and journey-creation endpoints
+    cannot bypass hidden buttons.
+  - Decide explicitly whether existing partner assessment links and completed
+    report links remain usable during construction mode; default to blocking
+    new journeys without destroying or modifying existing data.
+  - Make `/admin` the private administrator entry. When signed out it should
+    present a dedicated admin login, then verify server-side admin membership
+    before showing any controls; the unlisted URL is not itself a security
+    boundary.
+  - Allow authenticated administrators to bypass construction mode and provide
+    a prominent `Return to construction page` action.
+  - Prevent accidental lockout with a confirmation step, a verified admin
+    bypass, a tested recovery procedure and a fail-safe for settings lookup
+    errors.
+  - Return appropriate no-index and maintenance responses, keep private paths
+    out of analytics, and test cached pages so mode changes are reflected
+    promptly on Cloudflare.
 - [ ] Re-enable email and selected social sign-in directly through Supabase Auth;
       do not introduce Clerk for the current product.
   - Start with passwordless email OTP plus Google and Apple. Consider Facebook
