@@ -250,6 +250,82 @@ Pilot deliverables:
     or SMS delivery, while displaying a familiar national format during entry.
   - Keep detection failure invisible and non-blocking, and cover country
     selection, international input and E.164 output with regression tests.
+- [ ] Add a private shared discussion workspace after results are available.
+  - Generate an explicitly shared, expiring page with side-by-side or
+    differential scores and the existing conversation prompts.
+  - Let either person mark a topic as `Discussed`, `Still open` or `Parked`, and
+    add short shared notes.
+  - Make authorship and edit history clear, define whether either person may
+    edit or delete the other's notes, and prevent private answers from leaking
+    into the workspace.
+  - Require a deliberate owner sharing action, revocation and expiry controls;
+    keep the workspace out of search, analytics payloads and notifications.
+  - Position this as a negotiation aid, not chat, surveillance, moderation or
+    proof that a person or dynamic is safe.
+- [ ] Support progressive, multi-stage journeys.
+  - Offer a light first-contact assessment that can lead to a deeper or
+    category-focused follow-up, immediately or after a chosen cooling-off
+    period.
+  - Let the owner compare stages and see how scores and recurring themes change
+    without implying that a higher score guarantees safety.
+  - Support renegotiation journeys after a limit was approached or an
+    experience went badly, with contextual safety guidance rather than an
+    automated verdict.
+  - Define stage ownership, expiry, reminders, deletion and whether a partner
+    must explicitly consent before prior answers are carried forward.
+- [ ] Add redacted and selective result-sharing controls.
+  - Provide one-click presets for conversation prompts only, selected score
+    dimensions, and an owner-reviewed custom selection.
+  - Generate privacy-conscious PDF and Markdown exports that omit names,
+    contact details, raw answers, hidden dimensions, private notes and bearer
+    tokens unless each field is deliberately included.
+  - Make all shared links time-limited, revocable and clearly labelled with
+    their included content and expiry before the owner confirms sharing.
+  - Test every preset for accidental disclosure and preserve a private owner
+    report that is never altered by redaction choices.
+- [ ] Add a practical post-results action layer.
+  - Offer `Schedule a negotiation conversation` with a downloadable calendar
+    invite first; consider direct Google and Outlook connections only when the
+    additional permissions and provider setup are justified.
+  - Include only owner-selected discussion prompts in calendar descriptions,
+    display the exact content before export and never include private answers
+    or access tokens.
+  - Generate short role-aware negotiation checklists or templates from the
+    journey's approved prompts and answers, with clear non-diagnostic wording.
+  - Show curated external resources contextually, using an approved source list
+    and country-aware crisis information where appropriate.
+- [ ] Add an owner-only journey history view for repeat journeys with the same
+      person or dynamic.
+  - Make grouping strictly opt-in instead of inferring identity from names,
+    phone numbers, links, devices or response patterns.
+  - Show a simple timeline of stage dates, score changes and recurring themes,
+    with controls to unlink, relabel, export or delete history.
+  - Keep the view owner-only by default and require a separate deliberate
+    sharing action for any history-derived content.
+- [ ] Add lightweight, owner-only insights across the owner's completed
+      journeys.
+  - Summarise recurring high and low dimensions and common response patterns
+    using only that owner's data.
+  - Require enough completed journeys to avoid misleading conclusions, explain
+    how each insight was produced and provide a way to hide or reset it.
+  - Never benchmark against other users, build reputation scores or reuse this
+    data for advertising, targeting or model training.
+- [ ] Add secure journey-status notifications as an opt-in convenience.
+  - Support non-sensitive email notifications first and consider encrypted push
+    only if the value justifies the operational complexity.
+  - Keep subject lines and notification previews discreet, include no answers
+    or scores, and let users choose events and disable notifications easily.
+- [ ] Add portable Markdown and JSON exports for personal knowledge tools.
+  - Provide a documented, versioned structure that works with tools such as
+    Obsidian and encrypted notes applications.
+  - Let the owner review and selectively exclude identifying or sensitive
+    fields before download; never transmit exports directly to third parties.
+- [ ] Evaluate passkeys as an optional higher-security sign-in method after the
+      email and social authentication work is stable.
+  - Keep a tested recovery path, support multiple registered passkeys and
+    prevent removal of the final usable login method.
+  - Preserve phone OTP as a supported option until adoption and recovery data
+    justify a change.
 - [ ] Turn recurring, non-sensitive support and community questions into an
       approved education backlog.
 - [ ] Add product walkthrough material to the public site once the final flow
@@ -261,6 +337,17 @@ Pilot deliverables:
 - [ ] Repurpose the strongest pilot concepts into new platform-native formats.
 - [ ] Consider YouTube only after ownership of the intended handle and the
       ongoing production workload are confirmed.
+
+## Product boundary: do not pursue by default
+
+- [ ] Do not add ongoing partner monitoring, social-media analysis, device or
+      location tracking, third-party reputation data, public ratings, covert
+      risk scoring or background profiling.
+  - Keep RedFlagDaddy focused on consent-led structured conversation,
+    negotiation and user-controlled sharing.
+  - Any future proposal that crosses this boundary requires a new explicit
+    owner decision plus privacy, safety, abuse and legal review before design or
+    implementation begins.
 
 ## Later: guarded automation
 
