@@ -5,6 +5,10 @@ RedFlagDaddy. It combines the owner's marketing plan with findings from the app
 audit. Hosting, DNS, Cloudflare and other architecture work remain outside this
 list.
 
+The ordered delivery sequence lives in
+[`implementation-roadmap.md`](implementation-roadmap.md). This file remains the
+detailed catalogue and acceptance criteria for every recorded idea.
+
 ## How this list is used
 
 - `Built` means the capability exists in the application. It may still need
