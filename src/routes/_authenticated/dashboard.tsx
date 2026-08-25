@@ -56,7 +56,7 @@ function Dashboard() {
             <Compass className="w-6 h-6 text-primary" />
           </div>
           <h3 className="font-display text-lg">No journeys yet</h3>
-          <p className="text-sm text-muted-foreground">Create your first assessment to invite a respondent.</p>
+          <p className="text-sm text-muted-foreground">Create your first assessment to invite your partner.</p>
           <Link to="/create" className="inline-flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
             <Plus className="w-4 h-4" /> Create journey
           </Link>

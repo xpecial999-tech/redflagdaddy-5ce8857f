@@ -352,11 +352,11 @@ function PartnerLinkView({
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="g-name">Recipient name (optional)</Label>
+                  <Label htmlFor="g-name">Partner name (optional)</Label>
                   <Input id="g-name" value={rName} onChange={(e) => setRName(e.target.value)} placeholder="e.g. Natasha" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="g-phone">Recipient mobile number</Label>
+                  <Label htmlFor="g-phone">Partner mobile number</Label>
                   <Input id="g-phone" value={rPhone} onChange={(e) => setRPhone(e.target.value)} placeholder="+27123456789" inputMode="tel" type="tel" />
                 </div>
                 <div className="space-y-1.5">

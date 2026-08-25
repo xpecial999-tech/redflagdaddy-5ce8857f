@@ -111,7 +111,7 @@ function Create() {
               maxLength={120}
               className="w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <p className="text-xs text-muted-foreground mt-2">Only you and the respondent see this.</p>
+            <p className="text-xs text-muted-foreground mt-2">Only you and your partner see this.</p>
           </StepWrap>
         )}
 
@@ -203,13 +203,13 @@ function Create() {
 
         {step === 4 && (
           <StepWrap key="4">
-            <h2 className="font-semibold mb-3">Respondent details</h2>
+            <h2 className="font-semibold mb-3">Partner details</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Leave the mobile number blank if you prefer — the next step will generate a unique link you can share directly with your respondent.
+              Leave the mobile number blank if you prefer — the next step will generate a unique link you can share directly with your partner.
             </p>
-            <Field label="Participant name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Optional" />
+            <Field label="Partner name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Optional" />
             <Field
-              label="Participant mobile (SMS invite)"
+              label="Partner mobile (SMS invite)"
               type="tel"
               value={recipientPhone}
               onChange={(e) => setRecipientPhone(e.target.value)}
@@ -390,7 +390,7 @@ function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phon
           <Check className="w-8 h-8 text-primary-foreground" strokeWidth={3} />
         </motion.div>
         <h2 className="text-xl font-display font-semibold">"{title}" is live</h2>
-        <p className="text-sm text-muted-foreground mt-1">Share the link or code with your respondent. Expires in 7 days.</p>
+        <p className="text-sm text-muted-foreground mt-1">Share the link or code with your partner. Expires in 7 days.</p>
         {phone && (
           <p className={`text-xs mt-2 ${smsSent ? "text-primary" : "text-destructive"}`}>
             {smsSent ? `Invite SMS sent to ${formatPhone(phone)}.` : "We couldn't send the SMS — share the link below instead."}
@@ -430,11 +430,11 @@ function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phon
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="s-name">Recipient name (optional)</Label>
+              <Label htmlFor="s-name">Partner name (optional)</Label>
               <Input id="s-name" value={rName} onChange={(e) => setRName(e.target.value)} placeholder="e.g. Natasha" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="s-phone">Recipient mobile number</Label>
+              <Label htmlFor="s-phone">Partner mobile number</Label>
               <Input id="s-phone" value={rPhone} onChange={(e) => setRPhone(e.target.value)} placeholder="+27123456789" inputMode="tel" type="tel" />
             </div>
             <div className="space-y-1.5">
