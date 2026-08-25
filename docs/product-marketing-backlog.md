@@ -287,6 +287,9 @@ Pilot deliverables:
   - Offer `Schedule a negotiation conversation` with a downloadable calendar
     invite first; consider direct Google and Outlook connections only when the
     additional permissions and provider setup are justified.
+  - Let users choose a warm but clear event title such as `Consent Check-In`,
+    `Aftercare Debrief` or `Negotiation Conversation`, while avoiding titles
+    that expose sensitive details on a shared calendar or lock-screen preview.
   - Include only owner-selected discussion prompts in calendar descriptions,
     display the exact content before export and never include private answers
     or access tokens.
@@ -294,6 +297,43 @@ Pilot deliverables:
     journey's approved prompts and answers, with clear non-diagnostic wording.
   - Show curated external resources contextually, using an approved source list
     and country-aware crisis information where appropriate.
+- [ ] Add an optional `Soundtrack for this dynamic` experience.
+  - Launch with editorially curated Spotify, Apple Music and YouTube Music
+    links organised by user-selected role, journey theme and mood; possible
+    concepts include `Negotiation Night`, `Aftercare Soft Landing`, `Primal
+    Energy`, `Green Flag Glow` and `Pause & Renegotiate`.
+  - Let the user choose or adjust the mood before showing a playlist. If scores
+    influence suggestions, explain the mapping and keep it gentle; never frame
+    music as a reward, diagnosis or safety verdict.
+  - Use ordinary provider deep links first so no answers, scores, archetypes,
+    journey names or listening history leave RedFlagDaddy.
+  - Keep playlist titles and cover art tasteful, discreet and suitable for
+    lock-screen or recently played surfaces; do not default to explicit or
+    shock-value content.
+  - Review playlist content regularly for removed tracks, regional availability
+    and lyrics that conflict with the consent and safety tone.
+  - Consider optional account-connected playlist creation only after the static
+    experience proves useful. Request the minimum provider scopes, never request
+    listening history, make the exact playlist contents visible first, and let
+    the user disconnect and delete stored tokens.
+  - Offer a shared-listening action through a provider-supported collaborative
+    playlist or listening-session link without promising cross-provider support
+    or exposing private journey data to the music service.
+- [ ] Add private, redacted visual vibe cards for completed journeys.
+  - Build cards from a soft score-informed colour palette, approved archetype
+    icons or illustrations, and one or two owner-selected conversation prompts.
+  - Let the owner add a short affirmation, preview the exact card, remove names
+    and sensitive dimensions, and save an image locally.
+  - Keep public sharing out of the default flow, omit raw answers, access codes
+    and bearer links, and ensure colour is not the only way scores are conveyed.
+- [ ] Add optional owner-only journey milestones.
+  - Use private, non-competitive milestones such as `First full assessment`,
+    `Aftercare deep dive` and `Renegotiation complete` to acknowledge progress.
+  - Never award badges for high scores, risk levels, sexual activity or another
+    person's answers, and never show them to a partner without a deliberate
+    sharing action.
+  - Let the owner disable milestones entirely and avoid streaks, leaderboards,
+    scarcity mechanics or prompts that pressure people to complete journeys.
 - [ ] Add an owner-only journey history view for repeat journeys with the same
       person or dynamic.
   - Make grouping strictly opt-in instead of inferring identity from names,
@@ -315,9 +355,11 @@ Pilot deliverables:
     only if the value justifies the operational complexity.
   - Keep subject lines and notification previews discreet, include no answers
     or scores, and let users choose events and disable notifications easily.
-- [ ] Add portable Markdown and JSON exports for personal knowledge tools.
+- [ ] Add portable Markdown, JSON and redacted image exports for personal
+      knowledge and creative tools.
   - Provide a documented, versioned structure that works with tools such as
-    Obsidian and encrypted notes applications.
+    Notion, Obsidian and encrypted notes applications, including an optional
+    dynamics-journal layout for the owner's reflections.
   - Let the owner review and selectively exclude identifying or sensitive
     fields before download; never transmit exports directly to third parties.
 - [ ] Evaluate passkeys as an optional higher-security sign-in method after the
@@ -348,6 +390,12 @@ Pilot deliverables:
   - Any future proposal that crosses this boundary requires a new explicit
     owner decision plus privacy, safety, abuse and legal review before design or
     implementation begins.
+- [ ] Do not turn results into a shared scoreboard, public profile, competitive
+      game, streak mechanic or social-media content feed.
+  - Fun elements must remain optional, discreet and subordinate to consent,
+    reflection and conversation.
+  - Do not import follower data, social activity, location, contacts or
+    listening history for personalisation.
 
 ## Later: guarded automation
 
