@@ -250,6 +250,212 @@ Pilot deliverables:
     or SMS delivery, while displaying a familiar national format during entry.
   - Keep detection failure invisible and non-blocking, and cover country
     selection, international input and E.164 output with regression tests.
+- [ ] Add a private shared discussion workspace after results are available.
+  - Generate an explicitly shared, expiring page with side-by-side or
+    differential scores and the existing conversation prompts.
+  - Let either person mark a topic as `Discussed`, `Still open` or `Parked`, and
+    add short shared notes.
+  - Make authorship and edit history clear, define whether either person may
+    edit or delete the other's notes, and prevent private answers from leaking
+    into the workspace.
+  - Require a deliberate owner sharing action, revocation and expiry controls;
+    keep the workspace out of search, analytics payloads and notifications.
+  - Position this as a negotiation aid, not chat, surveillance, moderation or
+    proof that a person or dynamic is safe.
+- [ ] Support progressive, multi-stage journeys.
+  - Offer a light first-contact assessment that can lead to a deeper or
+    category-focused follow-up, immediately or after a chosen cooling-off
+    period.
+  - Let the owner compare stages and see how scores and recurring themes change
+    without implying that a higher score guarantees safety.
+  - Support renegotiation journeys after a limit was approached or an
+    experience went badly, with contextual safety guidance rather than an
+    automated verdict.
+  - Define stage ownership, expiry, reminders, deletion and whether a partner
+    must explicitly consent before prior answers are carried forward.
+  - Include short post-conversation and post-scene reflection stages covering
+    what landed well, what felt wrong and what each person wants to adjust.
+  - Place reflections beside the original journey only with clear ownership and
+    sharing controls; never treat one person's reflection as an objective fact
+    about the other person.
+- [ ] Add a results-assisted scene and negotiation planner.
+  - Create an editable draft containing user-selected intensity, required
+    check-ins, disclosed hard and soft limits, aftercare notes and a concise
+    negotiation checklist.
+  - Use answers to surface topics for confirmation, never to infer consent,
+    prescribe intensity or recommend an activity. Require both people to review
+    the current plan and make clear that consent can be changed or withdrawn at
+    any time.
+  - Let the owner remove fields, add context and preview a private, expiring or
+    downloadable document before sharing it.
+  - Keep version history and authorship clear, and visibly mark a plan as stale
+    whenever a linked limit, pause protocol or aftercare preference changes.
+- [ ] Add a living, shared limits map.
+  - Let each person classify their own items as `Hard limit`, `Soft limit`,
+    `Curious` or `No`, with an optional note and effective date.
+  - Never allow one person to set or edit the other's limits. Highlight changes
+    without exposing undisclosed private answers, and require fresh review
+    before an updated map is used in a scene plan.
+  - Offer a lightweight renegotiation journey when something changes, while
+    avoiding reminders or interface language that pressures a person to soften
+    a limit.
+  - Provide version history, export, unlinking and deletion controls, and treat
+    silence or an old status as no evidence of current consent.
+- [ ] Add an aftercare protocol builder.
+  - Use a short wizard for physical, emotional and practical preferences,
+    timing, check-ins, accessibility needs and what to avoid.
+  - Surface relevant assessment topics as questions rather than automatically
+    filling preferences, then let each person confirm what may be shared.
+  - Support private drafts, shared versions and version history, with a clear
+    reminder that an aftercare plan is not medical or emergency advice.
+- [ ] Add a safeword and pause-protocol library.
+  - Provide editable traffic-light systems, `pause`, `check-in` and `stop`
+    scripts, plus non-verbal and accessibility-friendly signals.
+  - Let users attach a reviewed protocol to a journey or scene plan and keep a
+    plain-language emergency-stop action prominent.
+  - Do not imply that a safeword replaces ongoing consent, observation,
+    preparation or an agreed response when someone cannot communicate.
+- [ ] Add an editable working-agreement generator.
+  - Turn owner-selected results and notes into a draft covering roles,
+    boundaries, safewords, renegotiation cadence and aftercare expectations.
+  - Support private drafts, redacted export, version history and optional
+    `Reviewed by both` acknowledgements with timestamps.
+  - Label the output as a conversation record rather than a legal contract,
+    proof of consent or waiver; acknowledgements never override withdrawal of
+    consent or changed circumstances.
+- [ ] Add redacted and selective result-sharing controls.
+  - Provide one-click presets for conversation prompts only, selected score
+    dimensions, and an owner-reviewed custom selection.
+  - Generate privacy-conscious PDF and Markdown exports that omit names,
+    contact details, raw answers, hidden dimensions, private notes and bearer
+    tokens unless each field is deliberately included.
+  - Make all shared links time-limited, revocable and clearly labelled with
+    their included content and expiry before the owner confirms sharing.
+  - Test every preset for accidental disclosure and preserve a private owner
+    report that is never altered by redaction choices.
+- [ ] Add a practical post-results action layer.
+  - Offer `Schedule a negotiation conversation` with a downloadable calendar
+    invite first; consider direct Google and Outlook connections only when the
+    additional permissions and provider setup are justified.
+  - Let users choose a warm but clear event title such as `Consent Check-In`,
+    `Aftercare Debrief` or `Negotiation Conversation`, while avoiding titles
+    that expose sensitive details on a shared calendar or lock-screen preview.
+  - Include only owner-selected discussion prompts in calendar descriptions,
+    display the exact content before export and never include private answers
+    or access tokens.
+  - Generate short role-aware negotiation checklists or templates from the
+    journey's approved prompts and answers, with clear non-diagnostic wording.
+  - Show curated external resources contextually, using an approved source list
+    and country-aware crisis information where appropriate.
+- [ ] Add an optional `Soundtrack for this dynamic` experience.
+  - Launch with editorially curated Spotify, Apple Music and YouTube Music
+    links organised by user-selected role, journey theme and mood; possible
+    concepts include `Negotiation Night`, `Aftercare Soft Landing`, `Primal
+    Energy`, `Green Flag Glow` and `Pause & Renegotiate`.
+  - Let the user choose or adjust the mood before showing a playlist. If scores
+    influence suggestions, explain the mapping and keep it gentle; never frame
+    music as a reward, diagnosis or safety verdict.
+  - Use ordinary provider deep links first so no answers, scores, archetypes,
+    journey names or listening history leave RedFlagDaddy.
+  - Keep playlist titles and cover art tasteful, discreet and suitable for
+    lock-screen or recently played surfaces; do not default to explicit or
+    shock-value content.
+  - Review playlist content regularly for removed tracks, regional availability
+    and lyrics that conflict with the consent and safety tone.
+  - Consider optional account-connected playlist creation only after the static
+    experience proves useful. Request the minimum provider scopes, never request
+    listening history, make the exact playlist contents visible first, and let
+    the user disconnect and delete stored tokens.
+  - Offer a shared-listening action through a provider-supported collaborative
+    playlist or listening-session link without promising cross-provider support
+    or exposing private journey data to the music service.
+- [ ] Add private, redacted visual vibe cards for completed journeys.
+  - Build cards from a soft score-informed colour palette, approved archetype
+    icons or illustrations, and one or two owner-selected conversation prompts.
+  - Let the owner add a short affirmation, preview the exact card, remove names
+    and sensitive dimensions, and save an image locally.
+  - Keep public sharing out of the default flow, omit raw answers, access codes
+    and bearer links, and ensure colour is not the only way scores are conveyed.
+  - Optionally include the selected soundtrack link, but no auto-playing media,
+    provider tracking pixels or sensitive journey labels in link metadata.
+- [ ] Add interactive, consent-focused scenario walkthroughs.
+  - Build short branching `What would you do if…` exercises from an approved
+    subset of the question library for solo or together use.
+  - Feed choices into conversation prompts, not scores, diagnoses, winner/loser
+    outcomes or claims about how someone will behave in real life.
+  - Let either person stop, skip or keep their answers private, and distinguish
+    educational scenarios from emergency or crisis guidance.
+- [ ] Add a lightweight mood and energy check-in.
+  - Offer an optional traffic-light or small-scale pulse before or after a
+    conversation, journey or planned scene.
+  - Let each person control whether their check-in is shared and retained;
+    provide an immediate `Pause` path without demanding an explanation.
+  - Never turn check-ins into performance metrics, streaks, compliance scores,
+    notifications to pressure the other person or evidence of consent.
+- [ ] Add optional owner-only journey milestones.
+  - Use private, non-competitive milestones such as `First full assessment`,
+    `Aftercare deep dive` and `Renegotiation complete` to acknowledge progress.
+  - Never award badges for high scores, risk levels, sexual activity or another
+    person's answers, and never show them to a partner without a deliberate
+    sharing action.
+  - Let the owner disable milestones entirely and avoid streaks, leaderboards,
+    scarcity mechanics or prompts that pressure people to complete journeys.
+- [ ] Add an owner-only journey history view for repeat journeys with the same
+      person or dynamic.
+  - Make grouping strictly opt-in instead of inferring identity from names,
+    phone numbers, links, devices or response patterns.
+  - Show a simple timeline of stage dates, score changes, limit revisions and
+    recurring conversation themes, with controls to unlink, relabel, export or
+    delete history.
+  - Keep the view owner-only by default and require a separate deliberate
+    sharing action for any history-derived content.
+- [ ] Add lightweight, owner-only insights across the owner's completed
+      journeys.
+  - Summarise recurring high and low dimensions and common response patterns
+    using only that owner's data.
+  - Require enough completed journeys to avoid misleading conclusions, explain
+    how each insight was produced and provide a way to hide or reset it.
+  - Never benchmark against other users, build reputation scores or reuse this
+    data for advertising, targeting or model training.
+- [ ] Add secure journey-status notifications as an opt-in convenience.
+  - Support non-sensitive email notifications first and consider encrypted push
+    only if the value justifies the operational complexity.
+  - Keep subject lines and notification previews discreet, include no answers
+    or scores, and let users choose events and disable notifications easily.
+- [ ] Add portable Markdown, JSON and redacted image exports for personal
+      knowledge and creative tools.
+  - Provide a documented, versioned structure that works with tools such as
+    Notion, Obsidian and encrypted notes applications, including an optional
+    dynamics-journal layout for the owner's reflections.
+  - Let the owner review and selectively exclude identifying or sensitive
+    fields before download; never transmit exports directly to third parties.
+- [ ] Add per-journey and per-share data-expiry controls.
+  - Let owners choose a clear automatic deletion date such as 7, 30 or 90 days,
+    show what will be deleted and warn before expiry without exposing sensitive
+    details in the notification.
+  - Separate shared-link revocation from deletion of the private owner record,
+    honour the earliest applicable retention promise and record deletion jobs
+    without retaining deleted content.
+  - Explain any records that cannot be deleted immediately for security,
+    payment or legal reasons before the user confirms the timer.
+- [ ] Evaluate a local-first or offline mode for especially sensitive journeys.
+  - Treat this as a separate architecture and threat-model project, not an
+    incidental interface feature.
+  - Define device loss, shared-device exposure, encrypted storage, key recovery,
+    conflict resolution and explicit encrypted sync before implementation.
+  - Keep offline data off analytics, crash reports, backups and notifications,
+    and let the user permanently delete the local copy.
+- [ ] Add optional custom journey themes and conversation starters.
+  - Offer subtle colour accents and approved icon sets based on user-selected
+    roles or categories without changing score meaning or accessibility.
+  - Provide an owner-controlled `Conversation starter` drawn from an approved
+    high-value question set, with hide, refresh and disable controls.
+- [ ] Evaluate passkeys as an optional higher-security sign-in method after the
+      email and social authentication work is stable.
+  - Keep a tested recovery path, support multiple registered passkeys and
+    prevent removal of the final usable login method.
+  - Preserve phone OTP as a supported option until adoption and recovery data
+    justify a change.
 - [ ] Turn recurring, non-sensitive support and community questions into an
       approved education backlog.
 - [ ] Add product walkthrough material to the public site once the final flow
@@ -261,6 +467,39 @@ Pilot deliverables:
 - [ ] Repurpose the strongest pilot concepts into new platform-native formats.
 - [ ] Consider YouTube only after ownership of the intended handle and the
       ongoing production workload are confirmed.
+
+## Product boundary: do not pursue by default
+
+- [ ] Do not add ongoing partner monitoring, social-media analysis, device or
+      location tracking, third-party reputation data, public ratings, covert
+      risk scoring or background profiling.
+  - Keep RedFlagDaddy focused on consent-led structured conversation,
+    negotiation and user-controlled sharing.
+  - Any future proposal that crosses this boundary requires a new explicit
+    owner decision plus privacy, safety, abuse and legal review before design or
+    implementation begins.
+- [ ] Do not turn results into a shared scoreboard, public profile, competitive
+      game, streak mechanic or social-media content feed.
+  - Fun elements must remain optional, discreet and subordinate to consent,
+    reflection and conversation.
+  - Do not import follower data, social activity, location, contacts or
+    listening history for personalisation.
+
+## Later: privacy research candidates
+
+- [ ] Research an opt-in aggregate community education pulse only after the app
+      has sufficient scale and an independent privacy review.
+  - Do not promise `fully anonymous` data. Define minimum cohort sizes,
+    suppression rules, contribution limits, retention and whether formal
+    privacy techniques are required before collecting anything.
+  - Exclude free text, rare archetype combinations, locations, journey titles,
+    contact details, precise dates and any result that could single out a person
+    or small group.
+  - Make participation separate, explicit and reversible; do not condition app
+    features on consent or reuse product analytics consent.
+  - Publish only approved educational patterns such as broadly useful
+    conversation prompts, never leaderboards, partner comparisons, reputation
+    data or claims about community safety.
 
 ## Later: guarded automation
 
