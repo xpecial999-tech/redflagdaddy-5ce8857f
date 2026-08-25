@@ -9,6 +9,8 @@ import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/phone-auth.functions";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
+import { ConstructionPage } from "@/components/ConstructionPage";
+import { useConstructionMode } from "@/hooks/use-construction-mode";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -36,6 +38,7 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const construction = useConstructionMode();
 
   const e164 = toE164(phone);
 
@@ -51,7 +54,7 @@ function Register() {
     setInfo(null);
     if (!isValidE164(e164)) return setError("Enter a valid mobile number, including country code.");
     setLoading(true);
-    const result = await sendOtp({ data: { phone: e164 } }).catch(() => ({ error: "Could not send code." }));
+    const result = await sendOtp({ data: { phone: e164, purpose: "register" } }).catch(() => ({ error: "Could not send code." }));
     setLoading(false);
     if ("error" in result && result.error) return setError(result.error);
     await captureMarketingEvent("signup_started", "account", { once: true });
@@ -73,6 +76,7 @@ function Register() {
         phone: e164,
         code: otp,
         metadata: { name: name || undefined, role },
+        purpose: "register",
       },
     }).catch(() => ({ error: "Could not verify code." }));
     if ("error" in result && result.error) {
@@ -103,6 +107,8 @@ function Register() {
     void onVerify();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp, step, loading]);
+
+  if (construction.enabled) return <ConstructionPage />;
 
   return (
     <div className="max-w-sm mx-auto pt-8 space-y-8">

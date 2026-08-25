@@ -22,6 +22,8 @@ const CreateGuestSchema = z.object({
 export const createGuestJourney = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => CreateGuestSchema.parse(d))
   .handler(async ({ data }) => {
+    const { assertJourneyCreationAllowed } = await import("./construction-mode.server");
+    await assertJourneyCreationAllowed();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
     await consumeRateLimits([

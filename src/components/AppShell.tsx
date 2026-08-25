@@ -3,6 +3,7 @@ import { LayoutDashboard, Plus, User, Shield, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { useMe } from "@/hooks/use-me";
+import { useConstructionMode } from "@/hooks/use-construction-mode";
 
 const baseNavItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -24,15 +25,21 @@ const PUBLIC_PATHS = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { me } = useMe();
-  const navItems = me?.isAdmin
-    ? [...baseNavItems, { to: "/admin", label: "Admin", icon: Shield }]
+  const construction = useConstructionMode();
+  const userNavItems = construction.enabled && !me?.isAdmin
+    ? baseNavItems.filter((item) => item.to !== "/create")
     : baseNavItems;
+  const navItems = me?.isAdmin
+    ? [...userNavItems, { to: "/admin", label: "Admin", icon: Shield }]
+    : userNavItems;
   const hideNav =
+    pathname === "/admin" ||
     PUBLIC_PATHS.includes(pathname) ||
     /^\/journey\/[^/]+/.test(pathname) ||
     pathname.startsWith("/assessment/") ||
     pathname.startsWith("/guest/");
   const hideHeader = pathname === "/guest" || pathname.startsWith("/guest/");
+  const showPublicSignIn = hideNav && pathname !== "/admin" && !construction.enabled;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -49,7 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="h-12 w-auto"
               />
             </Link>
-            {hideNav && (
+            {showPublicSignIn && (
               <Link
                 to="/login"
                 className="text-sm flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5 transition"

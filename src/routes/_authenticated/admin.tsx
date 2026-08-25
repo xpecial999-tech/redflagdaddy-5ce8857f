@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -47,7 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { getAdminSettings, setPaidMode } from "@/lib/entitlement.functions";
+import { getAdminSettings, setConstructionMode, setPaidMode } from "@/lib/entitlement.functions";
 import { formatCheckoutPrice } from "@/lib/payments.shared";
 
 import {
@@ -78,6 +78,8 @@ import {
 
 import { isCurrentUserAdmin } from "@/lib/admin-auth.functions";
 import { redirect } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { Login } from "@/routes/login";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -87,6 +89,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
     ],
   }),
   beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return;
     try {
       const res = await isCurrentUserAdmin();
       if (!res?.isAdmin) throw redirect({ to: "/dashboard" });
@@ -149,6 +153,7 @@ function AdminPanel() {
     );
   }
   if (!me?.isAdmin) {
+    if (!me) return <Login adminOnly />;
     return (
       <div className="glass-strong rounded-3xl p-8 text-center space-y-2">
         <Shield className="w-8 h-8 mx-auto text-muted-foreground" />
@@ -200,7 +205,10 @@ function AdminPanel() {
 function SettingsTab() {
   const getFn = useServerFn(getAdminSettings);
   const setFn = useServerFn(setPaidMode);
+  const setConstructionFn = useServerFn(setConstructionMode);
   const qc = useQueryClient();
+  const router = useRouter();
+  const [constructionConfirmation, setConstructionConfirmation] = useState<boolean | null>(null);
   const q = useQuery({ queryKey: ["admin-settings"], queryFn: () => getFn() });
   const m = useMutation({
     mutationFn: (enabled: boolean) => setFn({ data: { enabled } }),
@@ -211,6 +219,21 @@ function SettingsTab() {
     },
   });
   const enabled = !!q.data?.paid_mode_enabled;
+  const constructionEnabled = q.data?.construction_mode_enabled ?? true;
+  const constructionMutation = useMutation({
+    mutationFn: (nextEnabled: boolean) => setConstructionFn({ data: { enabled: nextEnabled } }),
+    onSuccess: async (result: { enabled: boolean }) => {
+      toast.success(result.enabled ? "Construction mode enabled" : "Construction mode disabled");
+      setConstructionConfirmation(null);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["admin-settings"] }),
+        qc.invalidateQueries({ queryKey: ["public-settings"] }),
+        qc.invalidateQueries({ queryKey: ["entitlement"] }),
+      ]);
+      await router.invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
   const price = formatCheckoutPrice(q.data?.price_cents ?? 100, q.data?.currency ?? "USD");
   return (
     <div className="space-y-4 max-w-2xl">
@@ -229,6 +252,65 @@ function SettingsTab() {
           Price: <span className="font-mono">{price}</span>
         </div>
       </div>
+      <div className="glass-strong rounded-2xl border border-amber-500/25 p-5 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-semibold">Construction mode</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Replaces public sign-in and journey creation with the construction page. Existing private assessment and report links continue to work, and administrators can always sign in at <span className="font-mono">/admin</span>.
+            </p>
+          </div>
+          <Switch
+            checked={constructionEnabled}
+            disabled={constructionMutation.isPending || q.isLoading || q.isError}
+            onCheckedChange={(value) => setConstructionConfirmation(value)}
+            aria-label="Construction mode"
+          />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3 text-xs text-muted-foreground">
+          <span>
+            {constructionEnabled ? "Public journey creation is paused." : "The public site is open."}
+          </span>
+          {constructionEnabled && (
+            <Link to="/" className="text-primary hover:text-foreground">
+              View construction page
+            </Link>
+          )}
+        </div>
+      </div>
+      {q.isError && (
+        <p className="text-sm text-destructive">
+          Construction mode cannot be changed because the current setting could not be loaded.
+        </p>
+      )}
+
+      <AlertDialog
+        open={constructionConfirmation !== null}
+        onOpenChange={(open) => !open && setConstructionConfirmation(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {constructionConfirmation ? "Enable construction mode?" : "Reopen the public site?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {constructionConfirmation
+                ? "New registrations and journeys will be paused immediately. Existing private assessment and report links will keep working."
+                : "Sign in, registration and new journey creation will become publicly available again."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (constructionConfirmation !== null) constructionMutation.mutate(constructionConfirmation);
+              }}
+            >
+              {constructionConfirmation ? "Enable construction mode" : "Reopen site"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

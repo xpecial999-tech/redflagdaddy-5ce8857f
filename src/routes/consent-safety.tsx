@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useConstructionMode } from "@/hooks/use-construction-mode";
 import { AnalyticsPreference } from "@/components/AnalyticsConsent";
 import { motion } from "framer-motion";
 import { Shield, AlertTriangle, Lock, HeartPulse, Users, MessageCircle, Scale, ArrowLeft } from "lucide-react";
@@ -58,10 +59,11 @@ const sections = [
 ];
 
 function ConsentSafety() {
+  const construction = useConstructionMode();
   return (
     <div className="max-w-2xl mx-auto pt-4 pb-12 space-y-8">
-      <Link to="/register" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition">
-        <ArrowLeft className="w-3.5 h-3.5" /> Back to registration
+      <Link to={construction.enabled ? "/" : "/register"} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition">
+        <ArrowLeft className="w-3.5 h-3.5" /> {construction.enabled ? "Back home" : "Back to registration"}
       </Link>
 
       <motion.div
@@ -121,12 +123,16 @@ function ConsentSafety() {
         <p className="text-sm text-muted-foreground">
           By creating an account you confirm that you are 18+, you understand these guidelines, and you agree to act responsibly and respectfully.
         </p>
-        <Link
-          to="/register"
-          className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30"
-        >
-          Return to sign up
-        </Link>
+        {construction.enabled ? (
+          <p className="text-sm text-primary">New accounts are temporarily paused while we make improvements.</p>
+        ) : (
+          <Link
+            to="/register"
+            className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30"
+          >
+            Return to sign up
+          </Link>
+        )}
       </motion.div>
     </div>
   );

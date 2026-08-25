@@ -32,6 +32,8 @@ export const createJourney = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => CreateJourneySchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { assertJourneyCreationAllowed } = await import("./construction-mode.server");
+    await assertJourneyCreationAllowed(userId);
 
     const ent = await loadEntitlement(userId);
     if (!ent.canCreateJourney) {

@@ -32,8 +32,45 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_settings_audit: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_value: Json
+          previous_value: Json
+          setting: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_value: Json
+          previous_value: Json
+          setting: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_value?: Json
+          previous_value?: Json
+          setting?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_settings_audit_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
+          construction_mode_enabled: boolean
+          construction_mode_updated_at: string | null
           currency: string
           id: boolean
           paid_mode_enabled: boolean
@@ -41,6 +78,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          construction_mode_enabled?: boolean
+          construction_mode_updated_at?: string | null
           currency?: string
           id?: boolean
           paid_mode_enabled?: boolean
@@ -48,6 +87,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          construction_mode_enabled?: boolean
+          construction_mode_updated_at?: string | null
           currency?: string
           id?: boolean
           paid_mode_enabled?: boolean

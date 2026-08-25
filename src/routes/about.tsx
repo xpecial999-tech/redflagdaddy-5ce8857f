@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useConstructionMode } from "@/hooks/use-construction-mode";
 import { motion } from "framer-motion";
 import {
   Compass,
@@ -126,6 +127,7 @@ const controls = [
 ];
 
 function About() {
+  const construction = useConstructionMode();
   return (
     <div className="space-y-20 pb-10">
       {/* Hero */}
@@ -452,20 +454,24 @@ function About() {
           RedFlagDaddy cannot verify another person's identity, diagnose them or guarantee your
           safety. In an emergency, contact local emergency services or a trusted crisis resource.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            to="/register"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30"
-          >
-            Start a journey <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            to="/guest"
-            className="inline-flex items-center justify-center rounded-xl glass px-5 py-3 text-sm font-medium"
-          >
-            Try as guest
-          </Link>
-        </div>
+        {construction.enabled ? (
+          <p className="text-sm text-primary">New journeys are temporarily paused while we make improvements.</p>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30"
+            >
+              Start a journey <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/guest"
+              className="inline-flex items-center justify-center rounded-xl glass px-5 py-3 text-sm font-medium"
+            >
+              Try as guest
+            </Link>
+          </div>
+        )}
       </section>
     </div>
   );

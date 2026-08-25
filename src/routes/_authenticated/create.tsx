@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
+import { ConstructionPage } from "@/components/ConstructionPage";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
@@ -62,6 +63,15 @@ function Create() {
   const canDeepDive = ent.data?.canDeepDive ?? true;
   const canCreate = ent.data?.canCreateJourney ?? true;
   const qLimit = ent.data?.questionLimit ?? 100;
+
+  if (ent.isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </div>
+    );
+  }
+  if (ent.isError || ent.data?.constructionBlocked) return <ConstructionPage />;
 
   const canContinue =
     (step === 1 && title.trim().length > 0) ||

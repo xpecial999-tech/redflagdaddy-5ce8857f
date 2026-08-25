@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 
 import { formatPhone } from "@/lib/phone";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
+import { ConstructionPage } from "@/components/ConstructionPage";
+import { useConstructionMode } from "@/hooks/use-construction-mode";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -56,6 +58,7 @@ const steps = [
 
 function GuestPage() {
   const createFn = useServerFn(createGuestJourney);
+  const construction = useConstructionMode();
 
   const [phone, setPhone] = useState("");
   const [partnerType, setPartnerType] = useState<Role | "">("");
@@ -70,6 +73,8 @@ function GuestPage() {
     },
   });
 
+
+  if (construction.enabled) return <ConstructionPage />;
 
   if (mutation.data) {
     return (
