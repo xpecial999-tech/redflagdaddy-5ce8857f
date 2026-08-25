@@ -51,11 +51,11 @@ const flow = [
     icon: ClipboardCheck,
     title: "Create a journey",
     body:
-      "A guided wizard: name your assessment, pick the respondent's archetype (Dominant, submissive, switch, Master, brat, little, primal and more), and add optional recipient details.",
+      "A guided wizard: name your assessment, choose your partner's role (Dominant, submissive, switch, Master, brat, little, primal and more), and add optional partner details.",
   },
   {
     icon: Users,
-    title: "Invite a respondent",
+    title: "Invite your partner",
     body:
       "Share a private, single-use invite link or code. No account is required to respond, and the invite stops working after completion or expiry.",
   },
@@ -106,7 +106,7 @@ const scoring = [
 
 const privacy = [
   { icon: Lock, title: "Owner access checks", body: "Account journeys and results are checked against the signed-in owner on the server and at the database layer." },
-  { icon: KeyRound, title: "Private links act like keys", body: "Anyone who receives an active invite or shared-report link may be able to open it. Share private links only with intended recipients." },
+  { icon: KeyRound, title: "Private links act like keys", body: "Anyone who receives an active invite or shared-report link may be able to open it. Share private links only with the intended person." },
   { icon: EyeOff, title: "Sensitive pages are not for search", body: "Account, invite, assessment and shared-report routes are marked to prevent normal search indexing." },
   { icon: Database, title: "Export and deletion controls", body: "Account holders can download their stored account data, delete journeys, or permanently delete their account." },
 ];
@@ -269,7 +269,7 @@ function About() {
             {[
               { label: "Journey created", done: true, time: "2 hours ago" },
               { label: "Invite sent", done: true, time: "2 hours ago" },
-              { label: "Respondent started", done: true, time: "1 hour ago" },
+              { label: "Partner started", done: true, time: "1 hour ago" },
               { label: "Assessment completed", done: false, time: "Waiting…" },
             ].map((step, i) => (
               <div key={step.label} className="flex items-center gap-3">

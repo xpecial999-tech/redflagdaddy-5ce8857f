@@ -52,7 +52,7 @@ const DEMO_ANALYSIS: {
     score: 72,
     label: "Ready" as const,
     rationale:
-      "This participant shows solid safety awareness, clear communication patterns, and strong green-flag indicators. Some experience gaps remain, and one elevated red-flag area needs discussion before deeper engagement.",
+      "Your partner shows solid safety awareness, clear communication patterns, and strong green-flag indicators. Some experience gaps remain, and one elevated red-flag area needs discussion before deeper engagement.",
     strengths: [
       "Explicitly values aftercare and check-ins",
       "Practices safeword use consistently",
@@ -71,7 +71,7 @@ const DEMO_ANALYSIS: {
   safety: {
     title: "Safety Practices",
     summary:
-      "Safety signals are consistently strong. The participant prioritizes physical and emotional safety, reports clear safeword habits, and values aftercare. This is the strongest dimension of the assessment.",
+      "Safety signals are consistently strong. Your partner prioritizes physical and emotional safety, reports clear safeword habits, and values aftercare. This is the strongest dimension of the assessment.",
     strengths: [
       "Aftercare rated as very important",
       "Safeword use is habitual",
@@ -104,7 +104,7 @@ const DEMO_ANALYSIS: {
   red_flags: {
     title: "Red Flags",
     summary:
-      "One area registers above the comfort threshold: a pattern of dismissing partner discomfort in past dynamics was reported. While the participant self-reports improvement, this warrants a direct conversation.",
+      "One area registers above the comfort threshold: a pattern of dismissing partner discomfort in past dynamics was reported. While your partner reports improvement, this warrants a direct conversation.",
     strengths: [
       "Self-aware about past behavior",
       "Rates accountability highly",
@@ -122,7 +122,7 @@ const DEMO_ANALYSIS: {
   green_flags: {
     title: "Green Flags",
     summary:
-      "Green-flag signals are strong and consistent. The participant demonstrates empathy, explicit consent practices, and a collaborative mindset toward dynamic negotiation.",
+      "Green-flag signals are strong and consistent. Your partner demonstrates empathy, explicit consent practices, and a collaborative mindset toward dynamic negotiation.",
     strengths: [
       "Empathy and aftercare orientation",
       "Proactive consent-check habits",
@@ -137,7 +137,7 @@ const DEMO_ANALYSIS: {
   communication: {
     title: "Communication",
     summary:
-      "Communication is a clear strength. The participant prefers direct discussion, values honesty over impression management, and reports comfort raising concerns.",
+      "Communication is a clear strength. Your partner prefers direct discussion, values honesty over impression management, and reports comfort raising concerns.",
     strengths: [
       "Direct communication style",
       "Comfortable raising concerns early",
@@ -153,7 +153,7 @@ const DEMO_ANALYSIS: {
   consent: {
     title: "Consent & Boundaries",
     summary:
-      "Consent awareness is high. The participant treats consent as ongoing, distinguishes between hard and soft limits clearly, and values enthusiastic agreement.",
+      "Consent awareness is high. Your partner treats consent as ongoing, distinguishes between hard and soft limits clearly, and values enthusiastic agreement.",
     strengths: [
       "Explicit hard/soft limit distinction",
       "Ongoing-consent mindset",
@@ -167,7 +167,7 @@ const DEMO_ANALYSIS: {
     concerns: [],
   },
   overall_note:
-    "Overall, this assessment paints a picture of a participant who is safety-minded, communicative, and largely aligned with healthy dynamic practices. The elevated red-flag item should be addressed directly but does not automatically disqualify engagement. The strongest recommendation is to have an explicit conversation about the historical feedback-dismissal pattern, set clear mutual check-in expectations, and proceed with graduated trust-building.",
+    "Overall, this assessment paints a picture of a partner who is safety-minded, communicative, and largely aligned with healthy dynamic practices. The elevated red-flag item should be addressed directly but does not automatically disqualify engagement. The strongest recommendation is to have an explicit conversation about the historical feedback-dismissal pattern, set clear mutual check-in expectations, and proceed with graduated trust-building.",
   generated_at: new Date().toISOString(),
 };
 
@@ -201,7 +201,7 @@ function DemoReportPage() {
       <header className="text-center space-y-2">
         <h1 className="font-display text-3xl font-semibold tracking-tight">Assessment Results</h1>
         <p className="text-sm text-muted-foreground">
-          Demo Journey: Summer 2024 Compatibility Check · participant type:{" "}
+          Demo Journey: Summer 2024 Compatibility Check · partner role:{" "}
           <span className="font-medium capitalize">submissive</span>
         </p>
       </header>

@@ -120,7 +120,7 @@ function JourneyTracker() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              {journey.participant_type} · journey
+              Partner role: {journey.participant_type}
             </p>
             <h1 className="text-2xl font-display font-semibold break-words">{journey.title}</h1>
           </div>
@@ -129,7 +129,7 @@ function JourneyTracker() {
 
         <div className="space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Respondent progress</span>
+            <span>Partner progress</span>
             <span>
               {progress.answered} / {progress.total} answered
             </span>
@@ -157,7 +157,7 @@ function JourneyTracker() {
 
       {/* Share & send */}
       <section className="space-y-3">
-        <SectionLabel>Send to respondent</SectionLabel>
+        <SectionLabel>Send to partner</SectionLabel>
         <ShareCard journeyId={journey.id} url={url} />
       </section>
 
@@ -214,7 +214,7 @@ function buildSteps(p: {
       at: p.sentAt,
     },
     {
-      label: "Respondent started",
+      label: "Partner started",
       desc: p.startedAt ? "They opened the assessment." : "Waiting for them to begin.",
       state: p.startedAt ? "done" : expired ? "blocked" : "pending",
       at: p.startedAt,
@@ -320,7 +320,7 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
           <Link2 className="w-3.5 h-3.5" /> Invite URL
         </div>
         <p className="text-xs text-muted-foreground/80 mb-1.5">
-          This link is unique to this journey — simply share it directly with your respondent.
+          This link is unique to this journey — simply share it directly with your partner.
         </p>
         <div className="flex gap-2">
           <input
@@ -361,12 +361,12 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
               Send invite by SMS
             </DialogTitle>
             <DialogDescription>
-              Enter the recipient's mobile number to text them the invite link.
+              Enter your partner's mobile number to text them the invite link.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="rname">Recipient name (optional)</Label>
+              <Label htmlFor="rname">Partner name (optional)</Label>
               <Input
                 id="rname"
                 value={recipientName}
@@ -376,7 +376,7 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="rcontact">
-                Recipient mobile number
+                Partner mobile number
               </Label>
               <Input
                 id="rcontact"
@@ -417,7 +417,7 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
 
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string; Icon: typeof Clock }> = {
-    pending: { label: "Awaiting respondent", cls: "bg-primary/15 text-primary border-primary/30", Icon: Clock },
+    pending: { label: "Awaiting partner", cls: "bg-primary/15 text-primary border-primary/30", Icon: Clock },
     in_progress: {
       label: "In progress",
       cls: "bg-aurora-1/20 text-aurora-1 border-aurora-1/40",

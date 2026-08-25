@@ -47,7 +47,7 @@ export function ReportView({
           Assessment Report
         </h1>
         <p className="text-sm text-muted-foreground">
-          {title} · participant type:{" "}
+          {title} · partner role:{" "}
           <span className="font-medium capitalize">{participantType}</span>
         </p>
       </header>

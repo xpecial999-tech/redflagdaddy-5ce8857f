@@ -71,7 +71,7 @@ list.
 
 ## Launch positioning and conversion decisions
 
-- [ ] Adopt a plain-language product glossary and update all user-facing copy.
+- [x] Adopt a plain-language product glossary and update all user-facing copy.
   - Use `partner` instead of `respondent`, `recipient` or `participant` in the
     normal journey flow: for example, `Send the assessment link to your
 partner` and `Your partner has started`.
@@ -218,7 +218,7 @@ Pilot deliverables:
     a request body rather than a URL, return a generic response for invalid or
     expired codes, and show pending, in-progress or completed status.
   - When complete, allow the valid owner code to retrieve the report without
-    exposing it to the respondent or creating an account.
+    exposing it to the partner or creating an account.
   - Store only a strong hash of the owner code, use enough random entropy,
     rate-limit lookups, keep routes out of search indexes and never include the
     code in analytics, logs or referrers.
