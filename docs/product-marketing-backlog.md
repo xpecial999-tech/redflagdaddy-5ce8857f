@@ -191,7 +191,9 @@ Pilot deliverables:
   - Add WhatsApp OTP as the first messaging alternative to SMS if provider cost
     and availability are acceptable. Supabase currently supports WhatsApp phone
     auth through Twilio and Twilio Verify; keep SMS as a fallback and do not
-    reveal whether a phone number has an account.
+    reveal whether a phone number has an account. The current Clickatell help
+    documentation says its WhatsApp authentication-template category is not
+    supported, so budget and approve a suitable provider before implementation.
   - Treat Telegram as a separate optional identity, not an OTP channel. Its
     official website login uses a Telegram bot and signed authorization data,
     so it requires a reviewed identity bridge and explicit linking to the
