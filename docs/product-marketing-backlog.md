@@ -273,6 +273,56 @@ Pilot deliverables:
     automated verdict.
   - Define stage ownership, expiry, reminders, deletion and whether a partner
     must explicitly consent before prior answers are carried forward.
+  - Include short post-conversation and post-scene reflection stages covering
+    what landed well, what felt wrong and what each person wants to adjust.
+  - Place reflections beside the original journey only with clear ownership and
+    sharing controls; never treat one person's reflection as an objective fact
+    about the other person.
+- [ ] Add a results-assisted scene and negotiation planner.
+  - Create an editable draft containing user-selected intensity, required
+    check-ins, disclosed hard and soft limits, aftercare notes and a concise
+    negotiation checklist.
+  - Use answers to surface topics for confirmation, never to infer consent,
+    prescribe intensity or recommend an activity. Require both people to review
+    the current plan and make clear that consent can be changed or withdrawn at
+    any time.
+  - Let the owner remove fields, add context and preview a private, expiring or
+    downloadable document before sharing it.
+  - Keep version history and authorship clear, and visibly mark a plan as stale
+    whenever a linked limit, pause protocol or aftercare preference changes.
+- [ ] Add a living, shared limits map.
+  - Let each person classify their own items as `Hard limit`, `Soft limit`,
+    `Curious` or `No`, with an optional note and effective date.
+  - Never allow one person to set or edit the other's limits. Highlight changes
+    without exposing undisclosed private answers, and require fresh review
+    before an updated map is used in a scene plan.
+  - Offer a lightweight renegotiation journey when something changes, while
+    avoiding reminders or interface language that pressures a person to soften
+    a limit.
+  - Provide version history, export, unlinking and deletion controls, and treat
+    silence or an old status as no evidence of current consent.
+- [ ] Add an aftercare protocol builder.
+  - Use a short wizard for physical, emotional and practical preferences,
+    timing, check-ins, accessibility needs and what to avoid.
+  - Surface relevant assessment topics as questions rather than automatically
+    filling preferences, then let each person confirm what may be shared.
+  - Support private drafts, shared versions and version history, with a clear
+    reminder that an aftercare plan is not medical or emergency advice.
+- [ ] Add a safeword and pause-protocol library.
+  - Provide editable traffic-light systems, `pause`, `check-in` and `stop`
+    scripts, plus non-verbal and accessibility-friendly signals.
+  - Let users attach a reviewed protocol to a journey or scene plan and keep a
+    plain-language emergency-stop action prominent.
+  - Do not imply that a safeword replaces ongoing consent, observation,
+    preparation or an agreed response when someone cannot communicate.
+- [ ] Add an editable working-agreement generator.
+  - Turn owner-selected results and notes into a draft covering roles,
+    boundaries, safewords, renegotiation cadence and aftercare expectations.
+  - Support private drafts, redacted export, version history and optional
+    `Reviewed by both` acknowledgements with timestamps.
+  - Label the output as a conversation record rather than a legal contract,
+    proof of consent or waiver; acknowledgements never override withdrawal of
+    consent or changed circumstances.
 - [ ] Add redacted and selective result-sharing controls.
   - Provide one-click presets for conversation prompts only, selected score
     dimensions, and an owner-reviewed custom selection.
@@ -326,6 +376,22 @@ Pilot deliverables:
     and sensitive dimensions, and save an image locally.
   - Keep public sharing out of the default flow, omit raw answers, access codes
     and bearer links, and ensure colour is not the only way scores are conveyed.
+  - Optionally include the selected soundtrack link, but no auto-playing media,
+    provider tracking pixels or sensitive journey labels in link metadata.
+- [ ] Add interactive, consent-focused scenario walkthroughs.
+  - Build short branching `What would you do if…` exercises from an approved
+    subset of the question library for solo or together use.
+  - Feed choices into conversation prompts, not scores, diagnoses, winner/loser
+    outcomes or claims about how someone will behave in real life.
+  - Let either person stop, skip or keep their answers private, and distinguish
+    educational scenarios from emergency or crisis guidance.
+- [ ] Add a lightweight mood and energy check-in.
+  - Offer an optional traffic-light or small-scale pulse before or after a
+    conversation, journey or planned scene.
+  - Let each person control whether their check-in is shared and retained;
+    provide an immediate `Pause` path without demanding an explanation.
+  - Never turn check-ins into performance metrics, streaks, compliance scores,
+    notifications to pressure the other person or evidence of consent.
 - [ ] Add optional owner-only journey milestones.
   - Use private, non-competitive milestones such as `First full assessment`,
     `Aftercare deep dive` and `Renegotiation complete` to acknowledge progress.
@@ -338,8 +404,9 @@ Pilot deliverables:
       person or dynamic.
   - Make grouping strictly opt-in instead of inferring identity from names,
     phone numbers, links, devices or response patterns.
-  - Show a simple timeline of stage dates, score changes and recurring themes,
-    with controls to unlink, relabel, export or delete history.
+  - Show a simple timeline of stage dates, score changes, limit revisions and
+    recurring conversation themes, with controls to unlink, relabel, export or
+    delete history.
   - Keep the view owner-only by default and require a separate deliberate
     sharing action for any history-derived content.
 - [ ] Add lightweight, owner-only insights across the owner's completed
@@ -362,6 +429,27 @@ Pilot deliverables:
     dynamics-journal layout for the owner's reflections.
   - Let the owner review and selectively exclude identifying or sensitive
     fields before download; never transmit exports directly to third parties.
+- [ ] Add per-journey and per-share data-expiry controls.
+  - Let owners choose a clear automatic deletion date such as 7, 30 or 90 days,
+    show what will be deleted and warn before expiry without exposing sensitive
+    details in the notification.
+  - Separate shared-link revocation from deletion of the private owner record,
+    honour the earliest applicable retention promise and record deletion jobs
+    without retaining deleted content.
+  - Explain any records that cannot be deleted immediately for security,
+    payment or legal reasons before the user confirms the timer.
+- [ ] Evaluate a local-first or offline mode for especially sensitive journeys.
+  - Treat this as a separate architecture and threat-model project, not an
+    incidental interface feature.
+  - Define device loss, shared-device exposure, encrypted storage, key recovery,
+    conflict resolution and explicit encrypted sync before implementation.
+  - Keep offline data off analytics, crash reports, backups and notifications,
+    and let the user permanently delete the local copy.
+- [ ] Add optional custom journey themes and conversation starters.
+  - Offer subtle colour accents and approved icon sets based on user-selected
+    roles or categories without changing score meaning or accessibility.
+  - Provide an owner-controlled `Conversation starter` drawn from an approved
+    high-value question set, with hide, refresh and disable controls.
 - [ ] Evaluate passkeys as an optional higher-security sign-in method after the
       email and social authentication work is stable.
   - Keep a tested recovery path, support multiple registered passkeys and
@@ -396,6 +484,22 @@ Pilot deliverables:
     reflection and conversation.
   - Do not import follower data, social activity, location, contacts or
     listening history for personalisation.
+
+## Later: privacy research candidates
+
+- [ ] Research an opt-in aggregate community education pulse only after the app
+      has sufficient scale and an independent privacy review.
+  - Do not promise `fully anonymous` data. Define minimum cohort sizes,
+    suppression rules, contribution limits, retention and whether formal
+    privacy techniques are required before collecting anything.
+  - Exclude free text, rare archetype combinations, locations, journey titles,
+    contact details, precise dates and any result that could single out a person
+    or small group.
+  - Make participation separate, explicit and reversible; do not condition app
+    features on consent or reuse product analytics consent.
+  - Publish only approved educational patterns such as broadly useful
+    conversation prompts, never leaderboards, partner comparisons, reputation
+    data or claims about community safety.
 
 ## Later: guarded automation
 
