@@ -36,9 +36,12 @@ Engineering order:
 3. **International phone inputs.** Standardise every mobile field, silently
    select the likely country from Cloudflare's country hint, allow overrides and
    normalise to E.164 before validation or delivery.
-4. **Email and social authentication.** Extend Supabase Auth with passwordless
+4. **Authentication alternatives.** Extend Supabase Auth with passwordless
    email, Google and Apple, production SMTP, safe callbacks and explicit account
-   linking for existing phone users. Keep phone OTP available.
+   linking for existing phone users. Keep SMS available, then add WhatsApp OTP
+   as the first alternative phone delivery channel if its Twilio requirement is
+   approved. Hold Telegram as a demand-led custom identity and exclude
+   unofficial Signal automation.
 5. **Anonymous owner-code journeys.** Add the no-contact creation path, separate
    private owner lookup code, rate-limited status lookup and automatic expiry.
 6. **Go-live verification and fixes.** Complete synthetic end-to-end, provider

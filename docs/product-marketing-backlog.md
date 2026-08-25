@@ -186,7 +186,19 @@ Pilot deliverables:
     only after audience evidence justifies its additional provider setup and
     review burden.
   - Keep phone sign-in available and present all methods on one clear sign-in
-    surface.
+    surface. Treat delivery channels and login identities separately so the
+    same phone account is not accidentally duplicated.
+  - Add WhatsApp OTP as the first messaging alternative to SMS if provider cost
+    and availability are acceptable. Supabase currently supports WhatsApp phone
+    auth through Twilio and Twilio Verify; keep SMS as a fallback and do not
+    reveal whether a phone number has an account.
+  - Treat Telegram as a separate optional identity, not an OTP channel. Its
+    official website login uses a Telegram bot and signed authorization data,
+    so it requires a reviewed identity bridge and explicit linking to the
+    existing Supabase user. Schedule it only if audience research shows demand.
+  - Do not implement Signal login or OTP delivery through unofficial clients,
+    command-line bridges or device automation. Reconsider only if Signal
+    publishes a supported service authentication API suitable for this use.
   - Add a dedicated OAuth callback with an allow-listed post-auth destination,
     separate staging/production provider credentials and exact approved
     redirect URLs.
