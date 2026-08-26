@@ -40,12 +40,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     pathname.startsWith("/guest/");
   const hideHeader = pathname === "/guest" || pathname.startsWith("/guest/");
   const showPublicSignIn = hideNav && pathname !== "/admin" && !construction.enabled;
+  const adminWorkspace = pathname === "/admin";
 
   return (
     <div className="min-h-screen flex flex-col">
       {!hideHeader && (
         <header className="sticky top-0 z-40 bg-background border-b border-white/5">
-          <div className="px-4 py-3 flex items-center justify-between max-w-3xl mx-auto">
+          <div
+            className={`px-4 py-3 flex items-center justify-between mx-auto ${adminWorkspace ? "max-w-7xl" : "max-w-3xl"}`}
+          >
             <Link to="/" className="flex items-center gap-2">
               <img
                 src="/logo.png"
@@ -68,7 +71,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
       )}
 
-      <main className="flex-1 px-4 pb-28 pt-6 max-w-3xl mx-auto w-full">
+      <main
+        className={`flex-1 px-4 pt-6 mx-auto w-full ${adminWorkspace ? "max-w-7xl pb-10" : "max-w-3xl pb-28"}`}
+      >
         <motion.div
           key={pathname}
           initial={{ opacity: 0, y: 8 }}

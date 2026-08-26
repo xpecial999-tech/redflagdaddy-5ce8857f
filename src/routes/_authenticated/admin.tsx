@@ -18,12 +18,18 @@ import {
   ChevronRight,
   Shield,
   Sparkles,
+  LayoutDashboard,
+  ListChecks,
+  FolderTree,
+  Map,
+  BarChart3,
+  Settings,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMe } from "@/hooks/use-me";
 import { ALL_ROLES, TOP_ROLES, BOTTOM_ROLES, SWITCH_ROLES, type Role } from "@/lib/roles";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -143,8 +149,25 @@ const riskColors: Record<RiskLevel, string> = {
   critical: "bg-rose-500/15 text-rose-300 border-rose-500/30",
 };
 
+type AdminSection = "overview" | "questions" | "categories" | "journeys" | "analytics" | "settings";
+
+const adminSections: Array<{
+  id: AdminSection;
+  label: string;
+  description: string;
+  icon: typeof LayoutDashboard;
+}> = [
+  { id: "overview", label: "Overview", description: "Status and shortcuts", icon: LayoutDashboard },
+  { id: "questions", label: "Questions", description: "Assessment library", icon: ListChecks },
+  { id: "categories", label: "Categories", description: "Question organisation", icon: FolderTree },
+  { id: "journeys", label: "Journeys", description: "Progress and controls", icon: Map },
+  { id: "analytics", label: "Analytics", description: "Private product trends", icon: BarChart3 },
+  { id: "settings", label: "Settings", description: "Site and payment controls", icon: Settings },
+];
+
 function AdminPanel() {
   const { me, loading } = useMe();
+  const [section, setSection] = useState<AdminSection>("overview");
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -162,42 +185,153 @@ function AdminPanel() {
       </div>
     );
   }
+  const activeSection = adminSections.find((item) => item.id === section) ?? adminSections[0];
   return (
-    <div className="space-y-6">
-      <header>
-        <p className="text-xs text-muted-foreground uppercase tracking-wider">Admin</p>
-        <h1 className="text-3xl font-display font-semibold">Control panel</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage questions, categories, journeys, and analytics.
-        </p>
+    <div className="space-y-5">
+      <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-gradient-to-br from-primary/15 via-card/80 to-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-primary">Administrator workspace</p>
+          <h1 className="mt-1 text-3xl font-display font-semibold">RedFlagDaddy control centre</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Manage the assessment library, review journey health and control launch settings without mixing administration into your personal profile.
+          </p>
+        </div>
+        <Button variant="secondary" asChild className="shrink-0">
+          <Link to="/dashboard">
+            Return to app <ExternalLink className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
       </header>
 
+      <div className="lg:grid lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-6">
+        <aside className="mb-4 lg:mb-0" aria-label="Admin sections">
+          <div className="lg:hidden">
+            <Label htmlFor="admin-section" className="sr-only">Admin section</Label>
+            <Select value={section} onValueChange={(value) => setSection(value as AdminSection)}>
+              <SelectTrigger id="admin-section" className="h-12 bg-card">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {adminSections.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>{item.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <nav className="sticky top-24 hidden space-y-1 rounded-2xl border border-white/10 bg-card/70 p-2 lg:block">
+            {adminSections.map((item) => {
+              const Icon = item.icon;
+              const active = item.id === section;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSection(item.id)}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition ${active ? "bg-primary/15 text-foreground" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"}`}
+                >
+                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${active ? "text-primary" : ""}`} />
+                  <span>
+                    <span className="block text-sm font-medium">{item.label}</span>
+                    <span className="mt-0.5 block text-[11px] leading-4 opacity-75">{item.description}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-      <Tabs defaultValue="questions" className="w-full">
-        <TabsList className="grid grid-cols-5 w-full h-auto">
-          <TabsTrigger value="questions" className="text-xs sm:text-sm py-2">Questions</TabsTrigger>
-          <TabsTrigger value="categories" className="text-xs sm:text-sm py-2">Categories</TabsTrigger>
-          <TabsTrigger value="journeys" className="text-xs sm:text-sm py-2">Journeys</TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2">Analytics</TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs sm:text-sm py-2">Settings</TabsTrigger>
-        </TabsList>
+        <section className="min-w-0" aria-labelledby="admin-section-title">
+          <div className="mb-4 border-b border-border pb-4">
+            <h2 id="admin-section-title" className="text-2xl font-display font-semibold">{activeSection.label}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{activeSection.description}</p>
+          </div>
+          {section === "overview" && <OverviewTab onNavigate={setSection} />}
+          {section === "questions" && <QuestionsTab />}
+          {section === "categories" && <CategoriesTab />}
+          {section === "journeys" && <JourneysTab />}
+          {section === "analytics" && <AnalyticsTab />}
+          {section === "settings" && <SettingsTab />}
+        </section>
+      </div>
+    </div>
+  );
+}
 
-        <TabsContent value="questions" className="mt-4">
-          <QuestionsTab />
-        </TabsContent>
-        <TabsContent value="categories" className="mt-4">
-          <CategoriesTab />
-        </TabsContent>
-        <TabsContent value="journeys" className="mt-4">
-          <JourneysTab />
-        </TabsContent>
-        <TabsContent value="analytics" className="mt-4">
-          <AnalyticsTab />
-        </TabsContent>
-        <TabsContent value="settings" className="mt-4">
-          <SettingsTab />
-        </TabsContent>
-      </Tabs>
+function OverviewTab({ onNavigate }: { onNavigate: (section: AdminSection) => void }) {
+  const analyticsFn = useServerFn(getAnalytics);
+  const questionsFn = useServerFn(listQuestions);
+  const categoriesFn = useServerFn(listCategories);
+  const analytics = useQuery({
+    queryKey: ["admin", "analytics"],
+    queryFn: () => analyticsFn({ data: undefined as never }),
+  });
+  const questions = useQuery({
+    queryKey: ["admin", "questions", "overview"],
+    queryFn: () => questionsFn({ data: { limit: 1, offset: 0, includeInactive: true } }),
+  });
+  const categories = useQuery({
+    queryKey: ["admin", "categories"],
+    queryFn: () => categoriesFn({ data: undefined as never }),
+  });
+
+  const cards = [
+    { label: "Questions", value: questions.data?.total, section: "questions" as const, icon: ListChecks },
+    { label: "Categories", value: categories.data?.categories.length, section: "categories" as const, icon: FolderTree },
+    { label: "Journeys", value: analytics.data?.totals.journeys, section: "journeys" as const, icon: Map },
+    { label: "Completed", value: analytics.data?.totals.completed, section: "analytics" as const, icon: BarChart3 },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <button
+              key={card.label}
+              type="button"
+              onClick={() => onNavigate(card.section)}
+              className="glass group rounded-2xl p-4 text-left transition hover:border-primary/40 hover:bg-primary/5"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{card.label}</span>
+                <Icon className="h-4 w-4 text-primary" />
+              </div>
+              <div className="mt-3 text-3xl font-display font-semibold">
+                {card.value ?? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+              </div>
+              <span className="mt-2 block text-[11px] text-muted-foreground group-hover:text-primary">Open section</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <section className="glass rounded-2xl p-5">
+          <h3 className="font-display font-semibold">Journey health</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Private operational totals across the app.</p>
+          {analytics.isError ? (
+            <p className="mt-4 text-sm text-destructive">Journey status could not be loaded.</p>
+          ) : (
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Stat label="Completed" value={analytics.data?.totals.completed ?? 0} />
+              <Stat label="In progress" value={analytics.data?.totals.inProgress ?? 0} />
+              <Stat label="Completion" value={`${analytics.data?.completionRate.toFixed(0) ?? 0}%`} />
+            </div>
+          )}
+        </section>
+        <section className="glass rounded-2xl p-5">
+          <h3 className="font-display font-semibold">Quick actions</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Common administration tasks.</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <Button variant="secondary" onClick={() => onNavigate("questions")}>Manage questions</Button>
+            <Button variant="secondary" onClick={() => onNavigate("journeys")}>Review journeys</Button>
+            <Button variant="secondary" onClick={() => onNavigate("analytics")}>View analytics</Button>
+            <Button variant="secondary" onClick={() => onNavigate("settings")}>Site settings</Button>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
@@ -1472,7 +1606,7 @@ function AnalyticsTab() {
 
 /* ============================ Shared ============================ */
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="glass rounded-2xl p-4">
       <div className="text-xs text-muted-foreground">{label}</div>
