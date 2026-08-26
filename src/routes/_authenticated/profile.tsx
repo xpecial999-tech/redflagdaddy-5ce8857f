@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LinkedAuthMethods } from "@/components/LinkedAuthMethods";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — RedFlagDaddy" }] }),
@@ -84,6 +85,8 @@ function Profile() {
         </p>
         <p className="text-xs text-muted-foreground mt-1">{formatPhone(me.phone)}</p>
       </motion.section>
+
+      <LinkedAuthMethods />
 
       <section className="space-y-2">
         <Dialog open={privacyOpen} onOpenChange={setPrivacyOpen}>
@@ -226,8 +229,8 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
           <div className="text-left">
             <div className="text-sm font-medium">Download your data</div>
             <div className="text-xs text-muted-foreground">
-              Get a JSON copy of your profile, preferences, journeys, responses,
-              results and payment history.
+              Get a JSON copy of your profile, preferences, journeys, responses, results and payment
+              history.
             </div>
           </div>
           {exporting && <Loader2 className="w-4 h-4 ml-auto animate-spin" />}
@@ -255,8 +258,8 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
                 Delete your account?
               </AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete your profile, preferences, journeys,
-                responses, results and payment history. Type{" "}
+                This will permanently delete your profile, preferences, journeys, responses, results
+                and payment history. Type{" "}
                 <span className="font-semibold text-foreground">delete my account</span> below to
                 confirm.
               </AlertDialogDescription>

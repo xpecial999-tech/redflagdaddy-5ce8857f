@@ -223,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/j/$code': typeof JCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
@@ -256,6 +257,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/j/$code': typeof JCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
@@ -291,6 +293,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
   '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/assessment/$code': typeof AssessmentCodeRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/j/$code': typeof JCodeRoute
   '/journey/$code': typeof JourneyCodeRoute
@@ -326,6 +329,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/upgrade'
     | '/assessment/$code'
+    | '/auth/callback'
     | '/email/unsubscribe'
     | '/j/$code'
     | '/journey/$code'
@@ -359,6 +363,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/upgrade'
     | '/assessment/$code'
+    | '/auth/callback'
     | '/email/unsubscribe'
     | '/j/$code'
     | '/journey/$code'
@@ -393,6 +398,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/upgrade'
     | '/assessment/$code'
+    | '/auth/callback'
     | '/email/unsubscribe'
     | '/j/$code'
     | '/journey/$code'
@@ -423,6 +429,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   AssessmentCodeRoute: typeof AssessmentCodeRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   JCodeRoute: typeof JCodeRoute
   JourneyCodeRoute: typeof JourneyCodeRoute
@@ -714,6 +721,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   AssessmentCodeRoute: AssessmentCodeRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   JCodeRoute: JCodeRoute,
   JourneyCodeRoute: JourneyCodeRoute,
