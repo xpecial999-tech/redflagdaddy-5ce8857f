@@ -25,6 +25,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as AssessmentCodeRouteImport } from './routes/assessment.$code'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as JCodeRouteImport } from './routes/j.$code'
 import { Route as JourneyCodeRouteImport } from './routes/journey.$code'
@@ -119,6 +120,11 @@ const AuthenticatedUpgradeRoute = AuthenticatedUpgradeRouteImport.update({
 const AssessmentCodeRoute = AssessmentCodeRouteImport.update({
   id: '/assessment/$code',
   path: '/assessment/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -556,6 +562,13 @@ declare module '@tanstack/react-router' {
       path: '/assessment/$code'
       fullPath: '/assessment/$code'
       preLoaderRoute: typeof AssessmentCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
