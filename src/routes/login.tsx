@@ -9,6 +9,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
+import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -123,15 +124,13 @@ export function Login({ adminOnly = false }: { adminOnly?: boolean }) {
               <form className="space-y-3" onSubmit={sendCode}>
                 <label className="block">
                   <span className="text-xs text-muted-foreground">Mobile number</span>
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
+                  <InternationalPhoneInput
+                    id={adminOnly ? "admin-phone" : "login-phone"}
                     required
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+27 82 123 4567"
-                    className="mt-1 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    onValueChange={setPhone}
+                    className="mt-1"
+                    aria-label="Mobile number"
                   />
                 </label>
                 {error && <p className="text-xs text-destructive">{error}</p>}

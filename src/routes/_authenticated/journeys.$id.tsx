@@ -31,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
 
 export const Route = createFileRoute("/_authenticated/journeys/$id")({
   head: () => ({ meta: [{ title: "Journey — RedFlagDaddy" }] }),
@@ -378,13 +379,11 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
               <Label htmlFor="rcontact">
                 Partner mobile number
               </Label>
-              <Input
+              <InternationalPhoneInput
                 id="rcontact"
                 value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                placeholder="+27123456789"
-                inputMode="tel"
-                type="tel"
+                onValueChange={setContact}
+                aria-label="Partner mobile number"
               />
             </div>
             <div className="space-y-1.5">

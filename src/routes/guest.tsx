@@ -14,6 +14,7 @@ import { formatPhone } from "@/lib/phone";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
+import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -137,16 +138,20 @@ function GuestPage() {
               mutation.mutate();
             }}
           >
-            <Field
-              label="Your mobile number"
-              hint="We'll text your private report link here when the assessment is done."
-              type="tel"
-              inputMode="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              placeholder="071 234 5678"
-            />
+            <div>
+              <span className="text-sm font-medium">Your mobile number</span>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                We'll text your private report link here when the assessment is done.
+              </p>
+              <InternationalPhoneInput
+                id="guest-owner-phone"
+                value={phone}
+                onValueChange={setPhone}
+                required
+                className="mt-2"
+                aria-label="Your mobile number"
+              />
+            </div>
 
 
             <div>
@@ -362,7 +367,12 @@ function PartnerLinkView({
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="g-phone">Partner mobile number</Label>
-                  <Input id="g-phone" value={rPhone} onChange={(e) => setRPhone(e.target.value)} placeholder="+27123456789" inputMode="tel" type="tel" />
+                  <InternationalPhoneInput
+                    id="g-phone"
+                    value={rPhone}
+                    onValueChange={setRPhone}
+                    aria-label="Partner mobile number"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="g-note">Personal note (optional)</Label>

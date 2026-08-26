@@ -11,6 +11,7 @@ import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
+import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -120,16 +121,17 @@ function Register() {
               <p className="text-sm text-muted-foreground mb-6">18+ only. Consent-first by design.</p>
               <form className="space-y-3" onSubmit={sendCode}>
                 <Field label="Display name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Used on your journeys" />
-                <Field
-                  label="Mobile number"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+27 82 123 4567"
-                />
+                <label className="block">
+                  <span className="text-xs text-muted-foreground">Mobile number</span>
+                  <InternationalPhoneInput
+                    id="register-phone"
+                    required
+                    value={phone}
+                    onValueChange={setPhone}
+                    className="mt-1"
+                    aria-label="Mobile number"
+                  />
+                </label>
 
                 <div>
                   <span className="text-xs text-muted-foreground">Primary identity</span>
