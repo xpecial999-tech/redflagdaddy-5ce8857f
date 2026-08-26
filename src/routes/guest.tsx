@@ -4,9 +4,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { createGuestJourney, sendGuestInvite } from "@/lib/guest.functions";
+import { createGuestJourney, lookupAnonymousJourney, sendGuestInvite } from "@/lib/guest.functions";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -15,6 +22,7 @@ import { captureMarketingEvent } from "@/lib/marketing-attribution";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
 import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
+import { ReportView } from "@/components/ReportView";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -27,28 +35,30 @@ import {
   CheckCircle2,
   MessageCircle,
   MessageSquare,
+  BellRing,
+  BellOff,
+  KeyRound,
+  Search,
+  Download,
 } from "lucide-react";
 
 export const Route = createFileRoute("/guest")({
-  head: () => ({ meta: [{ title: "Continue as guest — RedFlagDaddy" }] }),
+  head: () => ({
+    meta: [
+      { title: "Continue as guest — RedFlagDaddy" },
+      { name: "robots", content: "noindex,nofollow,noarchive" },
+    ],
+  }),
   component: GuestPage,
-  errorComponent: ({ error }) => (
-    
-      <p className="text-destructive">{error.message}</p>
-    
-  ),
-  notFoundComponent: () => (
-    
-      <p>Not found.</p>
-    
-  ),
+  errorComponent: ({ error }) => <p className="text-destructive">{error.message}</p>,
+  notFoundComponent: () => <p>Not found.</p>,
 });
 
 const steps = [
   {
     icon: Smartphone,
-    title: "Tell us where to send your report",
-    body: "We'll text your completed compatibility, safety and red-flag report link to your mobile number when the assessment is done.",
+    title: "Choose how to return",
+    body: "Receive a private SMS when the report is ready, or save a private lookup code and receive no notifications.",
   },
   {
     icon: ClipboardList,
@@ -62,18 +72,18 @@ function GuestPage() {
   const construction = useConstructionMode();
 
   const [phone, setPhone] = useState("");
+  const [notificationMode, setNotificationMode] = useState<"sms" | "owner_code">("sms");
   const [partnerType, setPartnerType] = useState<Role | "">("");
 
   const mutation = useMutation({
     mutationFn: () =>
       createFn({
-        data: { guestPhone: phone, partnerType },
+        data: { guestPhone: phone, notificationMode, partnerType },
       }),
     onSuccess: () => {
       void captureMarketingEvent("core_action_completed", "guest", { once: true });
     },
   });
-
 
   if (construction.enabled) return <ConstructionPage />;
 
@@ -82,11 +92,13 @@ function GuestPage() {
       <PartnerLinkView
         code={mutation.data.code}
         guestPhone={phone}
+        notificationMode={notificationMode}
+        ownerCode={mutation.data.ownerCode}
+        ownerExpiresAt={mutation.data.ownerExpiresAt}
         partnerType={partnerType}
       />
     );
   }
-
 
   return (
     <div className="py-2 sm:py-6">
@@ -103,7 +115,8 @@ function GuestPage() {
             Continue as guest
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Take the assessment without creating an account. Your final report link is sent to your mobile number.
+            Take the assessment without creating an account. Choose a text notification or a
+            completely no-contact return code.
           </p>
         </div>
 
@@ -130,6 +143,8 @@ function GuestPage() {
           </ol>
         </section>
 
+        <JourneyLookup />
+
         <section className="glass-strong rounded-3xl p-6 sm:p-7">
           <form
             className="space-y-5"
@@ -138,21 +153,53 @@ function GuestPage() {
               mutation.mutate();
             }}
           >
-            <div>
-              <span className="text-sm font-medium">Your mobile number</span>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                We'll text your private report link here when the assessment is done.
-              </p>
-              <InternationalPhoneInput
-                id="guest-owner-phone"
-                value={phone}
-                onValueChange={setPhone}
-                required
-                className="mt-2"
-                aria-label="Your mobile number"
-              />
+            <div className="space-y-3">
+              <div>
+                <span className="text-sm font-medium">How should we let you know?</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Your choice only affects how you return to this journey.
+                </p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <ModeCard
+                  selected={notificationMode === "sms"}
+                  onClick={() => setNotificationMode("sms")}
+                  icon={BellRing}
+                  title="Text me when ready"
+                  body="Receive one private report link by SMS."
+                />
+                <ModeCard
+                  selected={notificationMode === "owner_code"}
+                  onClick={() => setNotificationMode("owner_code")}
+                  icon={BellOff}
+                  title="No notifications"
+                  body="Save a code and return here within 30 days."
+                />
+              </div>
             </div>
 
+            {notificationMode === "sms" ? (
+              <div>
+                <span className="text-sm font-medium">Your mobile number</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  We'll text your private report link here when the assessment is done.
+                </p>
+                <InternationalPhoneInput
+                  id="guest-owner-phone"
+                  value={phone}
+                  onValueChange={setPhone}
+                  required
+                  className="mt-2"
+                  aria-label="Your mobile number"
+                />
+              </div>
+            ) : (
+              <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-xs text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">No contact details are required.</strong> You'll
+                receive a private owner code once. It cannot be recovered, and the journey and
+                report are automatically deleted after 30 days.
+              </div>
+            )}
 
             <div>
               <span className="text-sm font-medium">Which assessment do you want to do?</span>
@@ -165,8 +212,8 @@ function GuestPage() {
             </div>
 
             <label className="flex items-start gap-2 text-xs text-muted-foreground pt-1">
-              <input type="checkbox" required className="mt-0.5 accent-primary" />
-              I confirm I am 18+ and agree to the consent &amp; safety guidelines.
+              <input type="checkbox" required className="mt-0.5 accent-primary" />I confirm I am 18+
+              and agree to the consent &amp; safety guidelines.
             </label>
 
             {mutation.error && (
@@ -174,7 +221,9 @@ function GuestPage() {
             )}
 
             <button
-              disabled={mutation.isPending || !partnerType}
+              disabled={
+                mutation.isPending || !partnerType || (notificationMode === "sms" && !phone)
+              }
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
             >
               {mutation.isPending ? "Creating…" : "Generate partner link"}
@@ -184,7 +233,9 @@ function GuestPage() {
 
           <p className="text-xs text-muted-foreground text-center mt-6">
             Want to save your history?{" "}
-            <Link to="/register" className="text-primary">Create an account</Link>
+            <Link to="/register" className="text-primary">
+              Create an account
+            </Link>
           </p>
         </section>
       </motion.div>
@@ -192,18 +243,153 @@ function GuestPage() {
   );
 }
 
+function ModeCard({
+  selected,
+  onClick,
+  icon: Icon,
+  title,
+  body,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  icon: typeof BellRing;
+  title: string;
+  body: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onClick}
+      className={`rounded-xl border p-4 text-left transition ${
+        selected ? "border-primary bg-primary/10" : "border-border bg-input hover:bg-white/5"
+      }`}
+    >
+      <Icon className={`w-4 h-4 ${selected ? "text-primary" : "text-muted-foreground"}`} />
+      <span className="block mt-2 text-sm font-medium">{title}</span>
+      <span className="block mt-1 text-xs text-muted-foreground leading-relaxed">{body}</span>
+    </button>
+  );
+}
+
+function JourneyLookup() {
+  const lookupFn = useServerFn(lookupAnonymousJourney);
+  const [ownerCode, setOwnerCode] = useState("");
+  const lookup = useMutation({
+    mutationFn: () => lookupFn({ data: { ownerCode } }),
+  });
+
+  const result = lookup.data;
+
+  return (
+    <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-4">
+      <div className="flex items-start gap-3">
+        <Search className="w-5 h-5 text-primary mt-0.5" />
+        <div>
+          <h2 className="font-display text-lg font-semibold tracking-tight">
+            Check a journey code
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Enter the private owner code you saved. Codes and reports expire after 30 days.
+          </p>
+        </div>
+      </div>
+
+      <form
+        className="flex flex-col sm:flex-row gap-2 no-print"
+        onSubmit={(event) => {
+          event.preventDefault();
+          lookup.mutate();
+        }}
+      >
+        <Input
+          value={ownerCode}
+          onChange={(event) => {
+            setOwnerCode(event.target.value.toUpperCase());
+            if (lookup.data) lookup.reset();
+          }}
+          aria-label="Private owner code"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={32}
+          placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX"
+          className="font-mono tracking-wide"
+        />
+        <button
+          disabled={lookup.isPending || !ownerCode.trim()}
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium disabled:opacity-60"
+        >
+          <Search className="w-4 h-4" /> {lookup.isPending ? "Checking…" : "Check code"}
+        </button>
+      </form>
+
+      {lookup.error && (
+        <p className="text-xs text-destructive">
+          Could not check this code. Please wait and try again.
+        </p>
+      )}
+      {result?.status === "unavailable" && (
+        <p className="text-xs text-muted-foreground rounded-xl border border-border bg-input p-4">
+          This code is invalid, expired, or no longer available. For privacy, we cannot recover
+          anonymous codes.
+        </p>
+      )}
+      {(result?.status === "waiting" || result?.status === "in_progress") && (
+        <p className="text-xs text-muted-foreground rounded-xl border border-border bg-input p-4">
+          {result.status === "waiting"
+            ? "The partner assessment has not started yet."
+            : "The partner assessment is still in progress."}{" "}
+          Return with the same code later. This journey expires{" "}
+          {new Date(result.expiresAt).toLocaleDateString()}.
+        </p>
+      )}
+      {result?.status === "completed" && (
+        <div className="space-y-4 pt-2">
+          <div className="flex justify-end no-print">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input px-4 py-2.5 text-sm font-medium"
+            >
+              <Download className="w-4 h-4" /> Save / print report
+            </button>
+          </div>
+          <ReportView
+            title={result.journey.title}
+            participantType={result.journey.participantType}
+            scores={result.scores}
+            analysis={result.analysis}
+          />
+          <p className="text-center text-xs text-muted-foreground no-print">
+            Available until {new Date(result.expiresAt).toLocaleDateString()}.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function PartnerLinkView({
   code,
   guestPhone,
+  notificationMode,
+  ownerCode,
+  ownerExpiresAt,
   partnerType,
 }: {
   code: string;
   guestPhone?: string;
+  notificationMode: "sms" | "owner_code";
+  ownerCode: string | null;
+  ownerExpiresAt: string | null;
   partnerType: Role | "";
 }) {
   const navigate = useNavigate();
   const createFn = useServerFn(createGuestJourney);
   const [copied, setCopied] = useState(false);
+  const [ownerCodeCopied, setOwnerCodeCopied] = useState(false);
   const sendInviteFn = useServerFn(sendGuestInvite);
   const [smsOpen, setSmsOpen] = useState(false);
   const [rName, setRName] = useState("");
@@ -231,13 +417,19 @@ function PartnerLinkView({
     }
   };
 
-
   const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
   const [selfType, setSelfType] = useState<Role | "">(opposite);
 
   const selfMutation = useMutation({
     mutationFn: () =>
-      createFn({ data: { guestPhone: guestPhone ?? "", partnerType: selfType as Role, isSelf: true } }),
+      createFn({
+        data: {
+          guestPhone: guestPhone ?? "",
+          notificationMode: "sms" as const,
+          partnerType: selfType as Role,
+          isSelf: true,
+        },
+      }),
 
     onSuccess: (res) => {
       navigate({ to: "/journey/$code", params: { code: res.code } });
@@ -271,6 +463,17 @@ function PartnerLinkView({
     }
   };
 
+  const copyOwnerCode = async () => {
+    if (!ownerCode) return;
+    try {
+      await navigator.clipboard.writeText(ownerCode);
+      setOwnerCodeCopied(true);
+      setTimeout(() => setOwnerCodeCopied(false), 2000);
+    } catch {
+      /* noop */
+    }
+  };
+
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
   return (
@@ -289,7 +492,10 @@ function PartnerLinkView({
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Send this link to your partner so they can take the {partnerType} assessment. They'll
-            answer privately and we'll text the combined report link to your mobile number.
+            answer privately.{" "}
+            {notificationMode === "sms"
+              ? "We'll text the combined report link to your mobile number."
+              : "Return with your private owner code to check the report."}
           </p>
         </div>
 
@@ -318,22 +524,75 @@ function PartnerLinkView({
           <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
             <h3 className="text-sm font-medium">How to send it to your partner</h3>
             <ol className="mt-2 space-y-1.5 text-xs text-muted-foreground list-decimal pl-4">
-              <li>Share the link using one of the buttons below — your contacts stay on your device.</li>
+              <li>
+                Share the link using one of the buttons below — your contacts stay on your device.
+              </li>
               <li>They open the link, confirm they're 18+, and complete the assessment.</li>
               <li>
-                Once they finish, we'll text the combined report link to:{" "}
-                <span className="text-foreground">{formatPhone(guestPhone) || guestPhone}</span>
+                {notificationMode === "sms" ? (
+                  <>
+                    Once they finish, we'll text the combined report link to:{" "}
+                    <span className="text-foreground">{formatPhone(guestPhone) || guestPhone}</span>
+                  </>
+                ) : (
+                  "Return to this page and enter your private owner code to check progress or view the report."
+                )}
               </li>
             </ol>
           </div>
         </section>
+
+        {notificationMode === "owner_code" && ownerCode && (
+          <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/25">
+            <div className="flex items-start gap-3">
+              <KeyRound className="w-5 h-5 text-primary mt-0.5" />
+              <div>
+                <h2 className="font-display text-lg font-semibold tracking-tight">
+                  Save your private owner code
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  This is shown once and cannot be recovered. Keep it separate from the partner
+                  link. Anyone with it can view the report until it expires.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-xl border border-border bg-input p-4 text-center font-mono text-base sm:text-lg tracking-wider break-all">
+              {ownerCode}
+            </div>
+            <div className="grid grid-cols-2 gap-2 no-print">
+              <button
+                type="button"
+                onClick={copyOwnerCode}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium"
+              >
+                {ownerCodeCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {ownerCodeCopied ? "Copied" : "Copy code"}
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium"
+              >
+                <Download className="w-4 h-4" /> Save / print
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Expires{" "}
+              {ownerExpiresAt
+                ? new Date(ownerExpiresAt).toLocaleDateString()
+                : "30 days after creation"}
+              . The journey and report are then deleted.
+            </p>
+          </section>
+        )}
 
         <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-3">
           <span className="text-xs uppercase tracking-wider text-muted-foreground">
             Send the invite
           </span>
           <p className="text-xs text-muted-foreground">
-            Send the invite by SMS from RedFlagDaddy — just enter their number — or share it on WhatsApp yourself.
+            Send the invite by SMS from RedFlagDaddy — just enter their number — or share it on
+            WhatsApp yourself.
           </p>
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -358,12 +617,19 @@ function PartnerLinkView({
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Send invite by SMS</DialogTitle>
-                <DialogDescription>We'll text the invite link straight to their phone.</DialogDescription>
+                <DialogDescription>
+                  We'll text the invite link straight to their phone.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="g-name">Partner name (optional)</Label>
-                  <Input id="g-name" value={rName} onChange={(e) => setRName(e.target.value)} placeholder="e.g. Natasha" />
+                  <Input
+                    id="g-name"
+                    value={rName}
+                    onChange={(e) => setRName(e.target.value)}
+                    placeholder="e.g. Natasha"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="g-phone">Partner mobile number</Label>
@@ -376,7 +642,13 @@ function PartnerLinkView({
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="g-note">Personal note (optional)</Label>
-                  <Input id="g-note" value={rNote} onChange={(e) => setRNote(e.target.value)} placeholder="Add a line of context for them" maxLength={500} />
+                  <Input
+                    id="g-note"
+                    value={rNote}
+                    onChange={(e) => setRNote(e.target.value)}
+                    placeholder="Add a line of context for them"
+                    maxLength={500}
+                  />
                 </div>
               </div>
               <DialogFooter>
@@ -392,53 +664,36 @@ function PartnerLinkView({
           </Dialog>
         </section>
 
-
-        <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-4">
-          <h3 className="font-display text-lg font-semibold tracking-tight">
-            Want to take your own assessment too?
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Pick your own dynamic — we'll compare both perspectives in the final report.
-          </p>
-          <div>
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">
-              I am a…
-            </span>
-            <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
+        {notificationMode === "sms" && (
+          <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-4">
+            <h3 className="font-display text-lg font-semibold tracking-tight">
+              Want to take your own assessment too?
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Pick your own dynamic — we'll compare both perspectives in the final report.
+            </p>
+            <div>
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                I am a…
+              </span>
+              <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
                 <RoleSelector value={selfType} onChange={setSelfType} />
+              </div>
             </div>
-          </div>
-          {selfMutation.error && (
-            <p className="text-xs text-destructive">{(selfMutation.error as Error).message}</p>
-          )}
-          <button
-            onClick={() => selfMutation.mutate()}
-            disabled={!selfType || selfMutation.isPending}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
-          >
-            {selfMutation.isPending ? "Preparing…" : "Start my assessment"}
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </section>
-
+            {selfMutation.error && (
+              <p className="text-xs text-destructive">{(selfMutation.error as Error).message}</p>
+            )}
+            <button
+              onClick={() => selfMutation.mutate()}
+              disabled={!selfType || selfMutation.isPending}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
+            >
+              {selfMutation.isPending ? "Preparing…" : "Start my assessment"}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </section>
+        )}
       </motion.div>
     </div>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string }) {
-  return (
-    <label className="block">
-      <span className="text-sm font-medium">{label}</span>
-      {hint && <span className="block text-xs text-muted-foreground mt-0.5">{hint}</span>}
-      <input
-        {...props}
-        className="mt-2 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-    </label>
   );
 }

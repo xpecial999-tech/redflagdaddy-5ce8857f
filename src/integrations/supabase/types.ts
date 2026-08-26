@@ -224,6 +224,9 @@ export type Database = {
       }
       journeys: {
         Row: {
+          anonymous_no_contact: boolean
+          anonymous_owner_code_hash: string | null
+          anonymous_owner_expires_at: string | null
           category_ids: string[] | null
           created_at: string
           creator_id: string | null
@@ -240,6 +243,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anonymous_no_contact?: boolean
+          anonymous_owner_code_hash?: string | null
+          anonymous_owner_expires_at?: string | null
           category_ids?: string[] | null
           created_at?: string
           creator_id?: string | null
@@ -256,6 +262,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anonymous_no_contact?: boolean
+          anonymous_owner_code_hash?: string | null
+          anonymous_owner_expires_at?: string | null
           category_ids?: string[] | null
           created_at?: string
           creator_id?: string | null
