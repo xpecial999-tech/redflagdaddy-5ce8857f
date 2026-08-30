@@ -73,17 +73,12 @@ async function loadAssignedQuestions(
   if (!journeySettings) throw new Error("Journey not found.");
 
   const storedCategoryIds = journeySettings.category_ids as string[] | null;
-  const categoryIds =
-    storedCategoryIds && storedCategoryIds.length > 0
-      ? storedCategoryIds
-      : null;
+  const categoryIds = storedCategoryIds && storedCategoryIds.length > 0 ? storedCategoryIds : null;
   let limit = journeySettings.question_limit as number | null;
 
   if (limit == null && journeySettings.creator_id) {
     const { loadEntitlement } = await import("./entitlement.functions");
-    const entitlement = await loadEntitlement(
-      journeySettings.creator_id as string,
-    );
+    const entitlement = await loadEntitlement(journeySettings.creator_id as string);
     if (!categoryIds) limit = entitlement.questionLimit;
   } else if (limit == null && !categoryIds) {
     limit = 100;
@@ -98,9 +93,7 @@ async function loadAssignedQuestions(
 
   if (journey.participant_type && journey.participant_type !== "any") {
     const expanded = expandRoleForFiltering(journey.participant_type);
-    query = query.or(
-      expanded.map((role) => `applies_to.cs.{${role}}`).join(","),
-    );
+    query = query.or(expanded.map((role) => `applies_to.cs.{${role}}`).join(","));
   }
 
   if (categoryIds) query = query.in("category_id", categoryIds);
@@ -115,7 +108,12 @@ async function loadAssignedQuestions(
     : available;
 }
 
-function computeScore(qType: string, options: AnswerOption[], weight: number, answer: unknown): number | null {
+function computeScore(
+  qType: string,
+  options: AnswerOption[],
+  weight: number,
+  answer: unknown,
+): number | null {
   if (answer == null) return null;
   const w = Number(weight) || 1;
   switch (qType) {
@@ -178,14 +176,8 @@ export const saveResponse = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => SaveSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin, journey } = await loadInviteContext(data.code);
-    const assignedQuestions = await loadAssignedQuestions(
-      supabaseAdmin,
-      journey,
-    );
-    const question = requireAssignedAssessmentQuestion(
-      assignedQuestions,
-      data.questionId,
-    );
+    const assignedQuestions = await loadAssignedQuestions(supabaseAdmin, journey);
+    const question = requireAssignedAssessmentQuestion(assignedQuestions, data.questionId);
     validateAssessmentAnswer(question, data.answer);
 
     const score = computeScore(
@@ -235,10 +227,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => CompleteSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code);
-    const assignedQuestions = await loadAssignedQuestions(
-      supabaseAdmin,
-      journey,
-    );
+    const assignedQuestions = await loadAssignedQuestions(supabaseAdmin, journey);
     if (assignedQuestions.length === 0) {
       throw new Error("No questions are available for this assessment.");
     }
@@ -265,24 +254,15 @@ export const completeAssessment = createServerFn({ method: "POST" })
     const answers = Object.fromEntries(
       assignedResponses.map((row) => [row.question_id, row.answer]),
     );
-    const visibleQuestions = visibleAssessmentQuestions(
-      assignedQuestions,
-      answers,
-    );
-    const missingAnswers = visibleQuestions.filter(
-      ({ id }) => !hasAssessmentAnswer(answers[id]),
-    );
+    const visibleQuestions = visibleAssessmentQuestions(assignedQuestions, answers);
+    const missingAnswers = visibleQuestions.filter(({ id }) => !hasAssessmentAnswer(answers[id]));
     if (missingAnswers.length > 0) {
-      throw new Error(
-        "Answer every visible question and wait for it to save before submitting.",
-      );
+      throw new Error("Answer every visible question and wait for it to save before submitting.");
     }
 
     const visibleIds = visibleQuestions.map(({ id }) => id);
     const visibleIdSet = new Set(visibleIds);
-    const rows = assignedResponses.filter((row) =>
-      visibleIdSet.has(row.question_id),
-    );
+    const rows = assignedResponses.filter((row) => visibleIdSet.has(row.question_id));
 
     // Calculate maxima from this assessment's visible question set rather than
     // the global question bank.
@@ -308,7 +288,12 @@ export const completeAssessment = createServerFn({ method: "POST" })
     const safetyMax = maxes["BDSM Safety"];
     const redMax = maxes["Red Flags"];
 
-    let safetyRaw = 0, compat = 0, redRaw = 0, redLegacy = 0, greenRaw = 0, exp = 0;
+    let safetyRaw = 0,
+      compat = 0,
+      redRaw = 0,
+      redLegacy = 0,
+      greenRaw = 0,
+      exp = 0;
     const visibleQuestionById = new Map(
       visibleQuestions.map((question) => [question.id, question]),
     );
@@ -338,24 +323,21 @@ export const completeAssessment = createServerFn({ method: "POST" })
 
     const green = greenMax > 0 ? Math.max(0, Math.min(100, (greenRaw / greenMax) * 100)) : 0;
     const safety = safetyMax > 0 ? Math.max(0, Math.min(100, (safetyRaw / safetyMax) * 100)) : 0;
-    const red = redMax > 0
-      ? Math.max(0, Math.min(100, (redRaw / redMax) * 100))
-      : Math.min(100, redLegacy);
+    const red =
+      redMax > 0 ? Math.max(0, Math.min(100, (redRaw / redMax) * 100)) : Math.min(100, redLegacy);
 
-    const { error: resultError } = await supabaseAdmin
-      .from("results")
-      .upsert(
-        {
-          journey_id: journey.id,
-          safety_score: Math.round(safety),
-          compatibility_score: Math.round(compat),
-          red_flag_score: Math.round(red),
-          green_flag_score: Math.round(green),
-          experience_score: Math.round(exp),
-          ai_summary: null,
-        },
-        { onConflict: "journey_id" },
-      );
+    const { error: resultError } = await supabaseAdmin.from("results").upsert(
+      {
+        journey_id: journey.id,
+        safety_score: Math.round(safety),
+        compatibility_score: Math.round(compat),
+        red_flag_score: Math.round(red),
+        green_flag_score: Math.round(green),
+        experience_score: Math.round(exp),
+        ai_summary: null,
+      },
+      { onConflict: "journey_id" },
+    );
     if (resultError) throw new Error(resultError.message);
 
     const { error: journeyError } = await supabaseAdmin
@@ -385,13 +367,13 @@ export const completeAssessment = createServerFn({ method: "POST" })
     try {
       const { data: owner } = await supabaseAdmin
         .from("journeys")
-        .select("creator_id, guest_phone")
+        .select("creator_id, guest_phone, anonymous_no_contact")
         .eq("id", journey.id)
         .maybeSingle();
 
       // Guest journeys have no dashboard: mint a private shareable report link.
       let guestReportUrl: string | null = null;
-      if (!owner?.creator_id) {
+      if (!owner?.creator_id && !owner?.anonymous_no_contact) {
         const { data: result } = await supabaseAdmin
           .from("results")
           .select("id, share_token")
@@ -451,7 +433,6 @@ export const completeAssessment = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("Completion notification failed:", e);
     }
-
 
     return { ok: true as const, journeyId: journey.id };
   });

@@ -1,15 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { ConstructionPage } from "@/components/ConstructionPage";
+import { getPublicSettings } from "@/lib/entitlement.functions";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
+  loader: async () => {
+    try {
+      return await getPublicSettings();
+    } catch (error) {
+      console.error("[construction-mode] Landing settings unavailable", error);
+      return {
+        constructionModeEnabled: true,
+        constructionModeUpdatedAt: null,
+        settingsAvailable: false,
+      };
+    }
+  },
+  head: ({ loaderData }) => ({
     meta: [
       { title: "RedFlagDaddy — Consent, Compatibility & Safety" },
       { name: "description", content: "Structured assessments for Dominants, submissives, switches and the full spectrum of BDSM archetypes." },
       { property: "og:title", content: "RedFlagDaddy — Navigate dynamics with clarity" },
       { property: "og:description", content: "Role-aware conversation prompts for consent, compatibility, safety practices and potential red flags." },
       { property: "og:url", content: "https://redflagdaddy.com/" },
+      ...(loaderData?.constructionModeEnabled
+        ? [{ name: "robots", content: "noindex,nofollow,noarchive" }]
+        : []),
     ],
     links: [{ rel: "canonical", href: "https://redflagdaddy.com/" }],
   }),
@@ -17,6 +34,9 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const settings = Route.useLoaderData();
+  if (settings.constructionModeEnabled) return <ConstructionPage />;
+
   return (
     <div className="space-y-10 pt-8">
       <section className="text-center space-y-6">

@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { getEntitlement, listPublicCategories } from "@/lib/entitlement.functions";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
+import { ConstructionPage } from "@/components/ConstructionPage";
+import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
@@ -62,6 +64,15 @@ function Create() {
   const canDeepDive = ent.data?.canDeepDive ?? true;
   const canCreate = ent.data?.canCreateJourney ?? true;
   const qLimit = ent.data?.questionLimit ?? 100;
+
+  if (ent.isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </div>
+    );
+  }
+  if (ent.isError || ent.data?.constructionBlocked) return <ConstructionPage />;
 
   const canContinue =
     (step === 1 && title.trim().length > 0) ||
@@ -208,13 +219,16 @@ function Create() {
               Leave the mobile number blank if you prefer — the next step will generate a unique link you can share directly with your partner.
             </p>
             <Field label="Partner name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Optional" />
-            <Field
-              label="Partner mobile (SMS invite)"
-              type="tel"
-              value={recipientPhone}
-              onChange={(e) => setRecipientPhone(e.target.value)}
-              placeholder="Optional, e.g. 082 123 4567"
-            />
+            <label className="block">
+              <span className="text-xs text-muted-foreground">Partner mobile (SMS invite)</span>
+              <InternationalPhoneInput
+                id="create-partner-phone"
+                value={recipientPhone}
+                onValueChange={setRecipientPhone}
+                className="mt-1"
+                aria-label="Partner mobile number"
+              />
+            </label>
             {recipientPhone.trim() && !isValidE164(toE164(recipientPhone)) && (
               <p className="text-xs text-destructive -mt-2">Enter a valid mobile number.</p>
             )}
@@ -435,7 +449,12 @@ function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phon
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="s-phone">Partner mobile number</Label>
-              <Input id="s-phone" value={rPhone} onChange={(e) => setRPhone(e.target.value)} placeholder="+27123456789" inputMode="tel" type="tel" />
+              <InternationalPhoneInput
+                id="s-phone"
+                value={rPhone}
+                onValueChange={setRPhone}
+                aria-label="Partner mobile number"
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="s-note">Personal note (optional)</Label>

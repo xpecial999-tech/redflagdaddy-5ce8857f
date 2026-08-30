@@ -9,14 +9,25 @@ import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/phone-auth.functions";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
+import { ConstructionPage } from "@/components/ConstructionPage";
+import { useConstructionMode } from "@/hooks/use-construction-mode";
+import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
+import { AlternativeAuthMethods } from "@/components/AlternativeAuthMethods";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
       { title: "Create account — RedFlagDaddy" },
-      { name: "description", content: "Create your RedFlagDaddy account with your mobile number — we'll text you a 6-digit code." },
+      {
+        name: "description",
+        content:
+          "Create your RedFlagDaddy account with your mobile number — we'll text you a 6-digit code.",
+      },
       { property: "og:title", content: "Create account — RedFlagDaddy" },
-      { property: "og:description", content: "Sign up with your mobile number. Consent-first, 18+ only." },
+      {
+        property: "og:description",
+        content: "Sign up with your mobile number. Consent-first, 18+ only.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -36,6 +47,7 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const construction = useConstructionMode();
 
   const e164 = toE164(phone);
 
@@ -51,7 +63,9 @@ function Register() {
     setInfo(null);
     if (!isValidE164(e164)) return setError("Enter a valid mobile number, including country code.");
     setLoading(true);
-    const result = await sendOtp({ data: { phone: e164 } }).catch(() => ({ error: "Could not send code." }));
+    const result = await sendOtp({ data: { phone: e164, purpose: "register" } }).catch(() => ({
+      error: "Could not send code.",
+    }));
     setLoading(false);
     if ("error" in result && result.error) return setError(result.error);
     await captureMarketingEvent("signup_started", "account", { once: true });
@@ -73,6 +87,7 @@ function Register() {
         phone: e164,
         code: otp,
         metadata: { name: name || undefined, role },
+        purpose: "register",
       },
     }).catch(() => ({ error: "Could not verify code." }));
     if ("error" in result && result.error) {
@@ -104,38 +119,60 @@ function Register() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp, step, loading]);
 
+  if (construction.enabled) return <ConstructionPage />;
+
   return (
     <div className="max-w-sm mx-auto pt-8 space-y-8">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-strong rounded-3xl p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-strong rounded-3xl p-6"
+      >
         <AnimatePresence mode="wait">
           {step === "form" ? (
-            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key="form"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
               <h1 className="text-2xl font-display font-semibold mb-1">Create your account</h1>
-              <p className="text-sm text-muted-foreground mb-6">18+ only. Consent-first by design.</p>
+              <p className="text-sm text-muted-foreground mb-6">
+                18+ only. Consent-first by design.
+              </p>
               <form className="space-y-3" onSubmit={sendCode}>
-                <Field label="Display name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Used on your journeys" />
                 <Field
-                  label="Mobile number"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+27 82 123 4567"
+                  label="Display name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Used on your journeys"
                 />
+                <label className="block">
+                  <span className="text-xs text-muted-foreground">Mobile number</span>
+                  <InternationalPhoneInput
+                    id="register-phone"
+                    required
+                    value={phone}
+                    onValueChange={setPhone}
+                    className="mt-1"
+                    aria-label="Mobile number"
+                  />
+                </label>
 
                 <div>
                   <span className="text-xs text-muted-foreground">Primary identity</span>
                   <div className="mt-2 space-y-3 max-h-64 overflow-y-auto pr-1">
-                <RoleSelector value={role} onChange={setRole} />
+                    <RoleSelector value={role} onChange={setRole} />
                   </div>
                 </div>
 
                 <label className="flex items-start gap-2 text-xs text-muted-foreground pt-2">
-                  <input type="checkbox" required className="mt-0.5 accent-primary" />
-                  I confirm I am 18+ and agree to the{" "}
-                  <Link to="/consent-safety" className="text-primary underline hover:text-foreground">
+                  <input type="checkbox" required className="mt-0.5 accent-primary" />I confirm I am
+                  18+ and agree to the{" "}
+                  <Link
+                    to="/consent-safety"
+                    className="text-primary underline hover:text-foreground"
+                  >
                     consent & safety guidelines
                   </Link>
                   .
@@ -143,18 +180,35 @@ function Register() {
 
                 {error && <p className="text-xs text-destructive">{error}</p>}
 
-                <button disabled={loading} className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60">
+                <button
+                  disabled={loading}
+                  className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
+                >
                   {loading ? "Sending code…" : "Create account"}
                 </button>
               </form>
+              <AlternativeAuthMethods
+                mode="register"
+                metadata={{ name: name || undefined, role }}
+              />
               <p className="text-xs text-muted-foreground text-center mt-6">
-                Already a member? <Link to="/login" className="text-primary">Sign in</Link>
+                Already a member?{" "}
+                <Link to="/login" className="text-primary">
+                  Sign in
+                </Link>
               </p>
             </motion.div>
           ) : (
-            <motion.div key="otp" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key="otp"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
               <h1 className="text-2xl font-display font-semibold mb-1">Enter your code</h1>
-              <p className="text-sm text-muted-foreground mb-6">{info ?? `We sent a 6-digit code to ${formatPhone(e164)}.`}</p>
+              <p className="text-sm text-muted-foreground mb-6">
+                {info ?? `We sent a 6-digit code to ${formatPhone(e164)}.`}
+              </p>
               <form className="space-y-4" onSubmit={onVerify}>
                 <div className="flex justify-center">
                   <InputOTP maxLength={6} value={otp} onChange={setOtp}>
@@ -168,12 +222,23 @@ function Register() {
 
                 {error && <p className="text-xs text-destructive text-center">{error}</p>}
 
-                <button disabled={loading || otp.length !== 6} className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60">
+                <button
+                  disabled={loading || otp.length !== 6}
+                  className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
+                >
                   {loading ? "Verifying…" : "Verify & continue"}
                 </button>
               </form>
               <div className="flex items-center justify-between mt-6 text-xs text-muted-foreground">
-                <button type="button" onClick={() => { setStep("form"); setOtp(""); setError(null); }} className="hover:text-foreground">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("form");
+                    setOtp("");
+                    setError(null);
+                  }}
+                  className="hover:text-foreground"
+                >
                   ← Use a different number
                 </button>
                 <button type="button" onClick={() => sendCode()} className="text-primary">
@@ -196,7 +261,9 @@ function Register() {
               "Review side-by-side compatibility, limits and red flags.",
             ].map((s, i) => (
               <li key={i} className="flex gap-3">
-                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center font-semibold">{i + 1}</span>
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center font-semibold">
+                  {i + 1}
+                </span>
                 <span className="text-sm pt-0.5">{s}</span>
               </li>
             ))}
@@ -207,11 +274,17 @@ function Register() {
   );
 }
 
-function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+function Field({
+  label,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
     <label className="block">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <input {...props} className="mt-1 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+      <input
+        {...props}
+        className="mt-1 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      />
     </label>
   );
 }

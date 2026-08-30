@@ -10,17 +10,28 @@ function callerIp(): string | null {
   return getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-real-ip") ?? null;
 }
 
+const OtpPurpose = ["login", "register", "admin"] as const;
+type OtpPurpose = (typeof OtpPurpose)[number];
+
+function parsePurpose(value: unknown): OtpPurpose {
+  return OtpPurpose.includes(value as OtpPurpose) ? (value as OtpPurpose) : "login";
+}
+
 export const requestPhoneOtp = createServerFn({ method: "POST" })
-  .inputValidator((data: { phone: string }) => {
+  .inputValidator((data: { phone: string; purpose?: OtpPurpose }) => {
     if (typeof data.phone !== "string") throw new Error("Phone is required");
     const normalized = toE164(data.phone);
     if (!isValidE164(normalized)) throw new Error("Enter a valid mobile number with country code.");
-    return { phone: normalized };
+    return { phone: normalized, purpose: parsePurpose(data.purpose) };
   })
-  .handler(async ({ data }) => requestPhoneOtpHandler({ ...data, ip: callerIp() }));
+  .handler(async ({ data }) => {
+    const { assertOtpPurposeAllowed } = await import("./construction-mode.server");
+    await assertOtpPurposeAllowed(data.purpose, data.phone);
+    return requestPhoneOtpHandler({ phone: data.phone, ip: callerIp() });
+  });
 
 export const verifyPhoneOtp = createServerFn({ method: "POST" })
-  .inputValidator((data: { phone: string; code: string; metadata?: OtpMetadata }) => {
+  .inputValidator((data: { phone: string; code: string; metadata?: OtpMetadata; purpose?: OtpPurpose }) => {
     if (typeof data.phone !== "string" || typeof data.code !== "string") {
       throw new Error("Phone and code are required");
     }
@@ -36,6 +47,15 @@ export const verifyPhoneOtp = createServerFn({ method: "POST" })
             : {}),
         }
       : undefined;
-    return { phone: normalized, code, metadata };
+    return { phone: normalized, code, metadata, purpose: parsePurpose(data.purpose) };
   })
-  .handler(async ({ data }) => verifyPhoneOtpHandler({ ...data, ip: callerIp() }));
+  .handler(async ({ data }) => {
+    const { assertOtpPurposeAllowed } = await import("./construction-mode.server");
+    await assertOtpPurposeAllowed(data.purpose, data.phone);
+    return verifyPhoneOtpHandler({
+      phone: data.phone,
+      code: data.code,
+      metadata: data.metadata,
+      ip: callerIp(),
+    });
+  });
