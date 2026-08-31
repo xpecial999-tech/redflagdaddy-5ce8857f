@@ -49,7 +49,7 @@ const QuestionSchema = z.object({
 
 export const listQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         category_id: z.string().uuid().optional(),
@@ -82,7 +82,7 @@ export const listQuestions = createServerFn({ method: "POST" })
 
 export const bulkSetAppliesTo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         ids: z.array(z.string().uuid()).min(1).max(2000),
@@ -120,7 +120,7 @@ Rules:
 
 export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         ids: z.array(z.string().uuid()).min(1).max(200),
@@ -135,7 +135,13 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
       .select("id, question, applies_to, question_categories(name)")
       .in("id", data.ids);
     if (error) throw new Error(error.message);
-    const items = (rows ?? []).map((r: any) => ({
+    type QuestionTagRow = {
+      id: string;
+      question: string;
+      applies_to: string[] | null;
+      question_categories: { name: string } | null;
+    };
+    const items = ((rows ?? []) as unknown as QuestionTagRow[]).map((r) => ({
       id: r.id as string,
       question: r.question as string,
       category: r.question_categories?.name ?? null,
@@ -246,7 +252,7 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
 
 export const upsertQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => QuestionSchema.parse(d))
+  .validator((d: unknown) => QuestionSchema.parse(d))
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     if (data.id) {
@@ -266,7 +272,7 @@ export const upsertQuestion = createServerFn({ method: "POST" })
 
 export const deleteQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const { error } = await sb.from("questions").delete().eq("id", data.id);
@@ -276,7 +282,7 @@ export const deleteQuestion = createServerFn({ method: "POST" })
 
 export const archiveQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ id: z.string().uuid(), active: z.boolean() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -291,7 +297,7 @@ export const archiveQuestion = createServerFn({ method: "POST" })
 
 export const reorderQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         items: z
@@ -333,7 +339,7 @@ export const listCategories = createServerFn({ method: "POST" })
 
 export const upsertCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => CategorySchema.parse(d))
+  .validator((d: unknown) => CategorySchema.parse(d))
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     if (data.id) {
@@ -353,7 +359,7 @@ export const upsertCategory = createServerFn({ method: "POST" })
 
 export const deleteCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const { error } = await sb.from("question_categories").delete().eq("id", data.id);
@@ -365,7 +371,7 @@ export const deleteCategory = createServerFn({ method: "POST" })
 
 export const listJourneys = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         status: z.enum(["draft", "pending", "in_progress", "completed", "expired"]).optional(),
@@ -388,7 +394,7 @@ export const listJourneys = createServerFn({ method: "POST" })
 
 export const adminResetJourneys = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         ids: z.array(z.string().uuid()).min(1).max(500),

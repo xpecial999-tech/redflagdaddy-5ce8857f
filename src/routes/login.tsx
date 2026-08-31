@@ -149,7 +149,11 @@ export function Login({ adminOnly = false }: { adminOnly?: boolean }) {
                     aria-label="Mobile number"
                   />
                 </label>
-                {error && <p className="text-xs text-destructive">{error}</p>}
+                {error && (
+                  <p role="alert" className="text-xs text-destructive">
+                    {error}
+                  </p>
+                )}
                 <button
                   disabled={loading}
                   className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
@@ -188,7 +192,11 @@ export function Login({ adminOnly = false }: { adminOnly?: boolean }) {
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
-                {error && <p className="text-xs text-destructive text-center">{error}</p>}
+                {error && (
+                  <p role="alert" className="text-xs text-destructive text-center">
+                    {error}
+                  </p>
+                )}
                 <button
                   disabled={loading || otp.length !== 6}
                   className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"

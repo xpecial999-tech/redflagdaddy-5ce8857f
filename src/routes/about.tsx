@@ -51,26 +51,22 @@ const flow = [
   {
     icon: ClipboardCheck,
     title: "Create a journey",
-    body:
-      "A guided wizard: name your assessment, choose your partner's role (Dominant, submissive, switch, Master, brat, little, primal and more), and add optional partner details.",
+    body: "A guided wizard: name your assessment, choose your partner's role (Dominant, submissive, switch, Master, brat, little, primal and more), and add optional partner details.",
   },
   {
     icon: Users,
     title: "Invite your partner",
-    body:
-      "Share a private, single-use invite link or code. No account is required to respond, and the invite stops working after completion or expiry.",
+    body: "Share a private, single-use invite link or code. No account is required to respond, and the invite stops working after completion or expiry.",
   },
   {
     icon: Brain,
     title: "Role-aware questions",
-    body:
-      "The question set is filtered by the selected role and assessment mode, with optional category-focused journeys.",
+    body: "The question set is filtered by the selected role and assessment mode, with optional category-focused journeys.",
   },
   {
     icon: Sparkles,
     title: "Structured results",
-    body:
-      "Responses are weighted across five dimensions and summarised as conversation prompts—not a diagnosis, safety guarantee or decision about another person.",
+    body: "Responses are weighted across five dimensions and summarised as conversation prompts—not a diagnosis, safety guarantee or decision about another person.",
   },
 ];
 
@@ -99,31 +95,87 @@ const tracking = [
 
 const scoring = [
   { icon: ShieldCheck, label: "Safety", desc: "Risk awareness, aftercare and safe-word practice." },
-  { icon: HeartHandshake, label: "Compatibility", desc: "Dynamic preferences and lifestyle alignment." },
-  { icon: CheckCircle2, label: "Green flags", desc: "Trust, communication, emotional intelligence." },
+  {
+    icon: HeartHandshake,
+    label: "Compatibility",
+    desc: "Dynamic preferences and lifestyle alignment.",
+  },
+  {
+    icon: CheckCircle2,
+    label: "Green flags",
+    desc: "Trust, communication, emotional intelligence.",
+  },
   { icon: AlertTriangle, label: "Red flags", desc: "Scenario-based screening for warning signs." },
   { icon: Scale, label: "Experience", desc: "Prior experience and honest self-awareness." },
 ];
 
 const privacy = [
-  { icon: Lock, title: "Owner access checks", body: "Account journeys and results are checked against the signed-in owner on the server and at the database layer." },
-  { icon: KeyRound, title: "Private links act like keys", body: "Anyone who receives an active invite or shared-report link may be able to open it. Share private links only with the intended person." },
-  { icon: EyeOff, title: "Sensitive pages are not for search", body: "Account, invite, assessment and shared-report routes are marked to prevent normal search indexing." },
-  { icon: Database, title: "Export and deletion controls", body: "Account holders can download their stored account data, delete journeys, or permanently delete their account." },
+  {
+    icon: Lock,
+    title: "Owner access checks",
+    body: "Account journeys and results are checked against the signed-in owner on the server and at the database layer.",
+  },
+  {
+    icon: KeyRound,
+    title: "Private links act like keys",
+    body: "Anyone who receives an active invite or shared-report link may be able to open it. Share private links only with the intended person.",
+  },
+  {
+    icon: EyeOff,
+    title: "Sensitive pages are not for search",
+    body: "Account, invite, assessment and shared-report routes are marked to prevent normal search indexing.",
+  },
+  {
+    icon: Database,
+    title: "Export and deletion controls",
+    body: "Account holders can download their stored account data, delete journeys, or permanently delete their account.",
+  },
 ];
 
 const security = [
-  { icon: Smartphone, title: "One-time-code account access", body: "Signed-in accounts use an SMS one-time code. This verifies control of a phone number, not a person's identity or trustworthiness." },
-  { icon: Link2, title: "Expiring, single-use invites", body: "Invite codes stop accepting answers after they expire or the assessment is completed." },
-  { icon: KeyRound, title: "Server-side authorization", body: "Owner-only journey, analysis and result actions verify the signed-in user on the server." },
-  { icon: Lock, title: "Token-gated report sharing", body: "Anonymous database reads are disabled. An enabled shared report is returned only when its full bearer token matches." },
+  {
+    icon: Smartphone,
+    title: "One-time-code account access",
+    body: "Signed-in accounts use an SMS one-time code. This verifies control of a phone number, not a person's identity or trustworthiness.",
+  },
+  {
+    icon: Link2,
+    title: "Expiring, single-use invites",
+    body: "Invite codes stop accepting answers after they expire or the assessment is completed.",
+  },
+  {
+    icon: KeyRound,
+    title: "Server-side authorization",
+    body: "Owner-only journey, analysis and result actions verify the signed-in user on the server.",
+  },
+  {
+    icon: Lock,
+    title: "Token-gated report sharing",
+    body: "Anonymous database reads are disabled. An enabled shared report is returned only when its full bearer token matches.",
+  },
 ];
 
 const controls = [
-  { icon: Database, title: "Download your data", body: "Export a JSON copy of your profile, preferences, journeys, responses, results and payment history without active bearer tokens or raw provider payloads." },
-  { icon: ClipboardCheck, title: "Delete journeys", body: "Remove a journey and its associated responses and results from the journey tracker." },
-  { icon: EyeOff, title: "Consent-led analytics", body: "Anonymous funnel analytics are off by default and can be allowed or refused on this device." },
-  { icon: Activity, title: "Secure sign-out", body: "Sign out from your account at any time. Your session is cleared immediately." },
+  {
+    icon: Database,
+    title: "Download your data",
+    body: "Export a JSON copy of your profile, preferences, journeys, responses, results and payment history without active bearer tokens or raw provider payloads.",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Delete journeys",
+    body: "Remove a journey and its associated responses and results from the journey tracker.",
+  },
+  {
+    icon: EyeOff,
+    title: "Consent-led analytics",
+    body: "Anonymous funnel analytics are off by default and can be allowed or refused on this device.",
+  },
+  {
+    icon: Activity,
+    title: "Secure sign-out",
+    body: "Sign out from your account at any time. Your session is cleared immediately.",
+  },
 ];
 
 function About() {
@@ -146,7 +198,8 @@ function About() {
           transition={{ delay: 0.1 }}
           className="text-4xl md:text-5xl font-display font-semibold leading-[1.05]"
         >
-          A structured conversation tool for <span className="text-gradient">serious dynamics</span>.
+          A structured conversation tool for <span className="text-gradient">serious dynamics</span>
+          .
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 12 }}
@@ -154,19 +207,16 @@ function About() {
           transition={{ delay: 0.2 }}
           className="text-muted-foreground max-w-xl mx-auto"
         >
-          RedFlagDaddy replaces guesswork with structure. We help Dominants, submissives,
-          switches and the full spectrum of BDSM archetypes assess consent, compatibility,
-          safety practices and potential red flags through role-aware questions, weighted scores
-          and journey tracking.
+          RedFlagDaddy replaces guesswork with structure. We help Dominants, submissives, switches
+          and the full spectrum of BDSM archetypes assess consent, compatibility, safety practices
+          and potential red flags through role-aware questions, weighted scores and journey
+          tracking.
         </motion.p>
       </section>
 
       {/* How it works */}
       <section className="space-y-6">
-        <SectionHeader
-          eyebrow="How it works"
-          title="Four steps from intent to insight"
-        />
+        <SectionHeader eyebrow="How it works" title="Four steps from intent to insight" />
         <div className="grid md:grid-cols-2 gap-4">
           {flow.map((f, i) => (
             <motion.div
@@ -216,9 +266,7 @@ function About() {
                 <div
                   key={opt}
                   className={`rounded-xl border px-4 py-3 text-sm ${
-                    i === 0
-                      ? "border-primary/40 bg-primary/10"
-                      : "border-white/10 bg-white/[0.02]"
+                    i === 0 ? "border-primary/40 bg-primary/10" : "border-white/10 bg-white/[0.02]"
                   }`}
                 >
                   {opt}
@@ -275,11 +323,15 @@ function About() {
               { label: "Assessment completed", done: false, time: "Waiting…" },
             ].map((step, i) => (
               <div key={step.label} className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${step.done ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-muted-foreground"}`}>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${step.done ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-muted-foreground"}`}
+                >
                   {step.done ? <CheckCircle2 className="w-4 h-4" /> : <Timer className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className={`text-sm ${step.done ? "" : "text-muted-foreground"}`}>{step.label}</div>
+                  <div className={`text-sm ${step.done ? "" : "text-muted-foreground"}`}>
+                    {step.label}
+                  </div>
                 </div>
                 <div className="text-xs text-muted-foreground">{step.time}</div>
               </div>
@@ -414,9 +466,7 @@ function About() {
       {/* Question library */}
       <section className="glass-strong rounded-3xl p-8 text-center space-y-4">
         <Workflow className="w-8 h-8 text-primary mx-auto" />
-        <h2 className="text-2xl font-display font-semibold">
-          A role-aware question library
-        </h2>
+        <h2 className="text-2xl font-display font-semibold">A role-aware question library</h2>
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
           Questions are tagged by category, risk level, weight and applicable roles. The selected
           assessment mode determines whether a journey uses a broad, shorter or category-focused
@@ -455,18 +505,20 @@ function About() {
           safety. In an emergency, contact local emergency services or a trusted crisis resource.
         </p>
         {construction.enabled ? (
-          <p className="text-sm text-primary">New journeys are temporarily paused while we make improvements.</p>
+          <p className="text-sm text-primary">
+            New journeys are temporarily paused while we make improvements.
+          </p>
         ) : (
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               to="/register"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30"
             >
-              Start a journey <ArrowRight className="w-4 h-4" />
+              Create an account <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/guest"
-              className="inline-flex items-center justify-center rounded-xl glass px-5 py-3 text-sm font-medium"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl glass px-5 py-3 text-sm font-medium"
             >
               Try as guest
             </Link>

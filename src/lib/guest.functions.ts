@@ -3,6 +3,7 @@ import { z } from "zod";
 import { generateInviteCode } from "./utils.server";
 import { isValidE164, toE164 } from "./phone";
 import { ALL_ROLES } from "./roles";
+import { throwPublicDataError } from "./public-data-error";
 
 const CreateGuestSchema = z
   .object({
@@ -21,7 +22,7 @@ const CreateGuestSchema = z
   });
 
 export const createGuestJourney = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => CreateGuestSchema.parse(d))
+  .validator((d: unknown) => CreateGuestSchema.parse(d))
   .handler(async ({ data }) => {
     const { assertJourneyCreationAllowed } = await import("./construction-mode.server");
     await assertJourneyCreationAllowed();
@@ -74,15 +75,21 @@ export const createGuestJourney = createServerFn({ method: "POST" })
       })
       .select("id, invite_code")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throwPublicDataError(error, "create guest journey");
 
     const { error: iErr } = await supabaseAdmin.from("invites").insert({
       journey_id: journey.id,
       code,
     });
     if (iErr) {
-      await supabaseAdmin.from("journeys").delete().eq("id", journey.id);
-      throw new Error(iErr.message);
+      const { error: cleanupError } = await supabaseAdmin
+        .from("journeys")
+        .delete()
+        .eq("id", journey.id);
+      if (cleanupError) {
+        console.error("[guest-journey] Orphan cleanup failed", { code: cleanupError.code });
+      }
+      throwPublicDataError(iErr, "create guest invite");
     }
 
     return { code, ownerCode, ownerExpiresAt };
@@ -91,7 +98,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
 const OwnerCodeSchema = z.object({ ownerCode: z.string().trim().min(1).max(64) });
 
 export const lookupAnonymousJourney = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => OwnerCodeSchema.parse(d))
+  .validator((d: unknown) => OwnerCodeSchema.parse(d))
   .handler(async ({ data }) => {
     const { isValidOwnerCode, hashOwnerCode } = await import("./anonymous-owner-code.server");
     const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
@@ -181,7 +188,7 @@ const SendGuestInviteSchema = z.object({
 });
 
 export const sendGuestInvite = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => SendGuestInviteSchema.parse(d))
+  .validator((d: unknown) => SendGuestInviteSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { buildInviteSms } = await import("./invite-message");
@@ -192,7 +199,7 @@ export const sendGuestInvite = createServerFn({ method: "POST" })
       .select("id, title, invite_code, invite_url, creator_id")
       .eq("invite_code", data.code)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) throwPublicDataError(error, "load guest invite");
     if (!journey || journey.creator_id !== null) throw new Error("Invite not found");
 
     const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
@@ -207,15 +214,14 @@ export const sendGuestInvite = createServerFn({ method: "POST" })
       },
     ]);
 
-    const origin = process.env["PUBLIC_SITE_URL"] ?? "https://redflagdaddy.com";
-    const url = journey.invite_url ?? `${origin}/j/${journey.invite_code}`;
+    const { publicInviteUrl } = await import("./site-url.server");
+    const url = publicInviteUrl(journey.invite_code);
 
     await sendClickatellSms(
       data.recipientPhone,
       buildInviteSms({
         recipientName: data.recipientName,
         senderName: null,
-        title: journey.title,
         notes: data.notes,
         url,
       }),

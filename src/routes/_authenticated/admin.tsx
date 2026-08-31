@@ -778,6 +778,7 @@ function QuestionsTab() {
                 </div>
                 <div className="flex flex-col gap-1 pt-1">
                   <button
+                    type="button"
                     onClick={() => move(i, -1)}
                     className="text-muted-foreground hover:text-foreground"
                     aria-label="Move up"
@@ -785,6 +786,7 @@ function QuestionsTab() {
                     <ArrowUp className="w-4 h-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => move(i, 1)}
                     className="text-muted-foreground hover:text-foreground"
                     aria-label="Move down"
@@ -1313,6 +1315,7 @@ function CategoriesTab() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    aria-label={`Edit category ${c.name}`}
                     onClick={() => {
                       setEditing(c);
                       setName(c.name);
@@ -1325,6 +1328,7 @@ function CategoriesTab() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    aria-label={`Delete category ${c.name}`}
                     className="text-rose-300"
                     onClick={() => {
                       if (confirm(`Delete category "${c.name}"?`)) del.mutate(c.id);

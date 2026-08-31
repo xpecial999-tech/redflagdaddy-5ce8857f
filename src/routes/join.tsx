@@ -54,7 +54,9 @@ function JoinPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+            <label htmlFor="invite-code" className="sr-only">Invite code</label>
             <Input
+              id="invite-code"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               placeholder="ABCD1234"
@@ -62,8 +64,10 @@ function JoinPage() {
               autoFocus
               autoComplete="off"
               spellCheck={false}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "invite-code-error" : undefined}
             />
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p id="invite-code-error" role="alert" className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full h-12">
               Continue <ArrowRight className="w-4 h-4 ml-1" />
             </Button>

@@ -261,7 +261,7 @@ async function assertJourneyOwner(userId: string, journeyId: string) {
 
 export const runAnalysis = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => IdSchema.parse(d))
+  .validator((d: unknown) => IdSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertJourneyOwner(context.userId, data.journeyId);
     return runAnalysisInternal(data.journeyId);
@@ -269,7 +269,7 @@ export const runAnalysis = createServerFn({ method: "POST" })
 
 export const getResults = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => IdSchema.parse(d))
+  .validator((d: unknown) => IdSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin, journey } = await assertJourneyOwner(context.userId, data.journeyId);
 
@@ -307,19 +307,21 @@ const ShareSchema = z.object({
 
 export const toggleShareReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ShareSchema.parse(d))
+  .validator((d: unknown) => ShareSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await assertJourneyOwner(context.userId, data.journeyId);
 
     const { data: existing } = await supabaseAdmin
       .from("results")
-      .select("id, share_token")
+      .select("id, share_token, share_enabled")
       .eq("journey_id", data.journeyId)
       .maybeSingle();
     if (!existing) throw new Error("No report exists for this journey yet.");
 
     let token = existing.share_token as string | null;
-    if (data.enabled && !token) {
+    // A revoked URL must stay revoked. Generate a fresh token whenever sharing
+    // moves from disabled to enabled instead of resurrecting the old URL.
+    if (data.enabled && (!token || !existing.share_enabled)) {
       const bytes = new Uint8Array(18);
       crypto.getRandomValues(bytes);
       token = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -329,7 +331,10 @@ export const toggleShareReport = createServerFn({ method: "POST" })
       .from("results")
       .update({ share_enabled: data.enabled, share_token: token })
       .eq("id", existing.id);
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[shared-report] Update failed", { code: error.code });
+      throw new Error("Sharing could not be updated. Please try again.");
+    }
 
     return { enabled: data.enabled, token: data.enabled ? token : null };
   });
@@ -337,8 +342,17 @@ export const toggleShareReport = createServerFn({ method: "POST" })
 const TokenSchema = z.object({ token: z.string().trim().min(8).max(128) });
 
 export const getSharedReport = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => TokenSchema.parse(d))
+  .validator((d: unknown) => TokenSchema.parse(d))
   .handler(async ({ data }) => {
+    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
+    await consumeRateLimits([
+      {
+        action: "shared_report_ip",
+        value: callerIp(),
+        windowSeconds: 60 * 60,
+        maxEvents: 120,
+      },
+    ]);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: result, error } = await supabaseAdmin
@@ -347,7 +361,10 @@ export const getSharedReport = createServerFn({ method: "POST" })
       .eq("share_token", data.token)
       .eq("share_enabled", true)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[shared-report] Lookup failed", { code: error.code });
+      throw new Error("This shared report is unavailable.");
+    }
     if (!result) throw new Error("This shared report is unavailable.");
 
     let analysis: AnalysisPayload | null = null;

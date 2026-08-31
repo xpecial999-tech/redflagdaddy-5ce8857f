@@ -23,13 +23,9 @@ const CreateJourneySchema = z.object({
   questionLimit: z.number().int().min(10).max(500).optional().nullable(),
 });
 
-function originFromRequest(): string {
-  return process.env.PUBLIC_APP_URL ?? "https://redflagdaddy.com";
-}
-
 export const createJourney = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => CreateJourneySchema.parse(data))
+  .validator((data: unknown) => CreateJourneySchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { assertJourneyCreationAllowed } = await import("./construction-mode.server");
@@ -51,8 +47,8 @@ export const createJourney = createServerFn({ method: "POST" })
         : entLimit;
 
     const code = generateInviteCode();
-    const origin = originFromRequest();
-    const inviteUrl = `${origin}/j/${code}`;
+    const { publicInviteUrl } = await import("./site-url.server");
+    const inviteUrl = publicInviteUrl(code);
 
     const { data: journey, error } = await supabase
       .from("journeys")
@@ -69,13 +65,28 @@ export const createJourney = createServerFn({ method: "POST" })
       .select("id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, category_ids, question_limit")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[journey] Creation failed", { code: error.code });
+      throw new Error("The journey could not be created. Please try again.");
+    }
 
     const { error: inviteErr } = await supabase.from("invites").insert({
       journey_id: journey.id,
       code,
     });
-    if (inviteErr) throw new Error(inviteErr.message);
+    if (inviteErr) {
+      const { error: cleanupError } = await supabase
+        .from("journeys")
+        .delete()
+        .eq("id", journey.id);
+      if (cleanupError) {
+        console.error("[journey] Incomplete journey cleanup failed", {
+          code: cleanupError.code,
+        });
+      }
+      console.error("[journey] Invite creation failed", { code: inviteErr.code });
+      throw new Error("The journey could not be created. Please try again.");
+    }
 
     let smsSent = false;
     if (data.recipientPhone) {
@@ -92,7 +103,6 @@ export const createJourney = createServerFn({ method: "POST" })
           buildInviteSms({
             recipientName: data.recipientName,
             senderName: me?.name ?? null,
-            title: journey.title,
             notes: data.notes,
             url: inviteUrl,
           }),
@@ -121,14 +131,20 @@ export const listJourneys = createServerFn({ method: "GET" })
       .select("id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return { journeys: data ?? [] };
+    const { publicInviteUrl } = await import("./site-url.server");
+    return {
+      journeys: (data ?? []).map((journey) => ({
+        ...journey,
+        invite_url: publicInviteUrl(journey.invite_code),
+      })),
+    };
   });
 
 const JourneyIdSchema = z.object({ id: z.string().uuid() });
 
 export const getJourneyStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => JourneyIdSchema.parse(data))
+  .validator((data: unknown) => JourneyIdSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -183,8 +199,9 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
     const expiresAt = invite?.expires_at ?? null;
     const isExpired = expiresAt ? new Date(expiresAt).getTime() < Date.now() : false;
 
+    const { publicInviteUrl } = await import("./site-url.server");
     return {
-      journey,
+      journey: { ...journey, invite_url: publicInviteUrl(journey.invite_code) },
       invite: invite ?? null,
       progress: { answered, total, percent: progress },
       isExpired,
@@ -193,7 +210,7 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
 
 export const sendJourneyInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -231,7 +248,8 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
       if (!adminRow) throw new Error("Not authorized");
     }
 
-    const inviteUrl = journey.invite_url ?? `${originFromRequest()}/j/${journey.invite_code}`;
+    const { publicInviteUrl } = await import("./site-url.server");
+    const inviteUrl = publicInviteUrl(journey.invite_code);
 
       const phone = data.recipientPhone?.trim();
       if (!phone) throw new Error("Enter a valid mobile number.");
@@ -247,7 +265,6 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
         buildInviteSms({
           recipientName: data.recipientName,
           senderName: me?.name ?? null,
-          title: journey.title,
           notes: data.notes,
           url: inviteUrl,
         }),
@@ -264,7 +281,7 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
 
 export const deleteJourney = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => JourneyIdSchema.parse(data))
+  .validator((data: unknown) => JourneyIdSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: journey, error: jErr } = await supabase

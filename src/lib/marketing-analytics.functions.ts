@@ -1,10 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { MARKETING_EVENT_NAMES, MARKETING_FLOWS } from "./marketing-attribution";
+import {
+  analyticsMode,
+  MARKETING_EVENT_NAMES,
+  MARKETING_FLOWS,
+  MARKETING_SOURCES,
+} from "./marketing-attribution";
 
 const AttributionSchema = z
   .object({
-    source: z.enum(["tiktok", "instagram", "threads", "youtube"]).nullable(),
+    source: z.enum(MARKETING_SOURCES).nullable(),
     medium: z.literal("organic_social").nullable(),
     campaign: z
       .string()
@@ -26,8 +31,13 @@ const EventSchema = z.object({
 });
 
 export const recordMarketingEvent = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => EventSchema.parse(data))
+  .validator((data: unknown) => EventSchema.parse(data))
   .handler(async ({ data }) => {
+    const serverEnvironment = analyticsMode();
+    if (!serverEnvironment || data.environment !== serverEnvironment) {
+      throw new Error("Analytics event was not recorded");
+    }
+
     const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
     await consumeRateLimits([
       { action: "marketing_event_ip", value: callerIp(), windowSeconds: 60 * 60, maxEvents: 200 },
@@ -42,7 +52,7 @@ export const recordMarketingEvent = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("marketing_events").insert({
       event_name: data.eventName,
-      environment: data.environment,
+      environment: serverEnvironment,
       session_id: data.sessionId,
       flow: data.flow,
       utm_source: data.attribution?.source ?? null,

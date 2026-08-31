@@ -13,6 +13,9 @@ const publicJourneySurfaces = [
   "src/routes/_authenticated/journeys.$id.tsx",
   "src/routes/guest.tsx",
   "src/routes/demo-report.tsx",
+  "src/lib/invite-message.ts",
+  "src/lib/email-templates/journey-invite.tsx",
+  "src/lib/email-templates/assessment-complete.tsx",
 ];
 
 describe("plain-language partner terminology", () => {
@@ -29,5 +32,17 @@ describe("plain-language partner terminology", () => {
     expect(source("src/routes/_authenticated/journeys.$id.tsx")).toContain("Partner progress");
     expect(source("src/routes/_authenticated/journeys.$id.tsx")).toContain("Send to partner");
     expect(source("src/components/ReportView.tsx")).toContain("partner role:");
+    expect(source("src/lib/email-templates/journey-invite.tsx")).toContain(
+      "A partner invited you",
+    );
+    expect(source("src/lib/email-templates/assessment-complete.tsx")).toContain(
+      "Your partner has finished",
+    );
+  });
+
+  it("does not promise an AI summary in user notifications", () => {
+    expect(source("src/lib/email-templates/assessment-complete.tsx")).not.toMatch(
+      /\bAI (?:summary|analysis)\b/i,
+    );
   });
 });

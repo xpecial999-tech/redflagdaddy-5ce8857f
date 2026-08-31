@@ -48,7 +48,7 @@ const UpdateSchema = PreferencesSchema.partial();
 
 export const updatePreferences = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => UpdateSchema.parse(d))
+  .validator((d: unknown) => UpdateSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase

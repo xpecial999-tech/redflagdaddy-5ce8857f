@@ -99,9 +99,15 @@ function Help() {
         <div>
           <h2 className="font-display text-lg">Need product support?</h2>
           <p className="text-sm text-muted-foreground">
-            A public support channel will be added before launch. Do not use RedFlagDaddy for
-            emergencies or crisis support.
+            Use the private support form for product, account, privacy or accessibility help. Do not
+            use RedFlagDaddy for emergencies or crisis support.
           </p>
+          <Link
+            to="/support"
+            className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4"
+          >
+            Open support form
+          </Link>
         </div>
       </section>
     </div>

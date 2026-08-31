@@ -50,14 +50,14 @@ export function AnalyticsConsent() {
         <button
           type="button"
           onClick={() => choose("denied")}
-          className="rounded-lg px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
+          className="min-h-11 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
         >
           No thanks
         </button>
         <button
           type="button"
           onClick={() => choose("granted")}
-          className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+          className="min-h-11 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
         >
           Allow anonymous analytics
         </button>
@@ -92,7 +92,7 @@ export function AnalyticsPreference() {
         type="button"
         aria-pressed={consent === "granted"}
         onClick={() => choose("granted")}
-        className={`rounded-lg border px-3 py-2 text-xs ${consent === "granted" ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground"}`}
+        className={`min-h-11 rounded-lg border px-3 py-2 text-xs ${consent === "granted" ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground"}`}
       >
         Allow anonymous analytics
       </button>
@@ -100,7 +100,7 @@ export function AnalyticsPreference() {
         type="button"
         aria-pressed={consent === "denied"}
         onClick={() => choose("denied")}
-        className={`rounded-lg border px-3 py-2 text-xs ${consent === "denied" ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground"}`}
+        className={`min-h-11 rounded-lg border px-3 py-2 text-xs ${consent === "denied" ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground"}`}
       >
         Do not allow
       </button>

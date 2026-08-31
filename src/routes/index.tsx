@@ -19,10 +19,18 @@ export const Route = createFileRoute("/")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: "RedFlagDaddy — Consent, Compatibility & Safety" },
-      { name: "description", content: "Structured assessments for Dominants, submissives, switches and the full spectrum of BDSM archetypes." },
+      { title: "RedFlagDaddy — Structured conversations for adults" },
+      {
+        name: "description",
+        content:
+          "Private, role-aware prompts that help adults discuss consent, compatibility, boundaries and safety.",
+      },
       { property: "og:title", content: "RedFlagDaddy — Navigate dynamics with clarity" },
-      { property: "og:description", content: "Role-aware conversation prompts for consent, compatibility, safety practices and potential red flags." },
+      {
+        property: "og:description",
+        content:
+          "Private, role-aware conversation prompts for adults discussing consent, compatibility, boundaries and safety.",
+      },
       { property: "og:url", content: "https://redflagdaddy.com/" },
       ...(loaderData?.constructionModeEnabled
         ? [{ name: "robots", content: "noindex,nofollow,noarchive" }]
@@ -70,7 +78,7 @@ function Landing() {
             to="/register"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30 hover:scale-[1.02] transition"
           >
-            Start a journey <ArrowRight className="w-4 h-4" />
+            Create an account <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             to="/guest"
@@ -81,8 +89,9 @@ function Landing() {
         </motion.div>
 
         <p className="text-xs text-muted-foreground max-w-lg mx-auto">
-          For adults 18+. RedFlagDaddy is a structured conversation aid, not a diagnosis, identity
-          check, emergency service or guarantee of safety.
+          For adults 18+. RedFlagDaddy is a structured conversation aid—not identity verification,
+          a background check, a diagnosis, proof of consent, an emergency service or a guarantee of
+          safety.
         </p>
 
         <motion.div
@@ -93,7 +102,7 @@ function Landing() {
         >
           <Link
             to="/about"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition"
+            className="inline-flex min-h-11 items-center gap-1.5 px-3 text-sm text-muted-foreground hover:text-foreground transition"
           >
             Learn how it works <ArrowRight className="w-3.5 h-3.5" />
           </Link>

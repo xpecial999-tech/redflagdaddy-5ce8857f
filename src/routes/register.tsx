@@ -30,6 +30,7 @@ export const Route = createFileRoute("/register")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex, nofollow, noarchive" },
     ],
   }),
   component: Register,
@@ -178,7 +179,11 @@ function Register() {
                   .
                 </label>
 
-                {error && <p className="text-xs text-destructive">{error}</p>}
+                {error && (
+                  <p role="alert" className="text-xs text-destructive">
+                    {error}
+                  </p>
+                )}
 
                 <button
                   disabled={loading}
@@ -193,7 +198,7 @@ function Register() {
               />
               <p className="text-xs text-muted-foreground text-center mt-6">
                 Already a member?{" "}
-                <Link to="/login" className="text-primary">
+                <Link to="/login" className="inline-flex min-h-11 items-center px-1 text-primary">
                   Sign in
                 </Link>
               </p>
@@ -220,7 +225,11 @@ function Register() {
                   </InputOTP>
                 </div>
 
-                {error && <p className="text-xs text-destructive text-center">{error}</p>}
+                {error && (
+                  <p role="alert" className="text-xs text-destructive text-center">
+                    {error}
+                  </p>
+                )}
 
                 <button
                   disabled={loading || otp.length !== 6}
@@ -237,11 +246,11 @@ function Register() {
                     setOtp("");
                     setError(null);
                   }}
-                  className="hover:text-foreground"
+                  className="min-h-11 hover:text-foreground"
                 >
                   ← Use a different number
                 </button>
-                <button type="button" onClick={() => sendCode()} className="text-primary">
+                <button type="button" onClick={() => sendCode()} className="min-h-11 text-primary">
                   Resend code
                 </button>
               </div>
@@ -283,7 +292,7 @@ function Field({
       <span className="text-xs text-muted-foreground">{label}</span>
       <input
         {...props}
-        className="mt-1 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        className="mt-1 min-h-12 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
     </label>
   );

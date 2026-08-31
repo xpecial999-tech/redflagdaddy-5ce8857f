@@ -8,6 +8,39 @@ const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 
+type EmailQueuePayload = {
+  message_id?: string
+  run_id?: string
+  to?: string
+  from?: string
+  sender_domain?: string
+  subject?: string
+  html?: string
+  text?: string
+  purpose?: string
+  label?: string
+  idempotency_key?: string
+  unsubscribe_token?: string | null
+  queued_at?: string
+}
+
+type EmailQueueMessage = {
+  msg_id: number
+  read_ct?: number
+  enqueued_at?: string
+  message: EmailQueuePayload
+}
+
+type SendableEmailPayload = EmailQueuePayload &
+  Required<Pick<EmailQueuePayload, 'to' | 'from' | 'sender_domain' | 'subject' | 'html' | 'text'>>
+
+function isSendableEmailPayload(payload: EmailQueuePayload): payload is SendableEmailPayload {
+  return ['to', 'from', 'sender_domain', 'subject', 'html', 'text'].every((key) => {
+    const value = payload[key as keyof EmailQueuePayload]
+    return typeof value === 'string' && value.length > 0
+  })
+}
+
 // Check if an error is a rate-limit (429) response.
 // Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
 // falls back to parsing the error message for older versions.
@@ -36,9 +69,9 @@ function getRetryAfterSeconds(error: unknown): number {
 }
 
 async function moveToDlq(
-  supabase: SupabaseClient<any, any>,
+  supabase: SupabaseClient,
   queue: string,
-  msg: { msg_id: number; message: Record<string, unknown> },
+  msg: EmailQueueMessage,
   reason: string
 ): Promise<void> {
   const payload = msg.message
@@ -88,7 +121,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
           return Response.json({ error: 'Forbidden' }, { status: 403 })
         }
 
-        const supabase: SupabaseClient<any, any> = createClient(supabaseUrl, supabaseServiceKey)
+        const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
         // 1. Check rate-limit cooldown and read queue config
         const { data: state } = await supabase
@@ -123,12 +156,13 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
           }
 
           if (!messages?.length) continue
+          const queueMessages = messages as unknown as EmailQueueMessage[]
 
           // Retry budget is based on real send failures, not pgmq read_ct.
           const messageIds = Array.from(
             new Set(
-              messages
-                .map((msg: any) =>
+              queueMessages
+                .map((msg) =>
                   msg?.message?.message_id && typeof msg.message.message_id === 'string'
                     ? msg.message.message_id
                     : null
@@ -162,8 +196,8 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             }
           }
 
-          for (let i = 0; i < messages.length; i++) {
-            const msg = messages[i]
+          for (let i = 0; i < queueMessages.length; i++) {
+            const msg = queueMessages[i]
             const payload = msg.message
             const failedAttempts =
               payload?.message_id && typeof payload.message_id === 'string'
@@ -221,6 +255,11 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               }
             }
 
+            if (!isSendableEmailPayload(payload)) {
+              await moveToDlq(supabase, queue, msg, 'Malformed email queue payload')
+              continue
+            }
+
             try {
               await sendLovableEmail(
                 {
@@ -234,7 +273,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                   purpose: payload.purpose,
                   label: payload.label,
                   idempotency_key: payload.idempotency_key,
-                  unsubscribe_token: payload.unsubscribe_token,
+                  unsubscribe_token: payload.unsubscribe_token ?? undefined,
                   message_id: payload.message_id,
                 },
                 { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }

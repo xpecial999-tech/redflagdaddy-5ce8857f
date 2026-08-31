@@ -1,12 +1,13 @@
-import type { ComponentType } from 'react'
+import type { ElementType } from 'react'
 import { template as journeyInviteTemplate } from './journey-invite'
 import { template as assessmentCompleteTemplate } from './assessment-complete'
+import { template as supportRequestTemplate } from './support-request'
 
 export interface TemplateEntry {
-  component: ComponentType<any>
-  subject: string | ((data: Record<string, any>) => string)
+  component: ElementType
+  subject: string | ((data: Record<string, unknown>) => string)
   displayName?: string
-  previewData?: Record<string, any>
+  previewData?: Record<string, unknown>
   /** Fixed recipient — overrides caller-provided recipientEmail when set. */
   to?: string
 }
@@ -18,4 +19,5 @@ export interface TemplateEntry {
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'journey-invite': journeyInviteTemplate,
   'assessment-complete': assessmentCompleteTemplate,
+  'support-request': supportRequestTemplate,
 }

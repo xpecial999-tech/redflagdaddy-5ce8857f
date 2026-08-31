@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { throwPublicDataError } from "./public-data-error";
 
 const CodeSchema = z.object({
   code: z.string().trim().min(4).max(64),
@@ -10,9 +11,18 @@ function normalizeCode(raw: string) {
 }
 
 export const validateInvite = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => CodeSchema.parse(data))
+  .validator((data: unknown) => CodeSchema.parse(data))
   .handler(async ({ data }) => {
     const code = normalizeCode(data.code);
+    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
+    await consumeRateLimits([
+      {
+        action: "invite_validate_ip",
+        value: callerIp(),
+        windowSeconds: 60 * 60,
+        maxEvents: 60,
+      },
+    ]);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Look up the journey by invite_code (primary) — fall back to invites table by code.
@@ -22,7 +32,7 @@ export const validateInvite = createServerFn({ method: "POST" })
       .eq("invite_code", code)
       .maybeSingle();
 
-    if (jErr) throw new Error(jErr.message);
+    if (jErr) throwPublicDataError(jErr, "validate invite journey");
     if (!journey) {
       return { ok: false as const, reason: "not_found" as const };
     }
@@ -34,7 +44,7 @@ export const validateInvite = createServerFn({ method: "POST" })
       .eq("code", code)
       .maybeSingle();
 
-    if (iErr) throw new Error(iErr.message);
+    if (iErr) throwPublicDataError(iErr, "validate invite record");
     if (!invite) {
       return { ok: false as const, reason: "not_found" as const };
     }
@@ -70,9 +80,18 @@ export const validateInvite = createServerFn({ method: "POST" })
   });
 
 export const startInvite = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => CodeSchema.parse(data))
+  .validator((data: unknown) => CodeSchema.parse(data))
   .handler(async ({ data }) => {
     const code = normalizeCode(data.code);
+    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
+    await consumeRateLimits([
+      {
+        action: "invite_start_ip",
+        value: callerIp(),
+        windowSeconds: 60 * 60,
+        maxEvents: 30,
+      },
+    ]);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: journey, error: jErr } = await supabaseAdmin
@@ -80,7 +99,7 @@ export const startInvite = createServerFn({ method: "POST" })
       .select("id, status")
       .eq("invite_code", code)
       .maybeSingle();
-    if (jErr) throw new Error(jErr.message);
+    if (jErr) throwPublicDataError(jErr, "start invite journey");
     if (!journey) throw new Error("Invite not found");
 
     const { data: invite, error: iErr } = await supabaseAdmin
@@ -89,7 +108,7 @@ export const startInvite = createServerFn({ method: "POST" })
       .eq("journey_id", journey.id)
       .eq("code", code)
       .maybeSingle();
-    if (iErr) throw new Error(iErr.message);
+    if (iErr) throwPublicDataError(iErr, "start invite record");
     if (!invite) throw new Error("Invite not found");
     if (invite.completed_at) throw new Error("This invite has already been completed.");
     if (invite.expires_at && new Date(invite.expires_at).getTime() < Date.now()) {
@@ -97,10 +116,11 @@ export const startInvite = createServerFn({ method: "POST" })
     }
 
     if (journey.status === "pending") {
-      await supabaseAdmin
+      const { error: updateError } = await supabaseAdmin
         .from("journeys")
         .update({ status: "in_progress" })
         .eq("id", journey.id);
+      if (updateError) throwPublicDataError(updateError, "start invite");
     }
 
     return { ok: true as const, journeyId: journey.id };

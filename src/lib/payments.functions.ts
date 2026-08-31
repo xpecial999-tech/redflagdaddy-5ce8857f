@@ -3,20 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { peachPaymentStatus } from "@/lib/payments.shared";
 
-const PEACH_BASE = process.env.PEACH_BASE_URL ?? "https://eu-test.oppwa.com";
-
-function peachConfig() {
-  const entityId = process.env.PEACH_ENTITY_ID;
-  const token = process.env.PEACH_ACCESS_TOKEN;
-  if (!entityId || !token)
-    throw new Error("Peach Payments not configured. Set PEACH_ENTITY_ID and PEACH_ACCESS_TOKEN.");
-  return { entityId, token };
-}
-
 export const startPeachCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { entityId, token } = peachConfig();
+    const { peachPaymentConfig } = await import("./payment-config.server");
+    const { baseUrl, entityId, token } = peachPaymentConfig();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: settings }, { data: user }] = await Promise.all([
@@ -45,7 +36,7 @@ export const startPeachCheckout = createServerFn({ method: "POST" })
       merchantTransactionId: `rfd-${context.userId}-${Date.now()}`,
     });
 
-    const resp = await fetch(`${PEACH_BASE}/v1/checkouts`, {
+    const resp = await fetch(`${baseUrl}/v1/checkouts`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -58,7 +49,11 @@ export const startPeachCheckout = createServerFn({ method: "POST" })
       result?: { code?: string; description?: string };
     };
     if (!resp.ok || !json.id) {
-      throw new Error(`Peach checkout failed: ${json.result?.description ?? resp.statusText}`);
+      console.error("[payments] Checkout provider rejected request", {
+        status: resp.status,
+        code: json.result?.code ?? null,
+      });
+      throw new Error("Checkout could not be started. Please try again.");
     }
 
     const { error: paymentInsertError } = await supabaseAdmin.from("payments").insert({
@@ -76,15 +71,16 @@ export const startPeachCheckout = createServerFn({ method: "POST" })
 
     return {
       checkoutId: json.id,
-      scriptUrl: `${PEACH_BASE}/v1/paymentWidgets.js?checkoutId=${json.id}`,
+      scriptUrl: `${baseUrl}/v1/paymentWidgets.js?checkoutId=${json.id}`,
     };
   });
 
 export const finalizePeachPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ checkoutId: z.string().min(8).max(128) }).parse(d))
+  .validator((d: unknown) => z.object({ checkoutId: z.string().min(8).max(128) }).parse(d))
   .handler(async ({ data, context }) => {
-    const { entityId, token } = peachConfig();
+    const { peachPaymentConfig } = await import("./payment-config.server");
+    const { baseUrl, entityId, token } = peachPaymentConfig();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: payment, error: paymentLookupError } = await supabaseAdmin
@@ -100,7 +96,7 @@ export const finalizePeachPayment = createServerFn({ method: "POST" })
       return { ok: true, code: "already_paid", description: "Payment already confirmed." };
     }
 
-    const url = `${PEACH_BASE}/v1/checkouts/${encodeURIComponent(data.checkoutId)}/payment?entityId=${encodeURIComponent(entityId)}`;
+    const url = `${baseUrl}/v1/checkouts/${encodeURIComponent(data.checkoutId)}/payment?entityId=${encodeURIComponent(entityId)}`;
     const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     const json = (await resp.json()) as {
       amount?: string;
@@ -134,5 +130,11 @@ export const finalizePeachPayment = createServerFn({ method: "POST" })
       if (entitlementError) throw new Error("Payment verified, but access could not be unlocked.");
     }
 
-    return { ok, code, description: json.result?.description ?? "" };
+    return {
+      ok,
+      code,
+      description: ok
+        ? "Payment confirmed."
+        : "Payment could not be confirmed. Please try again or contact support.",
+    };
   });

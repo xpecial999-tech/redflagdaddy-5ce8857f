@@ -11,6 +11,7 @@ import {
   type AssessmentQuestion,
 } from "@/lib/assessment-questions";
 import { expandRoleForFiltering } from "./roles";
+import { throwPublicDataError } from "./public-data-error";
 
 const CodeSchema = z.object({ code: z.string().trim().min(4).max(64) });
 
@@ -41,7 +42,7 @@ async function loadInviteContext(code: string) {
     .select("id, title, participant_type, status, invite_code")
     .eq("invite_code", code)
     .maybeSingle();
-  if (jErr) throw new Error(jErr.message);
+  if (jErr) throwPublicDataError(jErr, "load assessment journey");
   if (!journey) throw new Error("Invite not found.");
 
   const { data: invite, error: iErr } = await supabaseAdmin
@@ -50,7 +51,7 @@ async function loadInviteContext(code: string) {
     .eq("journey_id", journey.id)
     .eq("code", code)
     .maybeSingle();
-  if (iErr) throw new Error(iErr.message);
+  if (iErr) throwPublicDataError(iErr, "load assessment invite");
   if (!invite) throw new Error("Invite not found.");
   if (invite.completed_at) throw new Error("This invite has already been completed.");
   if (invite.expires_at && new Date(invite.expires_at).getTime() < Date.now()) {
@@ -69,7 +70,7 @@ async function loadAssignedQuestions(
     .select("category_ids, question_limit, creator_id")
     .eq("id", journey.id)
     .maybeSingle();
-  if (settingsError) throw new Error(settingsError.message);
+  if (settingsError) throwPublicDataError(settingsError, "load assessment settings");
   if (!journeySettings) throw new Error("Journey not found.");
 
   const storedCategoryIds = journeySettings.category_ids as string[] | null;
@@ -100,7 +101,7 @@ async function loadAssignedQuestions(
   const { data: questions, error } = await query.order("order_index", {
     ascending: true,
   });
-  if (error) throw new Error(error.message);
+  if (error) throwPublicDataError(error, "load assessment questions");
 
   const available = (questions ?? []) as unknown as AssessmentQuestion[];
   return limit != null && !categoryIds
@@ -143,8 +144,17 @@ function computeScore(
 }
 
 export const getAssessment = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => CodeSchema.parse(d))
+  .validator((d: unknown) => CodeSchema.parse(d))
   .handler(async ({ data }) => {
+    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
+    await consumeRateLimits([
+      {
+        action: "assessment_load_ip",
+        value: callerIp(),
+        windowSeconds: 60 * 60,
+        maxEvents: 120,
+      },
+    ]);
     const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code);
     const questions = await loadAssignedQuestions(supabaseAdmin, journey);
     const assignedIds = questions.map(({ id }) => id);
@@ -152,7 +162,7 @@ export const getAssessment = createServerFn({ method: "POST" })
     const { data: categories, error: cErr } = await supabaseAdmin
       .from("question_categories")
       .select("id, name");
-    if (cErr) throw new Error(cErr.message);
+    if (cErr) throwPublicDataError(cErr, "load assessment categories");
 
     const responses = assignedIds.length
       ? await supabaseAdmin
@@ -161,7 +171,7 @@ export const getAssessment = createServerFn({ method: "POST" })
           .eq("journey_id", journey.id)
           .in("question_id", assignedIds)
       : { data: [], error: null };
-    if (responses.error) throw new Error(responses.error.message);
+    if (responses.error) throwPublicDataError(responses.error, "load assessment responses");
 
     return {
       journey,
@@ -173,7 +183,7 @@ export const getAssessment = createServerFn({ method: "POST" })
   });
 
 export const saveResponse = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => SaveSchema.parse(d))
+  .validator((d: unknown) => SaveSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin, journey } = await loadInviteContext(data.code);
     const assignedQuestions = await loadAssignedQuestions(supabaseAdmin, journey);
@@ -200,7 +210,7 @@ export const saveResponse = createServerFn({ method: "POST" })
         .from("responses")
         .update({ answer: data.answer, score })
         .eq("id", existing.id);
-      if (error) throw new Error(error.message);
+      if (error) throwPublicDataError(error, "update assessment response");
     } else {
       const { error } = await supabaseAdmin.from("responses").insert({
         journey_id: journey.id,
@@ -208,7 +218,7 @@ export const saveResponse = createServerFn({ method: "POST" })
         answer: data.answer,
         score,
       });
-      if (error) throw new Error(error.message);
+      if (error) throwPublicDataError(error, "create assessment response");
     }
 
     // Move journey to in_progress on first save
@@ -217,15 +227,24 @@ export const saveResponse = createServerFn({ method: "POST" })
         .from("journeys")
         .update({ status: "in_progress" })
         .eq("id", journey.id);
-      if (error) throw new Error(error.message);
+      if (error) throwPublicDataError(error, "start assessment journey");
     }
 
     return { ok: true as const, score };
   });
 
 export const completeAssessment = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => CompleteSchema.parse(d))
+  .validator((d: unknown) => CompleteSchema.parse(d))
   .handler(async ({ data }) => {
+    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
+    await consumeRateLimits([
+      {
+        action: "assessment_complete_ip",
+        value: callerIp(),
+        windowSeconds: 60 * 60,
+        maxEvents: 20,
+      },
+    ]);
     const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code);
     const assignedQuestions = await loadAssignedQuestions(supabaseAdmin, journey);
     if (assignedQuestions.length === 0) {
@@ -240,7 +259,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
       )
       .eq("journey_id", journey.id)
       .in("question_id", assignedIds);
-    if (error) throw new Error(error.message);
+    if (error) throwPublicDataError(error, "load assessment completion responses");
 
     type ResponseScoreRow = {
       question_id: string;
@@ -273,7 +292,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
       .select("weight, question_categories!inner(name)")
       .in("id", visibleIds)
       .in("question_categories.name", RELEVANT);
-    if (maxErr) throw new Error(maxErr.message);
+    if (maxErr) throwPublicDataError(maxErr, "calculate assessment score bounds");
 
     const maxes: Record<string, number> = { "Green Flags": 0, "BDSM Safety": 0, "Red Flags": 0 };
     for (const q of (maxRows ?? []) as Array<{
@@ -338,19 +357,24 @@ export const completeAssessment = createServerFn({ method: "POST" })
       },
       { onConflict: "journey_id" },
     );
-    if (resultError) throw new Error(resultError.message);
+    if (resultError) throwPublicDataError(resultError, "save assessment result");
 
     const { error: journeyError } = await supabaseAdmin
       .from("journeys")
       .update({ status: "completed" })
       .eq("id", journey.id);
-    if (journeyError) throw new Error(journeyError.message);
+    if (journeyError) throwPublicDataError(journeyError, "complete assessment journey");
 
-    const { error: inviteError } = await supabaseAdmin
+    const completedAt = new Date().toISOString();
+    const { data: completedInvite, error: inviteError } = await supabaseAdmin
       .from("invites")
-      .update({ completed_at: new Date().toISOString() })
-      .eq("id", invite.id);
-    if (inviteError) throw new Error(inviteError.message);
+      .update({ completed_at: completedAt })
+      .eq("id", invite.id)
+      .is("completed_at", null)
+      .select("id")
+      .maybeSingle();
+    if (inviteError) throwPublicDataError(inviteError, "complete assessment invite");
+    if (!completedInvite) throw new Error("This invite has already been completed.");
 
     // Best-effort AI analysis. Processing is default-off until the owner has
     // approved the external processor and explicitly enables it.
@@ -376,21 +400,28 @@ export const completeAssessment = createServerFn({ method: "POST" })
       if (!owner?.creator_id && !owner?.anonymous_no_contact) {
         const { data: result } = await supabaseAdmin
           .from("results")
-          .select("id, share_token")
+          .select("id, share_token, share_enabled")
           .eq("journey_id", journey.id)
           .maybeSingle();
         if (result) {
           let token = (result.share_token as string | null) ?? null;
-          if (!token) {
+          if (!token || !result.share_enabled) {
             const bytes = new Uint8Array(18);
             crypto.getRandomValues(bytes);
             token = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
           }
-          await supabaseAdmin
+          const { error: shareError } = await supabaseAdmin
             .from("results")
             .update({ share_enabled: true, share_token: token })
             .eq("id", result.id);
-          guestReportUrl = `https://redflagdaddy.com/report/${token}`;
+          if (shareError) {
+            console.error("[assessment-complete] Guest report link update failed", {
+              code: shareError.code,
+            });
+          } else {
+            const { publicSiteOrigin } = await import("./site-url.server");
+            guestReportUrl = `${publicSiteOrigin()}/report/${encodeURIComponent(token)}`;
+          }
         }
       }
 
@@ -420,9 +451,10 @@ export const completeAssessment = createServerFn({ method: "POST" })
             .maybeSingle();
           const ownerPhone = (ownerUser?.phone as string | null) ?? null;
           if (ownerPhone) {
+            const { publicSiteOrigin } = await import("./site-url.server");
             await sendClickatellSms(
               ownerPhone,
-              `RedFlagDaddy: your "${String(journey.title)}" report is ready. View it here: https://redflagdaddy.com/results/${journey.id}`,
+              `RedFlagDaddy: your report is ready. View it here: ${publicSiteOrigin()}/results/${encodeURIComponent(journey.id)}`,
               "owner-report",
             );
           }

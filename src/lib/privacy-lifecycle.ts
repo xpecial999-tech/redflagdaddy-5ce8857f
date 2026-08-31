@@ -10,7 +10,6 @@ export const PREFERENCES_EXPORT_FIELDS =
 export const JOURNEY_EXPORT_FIELDS =
   "id, title, participant_type, status, category_ids, question_limit, recipient_email, guest_email, guest_phone, created_at, updated_at";
 export const INVITE_EXPORT_FIELDS = "id, journey_id, email, created_at, expires_at, completed_at";
-export const RESPONSE_EXPORT_FIELDS = "id, journey_id, question_id, answer, score, created_at";
 export const RESULT_EXPORT_FIELDS =
   "id, journey_id, safety_score, compatibility_score, red_flag_score, green_flag_score, experience_score, ai_summary, share_enabled, created_at, updated_at";
 export const PAYMENT_EXPORT_FIELDS =

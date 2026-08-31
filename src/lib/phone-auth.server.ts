@@ -13,6 +13,7 @@ const MAX_VERIFY_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
 const OTP_EXPIRY_MINUTES = 5;
 const CLICKATELL_URL = "https://platform.clickatell.com/v1/message";
+const SMS_SEND_FAILURE_MESSAGE = "SMS could not be sent. Check the number and try again.";
 
 /** Generic, non-enumerating copy: never reveals whether an account exists. */
 const GENERIC_VERIFY_ERROR = "That code is invalid or has expired. Request a new one.";
@@ -84,26 +85,36 @@ async function logSms(entry: {
 
 export async function sendClickatellSms(phone: string, content: string, purpose = "general") {
   const apiKey = process.env["CLICKATELL_API_KEY"];
-  if (!apiKey) throw new Error("CLICKATELL_API_KEY is not configured");
+  if (!apiKey) {
+    console.error("[clickatell-sms] Provider credential is not configured");
+    throw new Error("SMS service is temporarily unavailable. Please try again later.");
+  }
 
   const to = phone.replace(/\D/g, "");
-  const response = await fetch(CLICKATELL_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: apiKey,
-    },
-    body: JSON.stringify({
-      messages: [{ channel: "sms", to, content }],
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(CLICKATELL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: apiKey,
+      },
+      body: JSON.stringify({
+        messages: [{ channel: "sms", to, content }],
+      }),
+    });
+  } catch {
+    console.error("[clickatell-sms] Provider request could not be completed", { purpose });
+    await logSms({ phone: to, purpose, status: "failed", error: "Network failure" });
+    throw new Error(SMS_SEND_FAILURE_MESSAGE);
+  }
 
   const body = await response.text();
   if (!response.ok) {
     console.error("[clickatell-sms] Provider request failed", { status: response.status, purpose });
     await logSms({ phone: to, purpose, status: "failed", error: `HTTP ${response.status}` });
-    throw new Error(`Clickatell error: ${response.status}`);
+    throw new Error(SMS_SEND_FAILURE_MESSAGE);
   }
 
   let parsed: {
@@ -121,7 +132,7 @@ export async function sendClickatellSms(phone: string, content: string, purpose 
   } catch {
     console.error("[clickatell-sms] Invalid provider response");
     await logSms({ phone: to, purpose, status: "failed", error: "Invalid provider response" });
-    throw new Error("Clickatell returned an invalid response");
+    throw new Error(SMS_SEND_FAILURE_MESSAGE);
   }
 
   const message = parsed.messages?.[0];
@@ -136,7 +147,7 @@ export async function sendClickatellSms(phone: string, content: string, purpose 
       status: "rejected",
       error: message?.errorCode ? `Provider code ${message.errorCode}` : "Provider rejected message",
     });
-    throw new Error(message?.errorDescription || "SMS provider did not accept the message");
+    throw new Error(SMS_SEND_FAILURE_MESSAGE);
   }
 
   console.log("[clickatell-sms] Message accepted", { providerMessageId: message.apiMessageId, purpose });
@@ -277,29 +288,69 @@ export async function verifyPhoneOtpHandler(data: {
   const newAttempts = row.attempts + 1;
   if (!safeCompare(row.code_hash, hashCode(data.code))) {
     const lockNow = newAttempts >= MAX_VERIFY_ATTEMPTS;
-    await supabaseAdmin
+    const { data: attempted, error: attemptError } = await supabaseAdmin
       .from("phone_otps")
       .update({
         attempts: newAttempts,
         ...(lockNow ? { used: true, locked_until: new Date(Date.now() + LOCKOUT_MS).toISOString() } : {}),
       })
-      .eq("id", row.id);
+      .eq("id", row.id)
+      .eq("used", false)
+      .eq("attempts", row.attempts)
+      .select("id")
+      .maybeSingle();
+    if (attemptError) {
+      console.error("[phone-otp] Failed to record verification attempt", {
+        code: attemptError.code,
+      });
+      return { error: "Could not verify code. Please try again." };
+    }
+    if (!attempted) return { error: GENERIC_VERIFY_ERROR };
     if (lockNow) {
       console.warn("[phone-otp] Lockout triggered after repeated bad codes");
       return { error: "Too many attempts. This number is locked for 15 minutes." };
     }
     return { error: GENERIC_VERIFY_ERROR };
   }
-  await supabaseAdmin.from("phone_otps").update({ used: true, attempts: newAttempts }).eq("id", row.id);
+  const { data: consumed, error: consumeError } = await supabaseAdmin
+    .from("phone_otps")
+    .update({ used: true, attempts: newAttempts })
+    .eq("id", row.id)
+    .eq("used", false)
+    .eq("attempts", row.attempts)
+    .select("id")
+    .maybeSingle();
+  if (consumeError) {
+    console.error("[phone-otp] Failed to consume verified code", { code: consumeError.code });
+    return { error: "Could not verify code. Please try again." };
+  }
+  if (!consumed) return { error: GENERIC_VERIFY_ERROR };
 
-  const { data: existing, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  if (listError) {
-    console.error("[phone-otp] Failed to list users:", listError);
+  const { data: phoneProfile, error: profileError } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("phone", data.phone)
+    .maybeSingle();
+  if (profileError) {
+    console.error("[phone-otp] Failed to find phone profile", { code: profileError.code });
     return { error: "Could not sign you in. Please try again." };
   }
 
+  let existingUser: User | undefined;
+  if (phoneProfile?.id) {
+    const { data: authRecord, error: authError } = await supabaseAdmin.auth.admin.getUserById(
+      phoneProfile.id,
+    );
+    if (authError || !authRecord.user) {
+      console.error("[phone-otp] Failed to load phone auth identity", {
+        status: authError?.status ?? "missing",
+      });
+      return { error: "Could not sign you in. Please try again." };
+    }
+    existingUser = authRecord.user;
+  }
+
   const digits = data.phone.replace(/\D/g, "");
-  const existingUser = existing.users.find((user: User) => (user.phone ?? "").replace(/\D/g, "") === digits);
   const password = randomPassword();
   let userId: string;
   // Phone grant is disabled in Auth, so we bootstrap the session with an email+password grant.

@@ -20,6 +20,7 @@ const PUBLIC_PATHS = [
   "/guest",
   "/demo-report",
   "/consent-safety",
+  "/support",
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -56,13 +57,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 width={1200}
                 height={400}
                 loading="eager"
-                className="h-12 w-auto"
+                className="h-auto w-[180px] sm:w-[240px]"
               />
             </Link>
             {showPublicSignIn && (
               <Link
                 to="/login"
-                className="text-sm flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5 transition"
+                className="flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm hover:bg-white/5 transition"
               >
                 <LogIn className="w-4 h-4" /> Sign in
               </Link>
@@ -89,6 +90,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link to="/about" className="hover:text-foreground">About</Link>
           <span aria-hidden="true" className="px-2">·</span>
           <Link to="/consent-safety" className="hover:text-foreground">Consent, safety &amp; analytics</Link>
+          <span aria-hidden="true" className="px-2">·</span>
+          <Link to="/support" className="hover:text-foreground">Support</Link>
         </footer>
       )}
 
@@ -102,6 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Link
                   key={item.to}
                   to={item.to}
+                  aria-current={active ? "page" : undefined}
                   className="relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-xs"
                 >
                   {active && (

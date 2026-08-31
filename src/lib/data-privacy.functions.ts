@@ -9,7 +9,6 @@ import {
   PREFERENCES_EXPORT_FIELDS,
   PROFILE_EXPORT_FIELDS,
   requirePrivacyResult,
-  RESPONSE_EXPORT_FIELDS,
   RESULT_EXPORT_FIELDS,
   smsLogPhone,
 } from "@/lib/privacy-lifecycle";
@@ -66,16 +65,11 @@ export const exportMyData = createServerFn({ method: "GET" })
       ) ?? [];
     const journeyIds = journeys.map((j) => j.id);
 
-    let responses: unknown[] = [];
     let results: unknown[] = [];
     let invites: unknown[] = [];
 
     if (journeyIds.length > 0) {
-      const [rRes, resRes, iRes] = await Promise.all([
-        supabase
-          .from("responses")
-          .select(RESPONSE_EXPORT_FIELDS)
-          .in("journey_id", journeyIds),
+      const [resRes, iRes] = await Promise.all([
         supabase
           .from("results")
           .select(RESULT_EXPORT_FIELDS)
@@ -85,12 +79,6 @@ export const exportMyData = createServerFn({ method: "GET" })
           .select(INVITE_EXPORT_FIELDS)
           .in("journey_id", journeyIds),
       ]);
-      responses =
-        requirePrivacyResult(
-          rRes,
-          "load responses for export",
-          EXPORT_FAILURE_MESSAGE,
-        ) ?? [];
       results =
         requirePrivacyResult(
           resRes,
@@ -110,12 +98,12 @@ export const exportMyData = createServerFn({ method: "GET" })
       exportedAt: new Date().toISOString(),
       exportNotes: [
         "Active invite codes, public share tokens, raw payment-provider payloads and authentication secrets are excluded.",
+        "Partner-submitted raw assessment answers are excluded from the account owner's export.",
       ],
       profile: profile ?? null,
       preferences: preferences ?? null,
       journeys,
       invites,
-      responses,
       results,
       payments,
     };
@@ -252,17 +240,9 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
       );
     }
 
-    // Finally remove the public profile and auth user
-    const { error: uErr } = await supabaseAdmin
-      .from("users")
-      .delete()
-      .eq("id", userId);
-    requirePrivacyResult(
-      { data: null, error: uErr },
-      "delete public profile",
-      DELETE_FAILURE_MESSAGE,
-    );
-
+    // Delete Auth last. The users profile has an ON DELETE CASCADE relationship,
+    // so a failed Auth deletion leaves the profile available for a safe retry
+    // rather than creating an orphaned identity with no application profile.
     const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(userId);
     requirePrivacyResult(
       { data: null, error: authErr },

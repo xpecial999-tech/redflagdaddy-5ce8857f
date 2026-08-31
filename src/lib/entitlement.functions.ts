@@ -1,16 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { throwPublicDataError } from "./public-data-error";
 
 export const FREE_QUESTION_CAP = 20;
 export const FREE_JOURNEY_CAP = 2;
 export const DEFAULT_QUESTION_LIMIT = 100;
 
 async function loadSettings() {
+  const { paymentsActivationEnabled } = await import("./payment-config.server");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("app_settings")
-    .select("paid_mode_enabled, price_cents, currency, construction_mode_enabled, construction_mode_updated_at")
+    .select(
+      "paid_mode_enabled, price_cents, currency, construction_mode_enabled, construction_mode_updated_at",
+    )
     .eq("id", true)
     .maybeSingle();
   if (error || !data) {
@@ -25,7 +29,7 @@ async function loadSettings() {
     };
   }
   return {
-    paidModeEnabled: data.paid_mode_enabled,
+    paidModeEnabled: paymentsActivationEnabled() && !!data.paid_mode_enabled,
     priceCents: data.price_cents,
     currency: data.currency,
     constructionModeEnabled: data.construction_mode_enabled,
@@ -74,7 +78,9 @@ export const getEntitlement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => loadEntitlement(context.userId));
 
-export const getPublicSettings = createServerFn({ method: "GET" }).handler(async () => loadSettings());
+export const getPublicSettings = createServerFn({ method: "GET" }).handler(async () =>
+  loadSettings(),
+);
 
 async function assertAdminInline(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -93,22 +99,32 @@ export const getAdminSettings = createServerFn({ method: "GET" })
     const sb = await assertAdminInline(context.userId);
     const { data } = await sb
       .from("app_settings")
-      .select("paid_mode_enabled, price_cents, currency, construction_mode_enabled, construction_mode_updated_at, updated_at")
+      .select(
+        "paid_mode_enabled, price_cents, currency, construction_mode_enabled, construction_mode_updated_at, updated_at",
+      )
       .eq("id", true)
       .maybeSingle();
-    return data ?? {
-      paid_mode_enabled: false,
-      price_cents: 100,
-      currency: "USD",
-      construction_mode_enabled: true,
-      construction_mode_updated_at: null,
-    };
+    return (
+      data ?? {
+        paid_mode_enabled: false,
+        price_cents: 100,
+        currency: "USD",
+        construction_mode_enabled: true,
+        construction_mode_updated_at: null,
+      }
+    );
   });
 
 export const setPaidMode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ enabled: z.boolean() }).parse(d))
+  .validator((d: unknown) => z.object({ enabled: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
+    if (data.enabled) {
+      const { paymentsActivationEnabled } = await import("./payment-config.server");
+      if (!paymentsActivationEnabled()) {
+        throw new Error("Payment activation is locked pending commercial review.");
+      }
+    }
     const sb = await assertAdminInline(context.userId);
     const { error } = await sb
       .from("app_settings")
@@ -119,7 +135,7 @@ export const setPaidMode = createServerFn({ method: "POST" })
 
 export const setConstructionMode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ enabled: z.boolean() }).parse(d))
+  .validator((d: unknown) => z.object({ enabled: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = await assertAdminInline(context.userId);
     const { data: previous, error: readError } = await sb
@@ -127,7 +143,8 @@ export const setConstructionMode = createServerFn({ method: "POST" })
       .select("construction_mode_enabled, construction_mode_updated_at, updated_at")
       .eq("id", true)
       .maybeSingle();
-    if (readError || !previous) throw new Error("Could not read the current construction-mode setting.");
+    if (readError || !previous)
+      throw new Error("Could not read the current construction-mode setting.");
 
     const changedAt = new Date().toISOString();
     const { error: updateError } = await sb
@@ -157,7 +174,9 @@ export const setConstructionMode = createServerFn({ method: "POST" })
         })
         .eq("id", true);
       if (rollbackError) console.error("[construction-mode] Audit rollback failed", rollbackError);
-      throw new Error("Construction mode was not changed because its audit record could not be saved.");
+      throw new Error(
+        "Construction mode was not changed because its audit record could not be saved.",
+      );
     }
 
     return { ok: true as const, enabled: data.enabled, changedAt };
@@ -169,13 +188,15 @@ export const listPublicCategories = createServerFn({ method: "GET" }).handler(as
     .from("question_categories")
     .select("id, name")
     .order("name");
-  if (error) throw new Error(error.message);
-  const { data: qs } = await supabaseAdmin
+  if (error) throwPublicDataError(error, "load public categories");
+  const { data: qs, error: questionsError } = await supabaseAdmin
     .from("questions")
     .select("category_id")
     .eq("active", true);
+  if (questionsError) throwPublicDataError(questionsError, "load public category counts");
   const counts = new Map<string, number>();
-  for (const q of qs ?? []) counts.set(q.category_id as string, (counts.get(q.category_id as string) ?? 0) + 1);
+  for (const q of qs ?? [])
+    counts.set(q.category_id as string, (counts.get(q.category_id as string) ?? 0) + 1);
   return {
     categories: (cats ?? []).map((c) => ({ id: c.id, name: c.name, count: counts.get(c.id) ?? 0 })),
   };

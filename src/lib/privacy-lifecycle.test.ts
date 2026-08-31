@@ -51,7 +51,19 @@ describe("privacy lifecycle", () => {
     expect(PAYMENT_EXPORT_FIELDS).not.toContain("raw");
 
     const privacySource = source("src/lib/data-privacy.functions.ts");
+    const exportSource = privacySource.slice(0, privacySource.indexOf("deleteMyAccount"));
     expect(privacySource).toContain('.from("payments")');
+    expect(exportSource).not.toContain('.from("responses")');
+    expect(exportSource).toContain("Partner-submitted raw assessment answers are excluded");
     expect(privacySource).not.toContain('.select("*")');
+  });
+
+  it("deletes Auth last and lets its cascade remove the public profile", () => {
+    const privacySource = source("src/lib/data-privacy.functions.ts");
+    expect(privacySource).toContain("auth.admin.deleteUser(userId)");
+    expect(privacySource).not.toMatch(/\.from\("users"\)\s*\.delete\(\)/);
+    expect(privacySource.indexOf('from("phone_otps")')).toBeLessThan(
+      privacySource.indexOf("auth.admin.deleteUser(userId)"),
+    );
   });
 });

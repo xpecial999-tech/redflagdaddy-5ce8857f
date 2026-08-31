@@ -1,0 +1,19 @@
+:root {
+  --rfd-ink-950: #08070e;
+  --rfd-midnight-900: #110b24;
+  --rfd-plum-800: #24113b;
+  --rfd-royal-violet: #6c2bff;
+  --rfd-electric-purple: #9a38ff;
+  --rfd-signal-pink: #f340a6;
+  --rfd-hot-magenta: #ff2e8c;
+  --rfd-soft-lavender: #d9c7ff;
+  --rfd-cloud: #f8f5fc;
+  --rfd-steel: #aaa4b7;
+  --rfd-success: #35d39a;
+  --rfd-caution: #ffb547;
+  --rfd-danger: #ff4d6d;
+  --rfd-info: #5aa7ff;
+  --rfd-gradient-primary: linear-gradient(135deg, #6c2bff 0%, #f340a6 58%, #ff2e8c 100%);
+  --rfd-font-display: "DM Serif Display", Georgia, serif;
+  --rfd-font-ui: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}

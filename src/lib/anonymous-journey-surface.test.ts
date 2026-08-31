@@ -19,7 +19,7 @@ describe("anonymous journey privacy surface", () => {
     expect(guestRoute).not.toMatch(/search:\s*\{[^}]*ownerCode/);
     expect(guestRoute).not.toMatch(/params:\s*\{[^}]*ownerCode/);
     expect(guestRoute).toContain('autoComplete="off"');
-    expect(guestRoute).toContain("noindex,nofollow,noarchive");
+    expect(guestRoute).toMatch(/noindex,\s*nofollow,\s*noarchive/);
   });
 
   it("stores only a hash and uses a distinct partner invite code", () => {
