@@ -62,30 +62,37 @@ export async function sendAppEmail(opts: {
 
     // Get or create an unsubscribe token for this address.
     let unsubscribeToken: string | null = null
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: tokenLookupError } = await supabaseAdmin
       .from('email_unsubscribe_tokens')
       .select('token, used_at')
       .eq('email', normalized)
       .maybeSingle()
 
+    if (tokenLookupError) return { ok: false, reason: 'unsubscribe_token_lookup_failed' }
+
     if (existing && !existing.used_at) {
       unsubscribeToken = existing.token
     } else if (!existing) {
       const token = generateToken()
-      await supabaseAdmin
+      const { error: tokenInsertError } = await supabaseAdmin
         .from('email_unsubscribe_tokens')
         .upsert({ token, email: normalized }, { onConflict: 'email', ignoreDuplicates: true })
-      const { data: stored } = await supabaseAdmin
+      if (tokenInsertError) return { ok: false, reason: 'unsubscribe_token_store_failed' }
+
+      const { data: stored, error: storedTokenError } = await supabaseAdmin
         .from('email_unsubscribe_tokens')
         .select('token')
         .eq('email', normalized)
         .maybeSingle()
-      unsubscribeToken = stored?.token ?? token
+      if (storedTokenError || !stored?.token) {
+        return { ok: false, reason: 'unsubscribe_token_confirmation_failed' }
+      }
+      unsubscribeToken = stored.token
     } else {
       return { ok: false, reason: 'email_suppressed' }
     }
 
-    const data = (opts.templateData ?? {}) as Record<string, any>
+    const data = opts.templateData ?? {}
     const element = React.createElement(template.component, data)
     const html = await render(element)
     const text = await render(element, { plainText: true })
@@ -121,7 +128,7 @@ export async function sendAppEmail(opts: {
       console.error('[email] enqueue failed', {
         template: opts.templateName,
         recipient: redactEmail(recipient),
-        message: enqueueError.message,
+        code: enqueueError.code,
       })
       await supabaseAdmin.from('email_send_log').insert({
         message_id: messageId,
@@ -134,8 +141,10 @@ export async function sendAppEmail(opts: {
     }
 
     return { ok: true }
-  } catch (e) {
-    console.error('[email] send failed', e)
+  } catch (error) {
+    console.error('[email] send failed', {
+      name: error instanceof Error ? error.name : 'unknown',
+    })
     return { ok: false, reason: 'exception' }
   }
 }

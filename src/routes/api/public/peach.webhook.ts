@@ -5,6 +5,8 @@ export const Route = createFileRoute("/api/public/peach/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const { paymentsActivationEnabled } = await import("@/lib/payment-config.server");
+        if (!paymentsActivationEnabled()) return new Response("Not found", { status: 404 });
         const secret = process.env.PEACH_WEBHOOK_SECRET ?? "";
         const rawBody = await request.text();
         const signatureValid = await verifyPeachWebhookSignature({

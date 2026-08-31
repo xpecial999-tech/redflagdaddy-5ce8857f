@@ -1,0 +1,22 @@
+{
+  "name": "RedFlagDaddy",
+  "short_name": "RFD",
+  "description": "Private, role-aware prompts for structured conversations between adults.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08070E",
+  "theme_color": "#08070E",
+  "icons": [
+    {
+      "src": "/icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

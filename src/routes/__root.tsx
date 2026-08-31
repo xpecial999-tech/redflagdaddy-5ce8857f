@@ -20,10 +20,17 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="glass rounded-3xl p-8 max-w-md text-center">
-        <h1 className="text-7xl font-display text-gradient">404</h1>
-        <h2 className="mt-4 text-xl font-semibold">Off course</h2>
-        <p className="mt-2 text-sm text-muted-foreground">This page isn't on the map.</p>
-        <Link to="/" className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+        <img
+          src="/favicon.png"
+          alt=""
+          width={64}
+          height={64}
+          className="mx-auto h-16 w-16"
+        />
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">404</p>
+        <h1 className="mt-2 text-2xl font-semibold">This route doesn’t exist.</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Use the button below to return to RedFlagDaddy.</p>
+        <Link to="/" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
           Return home
         </Link>
       </div>
@@ -68,9 +75,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => { router.invalidate(); reset(); }}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            className="min-h-11 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >Try again</button>
-          <a href="/" className="rounded-xl border border-border px-4 py-2 text-sm">Go home</a>
+          <a href="/" className="inline-flex min-h-11 items-center rounded-xl border border-border px-4 py-2 text-sm">Go home</a>
         </div>
       </div>
     </div>
@@ -82,24 +89,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "RedFlagDaddy — Consent & Compatibility Assessment" },
-      { name: "description", content: "A consent, compatibility, safety and red-flag assessment platform for Dominants, submissives, switches and the full spectrum of BDSM archetypes." },
-      { name: "theme-color", content: "#1a1424" },
-      { property: "og:title", content: "RedFlagDaddy — Consent & Compatibility Assessment" },
+      { title: "RedFlagDaddy — Structured conversations for adults" },
+      { name: "description", content: "Private, role-aware prompts that help adults discuss consent, compatibility, boundaries and safety. Not identity verification or proof of consent." },
+      { name: "theme-color", content: "#08070E" },
+      { property: "og:title", content: "RedFlagDaddy — Structured conversations for adults" },
       { property: "og:site_name", content: "RedFlagDaddy" },
-      { property: "og:locale", content: "en_ZA" },
-      { name: "twitter:title", content: "RedFlagDaddy — Consent & Compatibility Assessment" },
-      { property: "og:description", content: "A consent, compatibility, safety and red-flag assessment platform for Dominants, submissives, switches and the full spectrum of BDSM archetypes." },
-      { name: "twitter:description", content: "A consent, compatibility, safety and red-flag assessment platform for Dominants, submissives, switches and the full spectrum of BDSM archetypes." },
+      { name: "twitter:title", content: "RedFlagDaddy — Structured conversations for adults" },
+      { property: "og:description", content: "Private, role-aware prompts that help adults discuss consent, compatibility, boundaries and safety. Not identity verification or proof of consent." },
+      { name: "twitter:description", content: "Private, role-aware prompts that help adults discuss consent, compatibility, boundaries and safety. Not identity verification or proof of consent." },
       { name: "twitter:card", content: "summary" },
       { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      { rel: "icon", type: "image/png", sizes: "64x64", href: "/favicon.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" },
     ],
   }),
   shellComponent: RootShell,

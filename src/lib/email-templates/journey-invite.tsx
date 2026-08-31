@@ -27,14 +27,14 @@ const JourneyInviteEmail = ({
 }: JourneyInviteProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You've been invited to complete a RedFlagDaddy assessment</Preview>
+    <Preview>You've been invited to a private RedFlagDaddy check-in</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={brand}>RedFlagDaddy</Text>
-        <Heading style={h1}>You've been invited</Heading>
+        <Heading style={h1}>A partner invited you</Heading>
         <Text style={text}>
           {inviterName ? `${inviterName} has` : 'Someone has'} invited you to
-          complete a private compatibility &amp; safety assessment
+          a private check-in about compatibility, boundaries and safety
           {journeyTitle ? `: “${journeyTitle}”` : ''}.
         </Text>
         <Text style={text}>
@@ -44,7 +44,7 @@ const JourneyInviteEmail = ({
         {inviteUrl ? (
           <Section style={{ margin: '0 0 24px' }}>
             <Button style={button} href={inviteUrl}>
-              Start the assessment
+              Start your check-in
             </Button>
           </Section>
         ) : null}
@@ -62,7 +62,7 @@ const JourneyInviteEmail = ({
 
 export const template = {
   component: JourneyInviteEmail,
-  subject: 'You have been invited to a RedFlagDaddy assessment',
+  subject: 'You have been invited to a private RedFlagDaddy check-in',
   displayName: 'Journey invite',
   previewData: {
     inviterName: 'Alex',

@@ -21,7 +21,7 @@ const EMAIL_SUBJECTS: Record<string, string> = {
 }
 
 // Template mapping
-const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
+const EMAIL_TEMPLATES: Record<string, React.ElementType> = {
   signup: SignupEmail,
   invite: InviteEmail,
   magiclink: MagicLinkEmail,
@@ -35,12 +35,63 @@ const SITE_NAME = "RedFlagDaddy.com"
 const SENDER_DOMAIN = "notify.redflagdaddy.com"
 const ROOT_DOMAIN = "redflagdaddy.com"
 const FROM_DOMAIN = "redflagdaddy.com"
+const MAX_WEBHOOK_BODY_BYTES = 64 * 1024
+const MAX_EMAIL_LENGTH = 320
+const MAX_URL_LENGTH = 2048
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
   const [localPart, domain] = email.split('@')
   if (!localPart || !domain) return '***'
   return `${localPart[0]}***@${domain}`
+}
+
+type AuthWebhookPayload = {
+  run_id: string;
+  version: string;
+  data: {
+    action_type: string;
+    email?: string;
+    url?: string;
+    token?: string;
+    old_email?: string;
+    new_email?: string;
+  };
+};
+
+function isAuthWebhookPayload(value: unknown): value is AuthWebhookPayload {
+  if (!value || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  if (
+    typeof record.run_id !== 'string' ||
+    record.run_id.length < 1 ||
+    record.run_id.length > 128 ||
+    typeof record.version !== 'string' ||
+    record.version.length > 8
+  ) return false;
+  if (!record.data || typeof record.data !== 'object') return false;
+  const data = record.data as Record<string, unknown>;
+  if (typeof data.action_type !== 'string' || !EMAIL_TEMPLATES[data.action_type]) return false;
+  if (
+    typeof data.email !== 'string' ||
+    data.email.length > MAX_EMAIL_LENGTH ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)
+  ) return false;
+  if (data.url !== undefined) {
+    if (typeof data.url !== 'string' || data.url.length > MAX_URL_LENGTH) return false;
+    try {
+      if (new URL(data.url).protocol !== 'https:') return false;
+    } catch {
+      return false;
+    }
+  }
+  for (const key of ['token', 'old_email', 'new_email'] as const) {
+    const field = data[key];
+    if (field !== undefined && (typeof field !== 'string' || field.length > MAX_URL_LENGTH)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 export const Route = createFileRoute("/lovable/email/auth/webhook")({
@@ -57,8 +108,13 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           )
         }
 
+        const declaredLength = Number(request.headers.get('content-length'))
+        if (Number.isFinite(declaredLength) && declaredLength > MAX_WEBHOOK_BODY_BYTES) {
+          return Response.json({ error: 'Payload too large' }, { status: 413 })
+        }
+
         // Verify signature + timestamp, then parse payload.
-        let payload: any
+        let payload: AuthWebhookPayload
         let run_id = ''
         try {
           const verified = await verifyWebhookRequest({
@@ -66,6 +122,9 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
             secret: apiKey,
             parser: parseEmailWebhookPayload,
           })
+          if (!isAuthWebhookPayload(verified.payload)) {
+            return Response.json({ error: 'Invalid webhook payload' }, { status: 400 })
+          }
           payload = verified.payload
           run_id = payload.run_id
         } catch (error) {
@@ -75,14 +134,14 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
               case 'missing_timestamp':
               case 'invalid_timestamp':
               case 'stale_timestamp':
-                console.error('Invalid webhook signature', { error: error.message })
+                console.error('Invalid webhook signature', { code: error.code })
                 return Response.json(
                   { error: 'Invalid signature' },
                   { status: 401 }
                 )
               case 'invalid_payload':
               case 'invalid_json':
-                console.error('Invalid webhook payload', { error: error.message })
+                console.error('Invalid webhook payload', { code: error.code })
                 return Response.json(
                   { error: 'Invalid webhook payload' },
                   { status: 400 }
@@ -90,7 +149,9 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
             }
           }
 
-          console.error('Webhook verification failed', { error })
+          console.error('Webhook verification failed', {
+            type: error instanceof Error ? error.name : 'unknown',
+          })
           return Response.json(
             { error: 'Invalid webhook payload' },
             { status: 400 }
@@ -108,7 +169,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
         if (payload.version !== '1') {
           console.error('Unsupported payload version', { version: payload.version, run_id })
           return Response.json(
-            { error: `Unsupported payload version: ${payload.version}` },
+            { error: 'Unsupported payload version' },
             { status: 400 }
           )
         }
@@ -126,7 +187,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
         if (!EmailTemplate) {
           console.error('Unknown email type', { emailType, run_id })
           return Response.json(
-            { error: `Unknown email type: ${emailType}` },
+            { error: 'Unknown email type' },
             { status: 400 }
           )
         }
@@ -164,12 +225,20 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
         const messageId = crypto.randomUUID()
 
         // Log pending BEFORE enqueue so we have a record even if enqueue crashes
-        await supabase.from('email_send_log').insert({
+        const { error: pendingLogError } = await supabase.from('email_send_log').insert({
           message_id: messageId,
           template_name: emailType,
           recipient_email: payload.data.email,
           status: 'pending',
         })
+        if (pendingLogError) {
+          console.error('Failed to create auth email audit row', {
+            code: pendingLogError.code,
+            run_id,
+            emailType,
+          })
+          return Response.json({ error: 'Failed to enqueue email' }, { status: 500 })
+        }
 
         const { error: enqueueError } = await supabase.rpc('enqueue_email', {
           queue_name: 'auth_emails',
@@ -189,7 +258,11 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
         })
 
         if (enqueueError) {
-          console.error('Failed to enqueue auth email', { error: enqueueError, run_id, emailType })
+          console.error('Failed to enqueue auth email', {
+            code: enqueueError.code,
+            run_id,
+            emailType,
+          })
           await supabase.from('email_send_log').insert({
             message_id: messageId,
             template_name: emailType,

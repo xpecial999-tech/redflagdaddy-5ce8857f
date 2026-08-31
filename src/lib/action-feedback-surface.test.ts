@@ -23,4 +23,21 @@ describe("action feedback surface", () => {
     expect(route).toContain('sending ? "Sending…" : "Send SMS"');
     expect(route).toContain("toast.error");
   });
+
+  it("exposes navigation and preference state to assistive technology", () => {
+    const shell = source("src/components/AppShell.tsx");
+    const settings = source("src/components/profile-settings.tsx");
+
+    expect(shell).toContain('aria-current={active ? "page" : undefined}');
+    expect(settings).toContain('aria-label="Back to profile"');
+    expect(settings).toContain('role="switch"');
+    expect(settings).toContain("aria-checked={value}");
+  });
+
+  it("gives administrator icon actions accessible names", () => {
+    const admin = source("src/routes/_authenticated/admin.tsx");
+
+    expect(admin).toContain("aria-label={`Edit category ${c.name}`}");
+    expect(admin).toContain("aria-label={`Delete category ${c.name}`}");
+  });
 });

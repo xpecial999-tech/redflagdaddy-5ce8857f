@@ -23,15 +23,15 @@ const AssessmentCompleteEmail = ({
 }: AssessmentCompleteProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your RedFlagDaddy results are ready</Preview>
+    <Preview>Your RedFlagDaddy report is ready</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={brand}>RedFlagDaddy</Text>
-        <Heading style={h1}>Your results are ready</Heading>
+        <Heading style={h1}>Your partner has finished</Heading>
         <Text style={text}>
-          The assessment{journeyTitle ? ` for “${journeyTitle}”` : ''} has been
-          completed. Your compatibility, safety and red-flag scores — plus the
-          AI summary — are ready to review.
+          The partner check-in{journeyTitle ? ` for “${journeyTitle}”` : ''} is
+          complete. Your compatibility, safety and red-flag scores — plus the
+          conversation summary — are ready to review.
         </Text>
         {resultsUrl ? (
           <Section style={{ margin: '0 0 24px' }}>
@@ -50,7 +50,7 @@ const AssessmentCompleteEmail = ({
 
 export const template = {
   component: AssessmentCompleteEmail,
-  subject: 'Your RedFlagDaddy results are ready',
+  subject: 'Your RedFlagDaddy report is ready',
   displayName: 'Assessment complete',
   previewData: {
     journeyTitle: 'Getting to know each other',

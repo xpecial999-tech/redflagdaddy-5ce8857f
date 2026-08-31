@@ -12,6 +12,7 @@ export function SubpageHeader({
     <div className="flex items-center gap-3">
       <Link
         to="/profile"
+        aria-label="Back to profile"
         className="w-9 h-9 rounded-xl glass flex items-center justify-center hover:bg-white/5 transition"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -40,6 +41,8 @@ export function Toggle({
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={value}
       onClick={() => onChange(!value)}
       className="w-full text-left glass rounded-2xl p-4 flex items-center gap-3 hover:bg-white/5 transition"
     >

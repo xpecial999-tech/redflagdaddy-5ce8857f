@@ -193,7 +193,7 @@ function UpgradePage() {
       )}
       {finalizeMut.data && !finalizeMut.data.ok && (
         <p className="text-sm text-destructive text-center">
-          Payment not confirmed: {finalizeMut.data.description || finalizeMut.data.code}
+          Payment not confirmed: {finalizeMut.data.description}
         </p>
       )}
     </div>

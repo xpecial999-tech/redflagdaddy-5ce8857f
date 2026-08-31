@@ -4,7 +4,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Share2, Link2, Check, Lock } from "lucide-react";
+import { CalendarInviteDialog } from "@/components/CalendarInviteDialog";
+import { SelectiveReportExportDialog } from "@/components/SelectiveReportExportDialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Loader2, Download, Share2, Link2, Check, Lock, FileText, MessageSquare, FileJson, ChevronDown, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   getResults,
@@ -13,6 +16,7 @@ import {
 } from "@/lib/analysis.functions";
 import { getEntitlement } from "@/lib/entitlement.functions";
 import { ReportView } from "@/components/ReportView";
+import { buildConversationPlanMarkdown, buildConversationTopicsMarkdown, buildFullReportMarkdown, buildPrivateReportJson, downloadJson, downloadMarkdown, safeExportFilename, safeReportFilename } from "@/lib/report-export";
 
 export const Route = createFileRoute("/_authenticated/results/$id")({
   component: ResultsPage,
@@ -35,6 +39,7 @@ function ResultsPage() {
   const toggleShare = useServerFn(toggleShareReport);
   const entFn = useServerFn(getEntitlement);
   const [copied, setCopied] = useState(false);
+  const [selectiveExportOpen, setSelectiveExportOpen] = useState(false);
 
   const q = useQuery({
     queryKey: ["results", id],
@@ -86,19 +91,95 @@ function ResultsPage() {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const exportInput = analysis ? {
+    title: journey?.title ?? "Journey",
+    participantType: journey?.participant_type ?? "",
+    scores,
+    analysis,
+  } : null;
+
+  const exportMarkdown = (mode: "full" | "topics") => {
+    if (!exportInput) return;
+    const topicsOnly = mode === "topics";
+    downloadMarkdown(
+      topicsOnly
+        ? "conversation-topics.md"
+        : safeReportFilename(exportInput.title, "private-report"),
+      topicsOnly ? buildConversationTopicsMarkdown(exportInput) : buildFullReportMarkdown(exportInput),
+    );
+    toast.success(
+      topicsOnly ? "Conversation topics saved to this device" : "Private report saved to this device",
+      { description: "RedFlagDaddy does not upload or retain this export." },
+    );
+  };
+
+  const exportJson = () => {
+    if (!exportInput) return;
+    downloadJson(
+      safeExportFilename(exportInput.title, "private-report", "json"),
+      buildPrivateReportJson(exportInput),
+    );
+    toast.success("Private JSON report saved to this device", {
+      description: "RedFlagDaddy does not upload or retain this export.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Action bar */}
       <div className="flex flex-wrap gap-2 justify-end no-print">
         {analysis && ent.data?.canDownloadReport && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.print()}
-          >
-            <Download className="h-4 w-4 mr-1.5" /> Download PDF
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-1.5" /> Export
+                <ChevronDown className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Private exports</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => window.print()}>
+                <Download /> Save or print PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => exportMarkdown("full")}>
+                <FileText /> Complete Markdown
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => exportMarkdown("topics")}>
+                <MessageSquare /> Topics-only Markdown
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  if (!exportInput) return;
+                  downloadMarkdown(
+                    "conversation-plan.md",
+                    buildConversationPlanMarkdown(exportInput),
+                  );
+                  toast.success("Private conversation plan saved", {
+                    description: "This is a preparation aid, not an agreement or proof of consent.",
+                  });
+                }}
+              >
+                <ClipboardCheck /> Conversation plan
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={exportJson}>
+                <FileJson /> Versioned JSON
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setSelectiveExportOpen(true)}>
+                <FileText /> Choose dimensions…
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
+        {exportInput && (
+          <SelectiveReportExportDialog
+            input={exportInput}
+            open={selectiveExportOpen}
+            onOpenChange={setSelectiveExportOpen}
+          />
+        )}
+        {analysis && ent.data?.canDownloadReport && <CalendarInviteDialog analysis={analysis} />}
         {analysis && ent.data?.canDownloadReport && (
           <Button
             variant={share?.enabled ? "secondary" : "outline"}

@@ -46,7 +46,7 @@ export const Route = createFileRoute("/guest")({
   head: () => ({
     meta: [
       { title: "Continue as guest — RedFlagDaddy" },
-      { name: "robots", content: "noindex,nofollow,noarchive" },
+      { name: "robots", content: "noindex, nofollow, noarchive" },
     ],
   }),
   component: GuestPage,
@@ -217,7 +217,9 @@ function GuestPage() {
             </label>
 
             {mutation.error && (
-              <p className="text-xs text-destructive">{(mutation.error as Error).message}</p>
+              <p role="alert" className="text-xs text-destructive">
+                {(mutation.error as Error).message}
+              </p>
             )}
 
             <button
@@ -509,6 +511,7 @@ function PartnerLinkView({
                 {link}
               </div>
               <button
+                type="button"
                 onClick={copy}
                 className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground px-3 text-xs font-medium"
               >
@@ -596,6 +599,7 @@ function PartnerLinkView({
           </p>
           <div className="grid grid-cols-2 gap-2">
             <button
+              type="button"
               onClick={() => setSmsOpen(true)}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium hover:bg-white/5 transition"
             >
@@ -653,6 +657,7 @@ function PartnerLinkView({
               </div>
               <DialogFooter>
                 <button
+                  type="button"
                   onClick={submitSms}
                   disabled={sending || !rPhone.trim()}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-50"
@@ -681,9 +686,12 @@ function PartnerLinkView({
               </div>
             </div>
             {selfMutation.error && (
-              <p className="text-xs text-destructive">{(selfMutation.error as Error).message}</p>
+              <p role="alert" className="text-xs text-destructive">
+                {(selfMutation.error as Error).message}
+              </p>
             )}
             <button
+              type="button"
               onClick={() => selfMutation.mutate()}
               disabled={!selfType || selfMutation.isPending}
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"

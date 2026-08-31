@@ -7,12 +7,22 @@ export const MARKETING_EVENT_NAMES = [
 
 export const MARKETING_FLOWS = ["landing", "account", "guest"] as const;
 
+export const MARKETING_SOURCES = [
+  "fetlife",
+  "reddit",
+  "x",
+  "tiktok",
+  "instagram",
+  "threads",
+  "youtube",
+] as const;
+
 export type MarketingEventName = (typeof MARKETING_EVENT_NAMES)[number];
 export type MarketingFlow = (typeof MARKETING_FLOWS)[number];
 export type AnalyticsMode = "staging" | "production";
 
 export type MarketingAttribution = {
-  source: "tiktok" | "instagram" | "threads" | "youtube" | null;
+  source: "fetlife" | "reddit" | "x" | "tiktok" | "instagram" | "threads" | "youtube" | null;
   medium: "organic_social" | null;
   campaign: string | null;
   content: string | null;
@@ -22,7 +32,7 @@ const ATTRIBUTION_KEY = "rfd_marketing_attribution_v1";
 const SESSION_KEY = "rfd_marketing_session_v1";
 const CONSENT_KEY = "rfd_anonymous_analytics_consent_v1";
 const EVENT_PREFIX = "rfd_marketing_event_v1:";
-const ALLOWED_SOURCES = new Set(["tiktok", "instagram", "threads", "youtube"]);
+const ALLOWED_SOURCES = new Set<string>(MARKETING_SOURCES);
 const MARKETING_LANDING_PATHS = new Set([
   "/",
   "/about",

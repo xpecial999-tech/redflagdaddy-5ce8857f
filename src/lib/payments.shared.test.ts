@@ -73,10 +73,15 @@ describe("payment route contracts", () => {
     expect(paymentFunctions).toContain('.eq("user_id", context.userId)');
     expect(paymentFunctions).toContain("amountMatches");
     expect(paymentFunctions).toContain("currencyMatches");
+    expect(paymentFunctions).toContain("peachPaymentConfig");
+    expect(paymentFunctions).not.toContain("const PEACH_BASE");
+    expect(paymentFunctions).not.toContain("json.result?.description ?? \"\"");
+    expect(upgrade).not.toContain("finalizeMut.data.code");
   });
 
   it("parses and verifies signed form webhooks before using stored ownership", () => {
     expect(webhook).toContain("verifyPeachWebhookSignature");
+    expect(webhook).toContain("paymentsActivationEnabled");
     expect(webhook).toContain("await request.text()");
     expect(webhook).toContain("new URLSearchParams(rawBody)");
     expect(webhook).toContain('.eq("provider_ref", checkoutId)');

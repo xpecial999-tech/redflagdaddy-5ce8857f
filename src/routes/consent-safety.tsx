@@ -2,13 +2,25 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
 import { AnalyticsPreference } from "@/components/AnalyticsConsent";
 import { motion } from "framer-motion";
-import { Shield, AlertTriangle, Lock, HeartPulse, Users, MessageCircle, Scale, ArrowLeft } from "lucide-react";
+import {
+  Shield,
+  AlertTriangle,
+  Lock,
+  HeartPulse,
+  Users,
+  MessageCircle,
+  Scale,
+  ArrowLeft,
+} from "lucide-react";
 
 export const Route = createFileRoute("/consent-safety")({
   head: () => ({
     meta: [
       { title: "Consent & Safety Guidelines — RedFlagDaddy" },
-      { name: "description", content: "RedFlagDaddy's consent-first safety guidelines for adults exploring dynamics." },
+      {
+        name: "description",
+        content: "RedFlagDaddy's consent-first safety guidelines for adults exploring dynamics.",
+      },
       { property: "og:title", content: "Consent & Safety Guidelines — RedFlagDaddy" },
       { property: "og:description", content: "Read our consent-first safety guidelines." },
       { property: "og:url", content: "https://redflagdaddy.com/consent-safety" },
@@ -62,8 +74,12 @@ function ConsentSafety() {
   const construction = useConstructionMode();
   return (
     <div className="max-w-2xl mx-auto pt-4 pb-12 space-y-8">
-      <Link to={construction.enabled ? "/" : "/register"} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition">
-        <ArrowLeft className="w-3.5 h-3.5" /> {construction.enabled ? "Back home" : "Back to registration"}
+      <Link
+        to={construction.enabled ? "/" : "/register"}
+        className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground transition"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />{" "}
+        {construction.enabled ? "Back home" : "Back to registration"}
       </Link>
 
       <motion.div
@@ -72,9 +88,12 @@ function ConsentSafety() {
         transition={{ duration: 0.5 }}
         className="text-center space-y-3"
       >
-        <h1 className="text-3xl md:text-4xl font-display font-semibold">Consent & Safety Guidelines</h1>
+        <h1 className="text-3xl md:text-4xl font-display font-semibold">
+          Consent & Safety Guidelines
+        </h1>
         <p className="text-muted-foreground text-sm max-w-lg mx-auto">
-          RedFlagDaddy is built around informed, enthusiastic consent. Please read these guidelines carefully before using the platform.
+          RedFlagDaddy is built around informed, enthusiastic consent. Please read these guidelines
+          carefully before using the platform.
         </p>
       </motion.div>
 
@@ -121,14 +140,17 @@ function ConsentSafety() {
         className="glass rounded-2xl p-5 text-center space-y-4"
       >
         <p className="text-sm text-muted-foreground">
-          By creating an account you confirm that you are 18+, you understand these guidelines, and you agree to act responsibly and respectfully.
+          By creating an account you confirm that you are 18+, you understand these guidelines, and
+          you agree to act responsibly and respectfully.
         </p>
         {construction.enabled ? (
-          <p className="text-sm text-primary">New accounts are temporarily paused while we make improvements.</p>
+          <p className="text-sm text-primary">
+            New accounts are temporarily paused while we make improvements.
+          </p>
         ) : (
           <Link
             to="/register"
-            className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30"
           >
             Return to sign up
           </Link>

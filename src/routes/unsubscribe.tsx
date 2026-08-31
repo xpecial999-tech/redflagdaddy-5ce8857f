@@ -31,7 +31,9 @@ function Unsubscribe() {
       .then(async (r) => {
         const body = await r.json().catch(() => ({}));
         if (!r.ok || body?.valid === false) {
-          setState(body?.reason === "already_used" || body?.used ? "used" : "invalid");
+          setState(
+            body?.reason === "already_unsubscribed" || body?.used ? "used" : "invalid",
+          );
           return;
         }
         setState("valid");

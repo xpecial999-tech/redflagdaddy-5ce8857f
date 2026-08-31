@@ -229,8 +229,8 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
           <div className="text-left">
             <div className="text-sm font-medium">Download your data</div>
             <div className="text-xs text-muted-foreground">
-              Get a JSON copy of your profile, preferences, journeys, responses, results and payment
-              history.
+              Get a JSON copy of your profile, preferences, journey metadata, results and payment
+              history. Your partner's raw answers stay private.
             </div>
           </div>
           {exporting && <Loader2 className="w-4 h-4 ml-auto animate-spin" />}

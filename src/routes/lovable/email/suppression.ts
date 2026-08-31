@@ -1,28 +1,29 @@
 import { createClient } from '@supabase/supabase-js'
 import { WebhookError, verifyWebhookRequest } from '@lovable.dev/webhooks-js'
 import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
+
+const MAX_WEBHOOK_BODY_BYTES = 64 * 1024
 
 // Suppression event payload sent by the Go API when Mailgun reports
 // a bounce, complaint, or unsubscribe.
-interface SuppressionPayload {
-  email: string
-  reason: 'bounce' | 'complaint' | 'unsubscribe'
-  message_id?: string
-  metadata?: Record<string, unknown>
-  is_retry: boolean
-  retry_count: number
-}
+const SuppressionPayloadSchema = z.object({
+  email: z.string().trim().email().max(320),
+  reason: z.enum(['bounce', 'complaint', 'unsubscribe']),
+  message_id: z.string().min(1).max(512).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  is_retry: z.boolean(),
+  retry_count: z.number().int().min(0).max(100),
+})
+
+type SuppressionPayload = z.infer<typeof SuppressionPayloadSchema>
 
 function parseSuppressionPayload(body: string): SuppressionPayload {
-  const parsed = JSON.parse(body)
-  if (!parsed.data) {
+  const parsed = JSON.parse(body) as { data?: unknown }
+  if (!parsed?.data) {
     throw new Error('Missing data field in payload')
   }
-  const data = parsed.data as SuppressionPayload
-  if (!data.email || !data.reason) {
-    throw new Error('Missing required fields: email, reason')
-  }
-  return data
+  return SuppressionPayloadSchema.parse(parsed.data)
 }
 
 function mapReasonToStatus(
@@ -64,6 +65,11 @@ export const Route = createFileRoute("/lovable/email/suppression")({
           return Response.json({ error: 'Server configuration error' }, { status: 500 })
         }
 
+        const declaredLength = Number(request.headers.get('content-length'))
+        if (Number.isFinite(declaredLength) && declaredLength > MAX_WEBHOOK_BODY_BYTES) {
+          return Response.json({ error: 'Payload too large' }, { status: 413 })
+        }
+
         // Verify HMAC signature using the Lovable API Key (same as auth-email-hook)
         let payload: SuppressionPayload
         try {
@@ -89,12 +95,13 @@ export const Route = createFileRoute("/lovable/email/suppression")({
               default:
                 console.error('Webhook verification failed', {
                   code: error.code,
-                  message: error.message,
                 })
                 return Response.json({ error: 'Verification failed' }, { status: 401 })
             }
           }
-          console.error('Unexpected error during verification', { error })
+          console.error('Unexpected error during verification', {
+            type: error instanceof Error ? error.name : 'unknown',
+          })
           return Response.json({ error: 'Internal error' }, { status: 500 })
         }
 
@@ -116,7 +123,6 @@ export const Route = createFileRoute("/lovable/email/suppression")({
         if (suppressError) {
           console.error('Failed to upsert suppressed email', {
             code: suppressError.code,
-            message: suppressError.message,
             email_redacted: normalizedEmail[0] + '***@' + normalizedEmail.split('@')[1],
           })
           return Response.json({ error: 'Failed to write suppression' }, { status: 500 })
@@ -141,7 +147,6 @@ export const Route = createFileRoute("/lovable/email/suppression")({
           // Non-fatal — log and continue. The suppression was already recorded.
           console.warn('Failed to insert email_send_log', {
             code: insertError.code,
-            message: insertError.message,
           })
         }
 
