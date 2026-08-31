@@ -1,9 +1,11 @@
 # RedFlagDaddy product and marketing backlog
 
+Updated: 31 August 2026
+
 This is the living list of product features, launch work and marketing ideas for
 RedFlagDaddy. It combines the owner's marketing plan with findings from the app
-audit. Hosting, DNS, Cloudflare and other architecture work remain outside this
-list.
+audit. The Cloudflare migration is complete; hosting, DNS and other architecture
+work remain outside this list.
 
 The ordered delivery sequence lives in
 [`implementation-roadmap.md`](implementation-roadmap.md). This file remains the
@@ -51,26 +53,68 @@ detailed catalogue and acceptance criteria for every recorded idea.
     it into the header.
   - Verify the header logo on public, authenticated and mobile layouts, and
     confirm a missing image never leaves an unlabelled control.
+- [x] **DONE and merged:** apply the owner-supplied CI branding kit to the product.
+  - Confirm the repository header logo and construction artwork exactly match
+    the supplied approved assets.
+  - Replace the squeezed wordmark favicon with the approved emblem and add ICO,
+    Apple touch, 256 px and 512 px app icons plus a web app manifest.
+  - Map application colours and fonts to the supplied tokens, remove the cyan
+    ambient glow and reduce glass/glow intensity.
+  - Replace ad-hoc status greens, ambers, reds and blues across results, demo,
+    journeys, dashboard, upgrade and admin with the approved semantic tokens;
+    retain text labels and icons so colour is never the only signal.
+  - Protect the mapping, icon dimensions and manifest with automated tests; see
+    `docs/brand-implementation.md` for remaining staging checks and guardrails.
 - [ ] Publish an approved privacy notice and terms for the launch countries.
-- [ ] Add the approved public support contact throughout the relevant help,
-      safety and account surfaces.
-- [ ] Add the owner-approved abuse, threat, stalking, self-harm and emergency
-      escalation procedure.
-- [ ] Add approved country-specific crisis and emergency resources; keep the
-      current guidance generic until those resources are approved.
+- [x] **DONE and merged:** add `support@redflagdaddy.com`, a first-party support
+      form, emergency boundary and support links to the relevant public and
+      signed-in surfaces. Cloudflare forwarding and Turnstile configuration
+      remain deployment tasks.
+- [x] **DONE and merged / owner approved:** add the owner-approved abuse, threat,
+      stalking, self-harm and emergency escalation procedure.
+  - [x] **DONE and merged:** prepare `docs/support-safety-runbook-draft.md` with
+        minimal-data intake, triage levels, authority boundaries, dry-run scenarios
+        and owner/counsel approval gates. Owner approval is recorded; counsel review,
+        named roles and dry-run testing remain.
+- [x] **DONE:** use the owner-approved local-emergency wording and Find A Helpline
+      for the global beta rather than an unreviewed country-specific list.
 - [ ] Complete end-to-end staging checks for registration, journeys,
       assessments, result sharing, export, deletion, invitations and provider
       failures using synthetic data.
+  - [x] **DONE and merged:** add same-origin CSRF validation for every TanStack
+        server-function RPC before authentication/request handling; focused tests
+        and a local request confirm the framework warning is resolved.
 - [ ] Complete keyboard, screen-reader, reduced-motion and responsive checks on
       every public conversion path, then fix the findings.
-- [ ] Approve and verify pricing, currency, refunds and production checkout
-      before enabling paid mode.
-- [ ] Decide whether external AI analysis will launch; if so, approve the
-      processor, disclosure, data categories, consent and retention first.
+  - [x] **DONE and merged:** check the fail-closed construction surface at 390 px,
+        confirm there is no horizontal overflow, and raise the About and footer
+        links to a 44 px minimum touch target.
+  - [x] **DONE and merged:** move the login form into its own lazy route chunk,
+        remove the route code-splitting warning and reduce the shared client entry
+        from 297.44 kB to 242.49 kB gzip (about 18.5%).
+  - [ ] Complete the normal landing, registration, login and guest-path browser
+        pass on deployed staging, where construction-mode settings are available.
+  - [x] **DONE and merged:** raise compact header, landing, registration,
+        consent/safety, analytics-choice and guest recovery actions to the 44 px
+        minimum; source-level tests protect these public touch targets.
+  - [x] **DONE and merged:** browser-check the branded About and consent/safety
+        pages for horizontal overflow and undersized links/buttons; neither page had
+        a remaining control below 44 px at the tested desktop viewport.
+  - [x] **DONE and merged:** raise shared inputs/selects to 48 px, every shared
+        button size and select option to at least 44 px, and strengthen focus rings;
+        the invite-code browser check measures 56 px for the input and 48 px for its
+        action.
+- [x] **DONE — commercial hold:** paid mode remains disabled. At 1,000 accounts,
+      compare Stripe and Peach, then approve pricing, currencies, refunds, tax and
+      checkout before enabling any provider.
+- [x] **DONE:** external AI analysis will not launch initially. Any later opt-in
+      beta requires a new approved processor, disclosure, data categories,
+      consent, retention and credential review first.
 - [ ] Approve production analytics only after the documented staging payload
       inspection passes.
-- [ ] Replace the obsolete social preview with an approved 1200 x 630 brand
-      image and verify link previews.
+- [ ] Create and approve a dedicated 1200 x 630 social-sharing image and verify
+      link previews. The supplied kit contains square and portrait social
+      artwork, but no image at the required preview ratio.
 - [ ] Record final go/no-go approval against the exact deployed commit.
 
 ## Launch positioning and conversion decisions
@@ -89,27 +133,54 @@ partner` and `Your partner has started`.
     this is primarily a clarity improvement, not a data migration.
   - Add a public-copy regression check so jargon does not drift back into the
     main user journey.
-- [ ] Confirm the primary audience and minimum age.
-- [ ] Confirm launch countries.
-- [ ] Confirm brand voice and prohibited topics.
-- [ ] Confirm the primary conversion action and CTA.
-- [ ] Confirm the canonical landing-page URL.
-- [ ] Confirm public claims and honest product limitations.
+  - [x] **DONE and merged:** extend the regression check to partner SMS and email
+        notifications; replace the remaining assessment-heavy invite language and
+        remove the stale promise of an `AI summary` from the completion email.
+- [x] **DONE:** primary audience is adults from FetLife and wider kink
+      communities; the product is 18+ everywhere.
+- [x] **DONE:** launch is global and English-first, where lawful and technically
+      supported; this is not a claim of jurisdiction-wide legal coverage.
+- [x] **DONE:** brand voice is fun but clear, non-political and serious around
+      consent, coercion, abuse, privacy and emergencies.
+- [x] **DONE:** the primary conversion action is `Create an account`; guest use
+      remains secondary.
+- [x] **DONE:** the canonical landing page is `https://redflagdaddy.com/`.
+- [x] **DONE:** owner approved the recommended public claims and
+      product-limitations wording in `backlog-prioritization-report.md`, subject
+      to counsel's final legal wording.
 - [ ] Review the landing, registration, demo and upgrade paths against the
       approved audience and CTA; improve copy or friction where evidence supports
       it.
+  - [x] **DONE and merged:** confirm account creation remains the primary landing
+        action, guest mode is secondary, registration states 18+ and requires the
+        consent/safety acknowledgement, and the demo is prominently synthetic and
+        non-diagnostic.
+  - [x] **DONE and merged:** confirm the upgrade route fails closed when commercial
+        mode is disabled and presents no purchase action. Real staging behavior and
+        owner copy review remain open.
 
 ## Marketing foundation
 
-- [ ] Secure Gmail, TikTok, Instagram and Threads with MFA and recovery codes.
-- [ ] Create an ownership and credential inventory.
-- [ ] Build the brand kit: logo variants, colours, typography, caption style,
-      disclosure language and accessibility guidance.
-- [ ] Create moderation rules and the safety-escalation playbook.
-- [ ] Create the content tracker with idea, approval, consent, accessibility,
-      UTM, publishing and results fields from the marketing plan.
+- [x] **DONE by owner confirmation:** public social/email accounts have
+      owner-controlled MFA and recovery. Non-secret account inventory fields and
+      backup operational roles still need completion.
+- [x] **DONE as a safe template:** create `docs/production-account-inventory.md`
+      with accountable owner, recovery contact, MFA, secret-location reference,
+      billing and review fields. It deliberately contains no credentials and
+      still needs the owner's account details.
+- [x] **DONE:** owner supplied the CI branding kit with approved logo variants,
+      colours, typography, social guidance, accessibility rules and tokens; the
+      implementation notes and remaining gaps are in `docs/brand-implementation.md`.
+- [x] **DONE and merged / owner approved:** safety and escalation runbook prepared;
+      counsel review, named roles, Cloudflare support activation and synthetic
+      scenario tests remain.
+- [x] **DONE and merged:** create `docs/organic-content-tracker.md` with the first
+      twelve content items plus approval, consent/privacy, accessibility, UTM,
+      publishing, stop-condition and privacy-safe results fields.
 - [ ] Record baseline followers, reach, visits, sign-ups and activations.
-- [ ] Create the weekly privacy-safe scorecard.
+- [x] **DONE and merged:** create `docs/weekly-launch-scorecard.md` for aggregate
+      funnel, reliability, support and organic-channel results, with small-cell
+      suppression and explicit sensitive-data exclusions.
 
 ## Four-week manual content pilot
 
@@ -127,14 +198,22 @@ Content mix:
 
 Pilot deliverables:
 
-- [ ] Four-week content calendar.
-- [ ] Founder/mission introduction.
-- [ ] Educational red-flag and green-flag posts.
-- [ ] Weekly community questions that do not solicit private disclosures.
-- [ ] Privacy and product-expectations post.
-- [ ] Product walkthrough made only with synthetic data.
-- [ ] Hook and CTA experiments that change one variable at a time.
-- [ ] Platform-native scripts, captions, shot lists, alt text and thumbnails.
+- [x] **DONE and merged:** four-week policy-aware organic content calendar in
+      `docs/prelaunch-organic-content-plan.md`; publication remains blocked until
+      the go-live decision and channel-by-channel rule recheck.
+- [x] **DONE as approval drafts:** founder/mission introduction.
+- [x] **DONE as approval drafts:** educational boundary, limits and safeword
+      posts; expand the green-flag series after owner review.
+- [x] **DONE as approval drafts:** weekly community questions that explicitly
+      avoid private disclosures.
+- [x] **DONE as approval drafts:** privacy and product-expectations post.
+- [x] **DONE as approval drafts:** product walkthrough using synthetic data only.
+- [x] **DONE as approval drafts:** hook and CTA experiments that change one
+      variable at a time.
+- [x] **DONE as approval drafts:** scripts, accessibility notes and initial alt
+      text in `docs/organic-launch-copy-drafts.md`; final channel-native assets,
+      captions, shot lists and thumbnails still need to be produced from the
+      now-supplied brand kit and approved individually.
 - [ ] Exact human approval for every final asset, caption, link, account and
       scheduled time.
 - [ ] Results recorded after 24 hours and seven days.
@@ -143,19 +222,21 @@ Pilot deliverables:
 
 ## Measurement and attribution
 
-- [x] Canonical organic-social UTM allow-list implemented.
+- [x] Canonical organic-social UTM allow-list implemented for FetLife, Reddit,
+      X, TikTok, Instagram, Threads and YouTube.
 - [x] First-touch attribution limited to the current browser tab.
 - [x] Anonymous funnel events implemented without user IDs or product content.
 - [x] Opt-out clears stored attribution and once-only markers.
 - [ ] Verify every UTM and event in staging with synthetic users.
-- [ ] Approve the 35-day analytics retention period and exact consent copy.
+- [x] **DONE:** approve the 35-day analytics retention period and consent copy,
+      subject to the staging payload and consent-behaviour inspection.
 - [ ] Enable production analytics only after explicit owner approval.
 - [ ] Use activation quality, not clicks alone, to judge campaigns.
 
 ## Next product and marketing improvements
 
-- [ ] Add an administrator-controlled construction mode using the existing app
-      settings system.
+- [x] **DONE and merged:** add an administrator-controlled construction mode using
+      the existing app settings system.
   - Add a clearly labelled, confirmed toggle in Admin Settings, record who
     changed it and when, and make changes take effect without a deployment.
   - While enabled, replace the normal public landing conversion area with the
@@ -165,9 +246,8 @@ Pilot deliverables:
   - Enforce the mode on the server as well as the interface so direct visits to
     public login, registration, guest creation and journey-creation endpoints
     cannot bypass hidden buttons.
-  - Decide explicitly whether existing partner assessment links and completed
-    report links remain usable during construction mode; default to blocking
-    new journeys without destroying or modifying existing data.
+  - [x] **DONE:** block new journeys without destroying or modifying existing
+        data; issued partner assessment and completed-report links remain usable.
   - Make `/admin` the private administrator entry. When signed out it should
     present a dedicated admin login, then verify server-side admin membership
     before showing any controls; the unlisted URL is not itself a security
@@ -180,11 +260,17 @@ Pilot deliverables:
   - Return appropriate no-index and maintenance responses, keep private paths
     out of analytics, and test cached pages so mode changes are reflected
     promptly on Cloudflare.
-- [ ] Re-enable email and selected social sign-in directly through Supabase Auth;
-      do not introduce Clerk for the current product.
-  - Start with passwordless email OTP plus Google and Apple. Consider Facebook
-    only after audience evidence justifies its additional provider setup and
-    review burden.
+- [x] **DONE and merged, disabled pending provider setup:** re-enable email and
+      selected social sign-in directly through Supabase Auth; do not introduce
+      Clerk for the current product.
+  - [x] **DONE and merged:** disabled-by-default email, Google and Apple interfaces,
+        safe callback handling, consent gating and authenticated method-linking.
+  - [x] **DONE:** provider credential origins and activation steps documented in
+        `docs/auth-provider-setup-guide.md`.
+  - Activate passwordless email first and Google second. Add Apple only after
+    the paid developer membership and secret-rotation process are ready.
+    Consider Facebook only after audience evidence justifies its additional
+    provider setup and review burden.
   - Keep phone sign-in available and present all methods on one clear sign-in
     surface. Treat delivery channels and login identities separately so the
     same phone account is not accidentally duplicated.
@@ -194,6 +280,9 @@ Pilot deliverables:
     reveal whether a phone number has an account. The current Clickatell help
     documentation says its WhatsApp authentication-template category is not
     supported, so budget and approve a suitable provider before implementation.
+  - [x] **DONE:** official Meta account, sender, template, webhook and pilot setup
+        documented in `docs/meta-whatsapp-business-setup-guide.md`; production
+        integration remains held pending provider/legal identity decisions.
   - Treat Telegram as a separate optional identity, not an OTP channel. Its
     official website login uses a Telegram bot and signed authorization data,
     so it requires a reviewed identity bridge and explicit linking to the
@@ -211,9 +300,10 @@ Pilot deliverables:
   - Require the 18+ and consent confirmation plus role onboarding after a new
     email/social identity returns; a provider login does not prove age,
     identity, safety or trustworthiness.
-  - Build an explicit account-linking flow for current phone users. Their Auth
-    records use synthetic email addresses, so never assume an OAuth login is
-    the same person based only on a profile email or display name.
+  - The existing phone records are test users and may be deleted before launch.
+    Keep the explicit account-linking flow for future real phone users; never
+    assume an OAuth login is the same person based only on an email or display
+    name.
   - Let a signed-in user add and review login methods from Profile, prevent
     removal of their final usable method, and verify deletion removes the Auth
     user and all linked identities.
@@ -222,8 +312,8 @@ Pilot deliverables:
   - Cover new signup, returning login, cancellation, denied consent, duplicate
     email, existing phone-account linking, admin login, logout and account
     deletion with staging tests before release.
-- [ ] Add a purely anonymous guest-journey option with no phone number, email or
-      account.
+- [x] **DONE and merged:** add a purely anonymous guest-journey option with no phone
+      number, email or account.
   - Let the creator choose `No notifications — I'll return with a code`, then
     create the journey without storing communication details.
   - Show a clear completion card containing the partner assessment link and a
@@ -240,9 +330,10 @@ Pilot deliverables:
   - Store only a strong hash of the owner code, use enough random entropy,
     rate-limit lookups, keep routes out of search indexes and never include the
     code in analytics, logs or referrers.
-  - Define and display the anonymous journey/report expiry period before
-    implementation, then delete expired anonymous records automatically.
-- [ ] Redesign administration as a dedicated, readable workspace.
+  - [x] **DONE:** display and enforce the owner-approved 30-day anonymous
+        journey/report expiry and automatically delete expired records.
+- [x] **DONE and merged:** redesign administration as a dedicated, readable
+      workspace.
   - Show a clear `Admin` button only to authorised administrators after sign-in;
     keep their personal profile and ordinary user dashboard separate.
   - Give `/admin` its own wider responsive shell instead of squeezing admin
@@ -256,9 +347,9 @@ Pilot deliverables:
     protected destructive actions.
   - Preserve both route-level and server-side admin authorization, and verify
     that non-admin users cannot see the entry point or access any admin data.
-- [ ] Standardise all six mobile-number inputs on one international phone
-      component (sign-in, registration, account journey, account resend, guest
-      journey and guest resend).
+- [x] **DONE and merged:** standardise all seven mobile-number inputs on one
+      international phone component (sign-in, registration, account journey,
+      account resend, guest journey, guest resend and partner invitation).
   - Silently use Cloudflare's request country hint to preselect the likely
     country; do not call an external IP-geolocation service or store the IP or
     inferred country.
@@ -269,6 +360,8 @@ Pilot deliverables:
   - Keep detection failure invisible and non-blocking, and cover country
     selection, international input and E.164 output with regression tests.
 - [ ] Add a private shared discussion workspace after results are available.
+  - [x] **DIRECTION APPROVED:** keep this after paid mode. Detailed data rules
+        below still require a workshop before implementation.
   - Generate an explicitly shared, expiring page with side-by-side or
     differential scores and the existing conversation prompts.
   - Let either person mark a topic as `Discussed`, `Still open` or `Parked`, and
@@ -342,8 +435,21 @@ Pilot deliverables:
     proof of consent or waiver; acknowledgements never override withdrawal of
     consent or changed circumstances.
 - [ ] Add redacted and selective result-sharing controls.
+  - [x] **DONE and merged:** add a complete private Markdown download and a
+        `Topics only` preset that omits scores, readiness, overall notes, contact
+        details, raw answers, bearer links and timestamps.
+  - [x] **DONE and merged:** generate both Markdown files entirely in the browser;
+        do not upload or retain the export and do not add owner export controls to
+        public shared-report pages.
+  - [x] **DONE and merged:** add a versioned private JSON report for personal
+        archives and knowledge tools. It is generated on-device and omits contact
+        details, raw answers, bearer links, access tokens and generation timestamps.
   - Provide one-click presets for conversation prompts only, selected score
     dimensions, and an owner-reviewed custom selection.
+    - [x] **DONE and merged:** add an owner-reviewed selective Markdown export for
+          Safety, Consent, Communication, Compatibility, Green flags and Potential
+          red flags. Nothing is selected by default, and only reviewed dimensions
+          are included.
   - Generate privacy-conscious PDF and Markdown exports that omit names,
     contact details, raw answers, hidden dimensions, private notes and bearer
     tokens unless each field is deliberately included.
@@ -352,24 +458,41 @@ Pilot deliverables:
   - Test every preset for accidental disclosure and preserve a private owner
     report that is never altered by redaction choices.
 - [ ] Add a practical post-results action layer.
-  - Offer `Schedule a negotiation conversation` with a downloadable calendar
-    invite first; consider direct Google and Outlook connections only when the
-    additional permissions and provider setup are justified.
-  - Let users choose a warm but clear event title such as `Consent Check-In`,
-    `Aftercare Debrief` or `Negotiation Conversation`, while avoiding titles
-    that expose sensitive details on a shared calendar or lock-screen preview.
-  - Include only owner-selected discussion prompts in calendar descriptions,
-    display the exact content before export and never include private answers
-    or access tokens.
+  - [x] **DONE and merged:** offer `Schedule a conversation` with a downloadable
+        `.ics` calendar invite generated entirely on the user's device; no calendar
+        provider connection or external permission is required.
+  - Offer direct Google and Outlook connections only when the additional
+    permissions and provider setup are justified.
+  - [x] **DONE and merged:** use the discreet default title `Private conversation`
+        and allow the owner to edit it before download. No journey name, scores,
+        report details, private answers or bearer tokens are included by default.
+  - [x] **DONE and merged:** keep extracted discussion topics off by default and
+        include them only after explicit owner opt-in; topic content is bounded and
+        excludes readiness rationale, overall notes and raw answers.
+  - [x] **DONE and merged:** preview the exact optional topics before export so the owner can review
+        what will enter a possibly shared or lock-screen-visible calendar.
+  - [x] **DONE and merged:** add warm but clear title presets such as `Consent Check-In`,
+        `Aftercare Debrief` or `Negotiation Conversation`, while avoiding titles
+        that expose sensitive details on a shared calendar or lock-screen preview.
+  - [x] **DONE and merged:** let the owner select individual discussion topics rather than including the
+        complete bounded topic set.
   - Generate short role-aware negotiation checklists or templates from the
     journey's approved prompts and answers, with clear non-diagnostic wording.
+    - [x] **DONE and merged:** add an owner-only `Conversation plan` Markdown
+          export built from open topics, with preparation, pause/stop, discussion
+          and close-out prompts. It excludes scores, overall notes, timestamps and
+          raw answers and states that it is not an agreement or proof of consent.
   - Show curated external resources contextually, using an approved source list
     and country-aware crisis information where appropriate.
+    - [x] **DIRECTION APPROVED:** exact safety, consent and aftercare URLs still
+          require editorial approval and review dates before publication.
 - [ ] Add an optional `Soundtrack for this dynamic` experience.
+  - [x] **DIRECTION APPROVED:** implementation waits for actual playlist URLs,
+        titles and rights-cleared artwork.
   - Launch with editorially curated Spotify, Apple Music and YouTube Music
     links organised by user-selected role, journey theme and mood; possible
     concepts include `Negotiation Night`, `Aftercare Soft Landing`, `Primal
-    Energy`, `Green Flag Glow` and `Pause & Renegotiate`.
+Energy`, `Green Flag Glow` and `Pause & Renegotiate`.
   - Let the user choose or adjust the mood before showing a playlist. If scores
     influence suggestions, explain the mapping and keep it gentle; never frame
     music as a reward, diagnosis or safety verdict.
