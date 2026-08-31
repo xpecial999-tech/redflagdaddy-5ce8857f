@@ -1,6 +1,8 @@
 # RedFlagDaddy implementation roadmap
 
-Last prioritised: 25 August 2026.
+Last prioritised: 31 August 2026.
+
+For the current short execution queue, use `docs/current-backlog.md`.
 
 This is the ordered execution view of the detailed
 [`product-marketing-backlog.md`](product-marketing-backlog.md). It deliberately
@@ -10,46 +12,41 @@ credentials, providers, user contact, spending, analytics or public promotion.
 
 ## Now: launch control and core usability
 
-Owner decisions can progress in parallel with engineering, but must be complete
-before public promotion:
-
-1. Confirm the primary audience, minimum age, launch countries, brand voice,
-   prohibited topics, main CTA and canonical landing URL.
-2. Approve legal/privacy text, a public support contact, the escalation process
-   and country-specific crisis resources.
-3. Decide production pricing/refunds, analytics retention and enablement, and
-   whether external AI analysis will launch.
-4. Approve the brand kit and 1200 x 630 social-sharing image.
+The audience, 18+ rule, global English-first positioning, voice, product claims,
+primary CTA, canonical URL, support direction, crisis-resource approach, 35-day
+analytics direction, paid-mode hold, AI hold and brand kit are decided. Before
+public promotion, obtain counsel-approved legal/privacy text, activate and test
+support, inspect analytics on staging, complete the account inventory and
+approve the dedicated 1200 × 630 social-preview image.
 
 Engineering order:
 
-1. **Construction mode and secure admin entry.** Add the administrator toggle,
+1. **DONE and merged — Construction mode and secure admin entry.** Add the administrator toggle,
    accessible maintenance surface, `/admin` sign-in and server-side enforcement.
-   Preserve current data and provide a tested admin recovery path. Before merge,
-   decide whether existing private assessment and report links remain usable;
-   the recommended default is to block new public journeys while allowing
-   already-issued private links to finish.
-2. **Dedicated admin workspace.** Separate administration from the personal
+   Preserve current data and provide a tested admin recovery path. Existing
+   private assessment and report links remain usable while new public journeys
+   are blocked; the owner confirmed this policy on 28 August 2026.
+2. **DONE and merged — Dedicated admin workspace.** Separate administration from the personal
    profile, add an admin-only entry button and reorganise the current monolith
    into clear overview, questions, categories, journeys, analytics and settings
    sections.
-3. **International phone inputs.** Standardise every mobile field, silently
+3. **DONE and merged — International phone inputs.** Standardise every mobile field, silently
    select the likely country from Cloudflare's country hint, allow overrides and
    normalise to E.164 before validation or delivery.
-4. **Authentication alternatives.** Extend Supabase Auth with passwordless
+4. **DONE and merged, disabled — Authentication alternatives.** Extend Supabase Auth with passwordless
    email, Google and Apple, production SMTP, safe callbacks and explicit account
    linking for existing phone users. Keep SMS available, then add WhatsApp OTP
    as the first alternative phone delivery channel if its Twilio requirement is
    approved. Hold Telegram as a demand-led custom identity and exclude
    unofficial Signal automation.
-5. **Anonymous owner-code journeys.** Add the no-contact creation path, separate
+5. **DONE and merged — Anonymous owner-code journeys.** Add the no-contact creation path, separate
    private owner lookup code, rate-limited status lookup and automatic expiry.
-6. **Go-live verification and fixes.** Complete synthetic end-to-end, provider
+6. **IN PROGRESS — Go-live verification and fixes.** Complete synthetic end-to-end, provider
    failure, accessibility, responsive, reduced-motion, metadata and analytics
    checks. Fix findings, then record go/no-go approval against the exact commit.
 
-Do not combine these six items into one pull request. Each should ship as a
-reviewable batch with its own threat checks and regression coverage.
+Items 1–5 were integrated and merged through PR #15; broader launch hardening
+merged through PR #16. Item 6 remains the controlled staging and release gate.
 
 ## Next: privacy controls and useful follow-through
 
@@ -105,7 +102,11 @@ Do not schedule these until their prerequisites and dedicated reviews exist:
 - Any monitoring, reputation, location, social-media or third-party profiling
   capability remains outside the product boundary.
 
-## First engineering epic: construction mode
+## Completed first engineering epic: construction mode
+
+The following is retained as the implementation and verification record. The
+feature is complete locally; staging and release checks remain in
+`docs/weekend-dry-run.md`.
 
 Current-state audit:
 
@@ -122,8 +123,8 @@ Current-state audit:
   authenticated server function. Both require an authoritative settings check;
   hiding routes or buttons is insufficient.
 - Existing assessment and shared-report routes are distinct from creation
-  routes, so already-issued private links can remain usable without allowing new
-  journeys. This is the recommended initial policy, pending owner confirmation.
+  routes, so already-issued private links remain usable without allowing new
+  journeys. The owner confirmed this policy on 28 August 2026.
 - The settings read currently defaults paid mode off when no row is returned and
   does not expose lookup errors. Construction mode needs explicit error handling
   that never locks out the administrator and never silently permits a creation
