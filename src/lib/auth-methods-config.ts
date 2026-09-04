@@ -1,4 +1,5 @@
 export type AuthMethodsConfig = {
+  phoneSignIn: boolean;
   emailSignIn: boolean;
   googleSignIn: boolean;
   appleSignIn: boolean;
@@ -15,6 +16,7 @@ export function getAuthMethodsConfig(
   env: AuthEnvironment = import.meta.env as AuthEnvironment,
 ): AuthMethodsConfig {
   return {
+    phoneSignIn: enabled(env.VITE_AUTH_PHONE_MODE),
     emailSignIn: enabled(env.VITE_AUTH_EMAIL_MODE),
     googleSignIn: enabled(env.VITE_AUTH_GOOGLE_MODE),
     appleSignIn: enabled(env.VITE_AUTH_APPLE_MODE),

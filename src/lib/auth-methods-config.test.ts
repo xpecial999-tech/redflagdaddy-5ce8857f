@@ -5,6 +5,7 @@ describe("authentication method configuration", () => {
   it("keeps every alternative disabled unless explicitly enabled", () => {
     const config = getAuthMethodsConfig({});
     expect(config).toEqual({
+      phoneSignIn: false,
       emailSignIn: false,
       googleSignIn: false,
       appleSignIn: false,
@@ -16,12 +17,14 @@ describe("authentication method configuration", () => {
   it("accepts only the explicit enabled value", () => {
     expect(
       getAuthMethodsConfig({
+        VITE_AUTH_PHONE_MODE: "enabled",
         VITE_AUTH_EMAIL_MODE: "enabled",
         VITE_AUTH_GOOGLE_MODE: "ENABLED",
         VITE_AUTH_APPLE_MODE: "true",
         VITE_AUTH_ACCOUNT_LINKING_MODE: "1",
       }),
     ).toEqual({
+      phoneSignIn: true,
       emailSignIn: true,
       googleSignIn: true,
       appleSignIn: false,

@@ -13,7 +13,13 @@
   },
   "env": {
     "staging": {
-      "name": "redflagdaddy-staging"
+      "name": "redflagdaddy-staging",
+      "routes": [
+        {
+          "pattern": "staging.redflagdaddy.com",
+          "custom_domain": true
+        }
+      ]
     },
     "production": {
       "name": "redflagdaddy-production",

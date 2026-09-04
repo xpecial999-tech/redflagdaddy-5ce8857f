@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const CallbackSearch = z.object({
   code: z.string().max(2048).optional(),
-  next: z.enum(["/dashboard", "/profile"]).catch("/dashboard"),
+  next: z.enum(["/admin", "/dashboard", "/profile"]).catch("/dashboard"),
 });
 
 export const Route = createFileRoute("/auth/callback")({

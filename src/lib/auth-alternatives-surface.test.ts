@@ -13,12 +13,13 @@ const linking = readFileSync(
 );
 
 describe("authentication alternatives surface", () => {
-  it("keeps the dedicated administrator login on SMS", () => {
-    expect(login).toContain('!adminOnly && <AlternativeAuthMethods mode="login" />');
+  it("allows the dedicated administrator login to use the configured email method", () => {
+    expect(login).toContain('mode={adminOnly ? "admin" : "login"}');
+    expect(alternatives).toContain('mode === "admin" ? "/admin" : "/dashboard"');
   });
 
   it("uses an allow-listed, no-index callback", () => {
-    expect(callback).toContain('z.enum(["/dashboard", "/profile"])');
+    expect(callback).toContain('z.enum(["/admin", "/dashboard", "/profile"])');
     expect(callback).toContain("noindex,nofollow,noarchive");
     expect(callback).toContain("no-referrer");
     expect(callback).toContain("exchangeCodeForSession");

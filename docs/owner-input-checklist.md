@@ -45,7 +45,11 @@ support form notification.
       PUBLIC_SITE_URL to https://redflagdaddy.com.
 - [ ] Do not send the Turnstile secret in chat.
 
-### 4. Real SMS testing
+### 4. Interim messaging and future WhatsApp
+
+Clickatell is paused for the staging email-first release. Do not configure its
+credentials or callbacks. Use email magic links, copied private invite links and
+anonymous owner codes until an approved WhatsApp provider is selected.
 
 - [ ] Confirm the official SMS provider and sender/integration label.
 - [ ] Fund only a small, capped test balance.

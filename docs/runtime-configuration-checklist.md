@@ -36,6 +36,12 @@ creation fails closed rather than silently generating a production-domain link.
 
 ## SMS — required for current login and notified journeys
 
+SMS is suspended for the staging email-first release. Leave every `CLICKATELL_*`
+value absent and set `VITE_AUTH_PHONE_MODE` to any value other than `enabled`.
+Do not remove the historical SMS data tables or callbacks; they remain inactive
+until an approved provider (such as WhatsApp through a supported provider) is
+configured and tested.
+
 | Name                           | Handling         | Purpose                                 | Activation rule                                 |
 | ------------------------------ | ---------------- | --------------------------------------- | ----------------------------------------------- |
 | `CLICKATELL_API_KEY`           | Encrypted secret | Sends OTP and journey SMS               | Required for real SMS tests                     |
@@ -44,6 +50,19 @@ creation fails closed rather than silently generating a production-domain link.
 
 If either callback credential is absent, the callback deliberately returns
 `503` and must remain disabled at the provider. SMS sending can still operate.
+
+## Interim email-first authentication
+
+| Name | Handling | Required staging value |
+| --- | --- | --- |
+| `VITE_AUTH_PHONE_MODE` | Public build value | Absent or `disabled` while Clickatell is not used |
+| `VITE_AUTH_EMAIL_MODE` | Public build value | `enabled` after Resend SMTP is verified in Supabase |
+
+With phone sign-in disabled, the app uses Supabase email magic links. Anonymous
+owner-code journeys and copied private invite links remain available without a
+messaging provider. Configure an administrator email identity before publishing:
+the administrator entry accepts the same enabled email method and still checks
+the existing administrator role after sign-in.
 
 ## Public support form
 

@@ -1,26 +1,35 @@
 import { useState } from "react";
 import { Apple, Loader2, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getAuthMethodsConfig, hasAlternativeSignIn } from "@/lib/auth-methods-config";
+import { getAuthMethodsConfig } from "@/lib/auth-methods-config";
 import { Input } from "@/components/ui/input";
 
 type AlternativeAuthMethodsProps = {
-  mode: "login" | "register";
+  mode: "login" | "register" | "admin";
   metadata?: { name?: string; role?: string };
+  primary?: boolean;
+  registrationAcknowledged?: boolean;
 };
 
 function callbackUrl(next = "/dashboard"): string {
   return `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
 }
 
-export function AlternativeAuthMethods({ mode, metadata }: AlternativeAuthMethodsProps) {
+export function AlternativeAuthMethods({
+  mode,
+  metadata,
+  primary = false,
+  registrationAcknowledged = true,
+}: AlternativeAuthMethodsProps) {
   const config = getAuthMethodsConfig();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState<"email" | "google" | "apple" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (!hasAlternativeSignIn(config)) return null;
+  const emailEnabled = config.emailSignIn;
+  const socialEnabled = mode !== "admin" && (config.googleSignIn || config.appleSignIn);
+  if (!emailEnabled && !socialEnabled) return null;
 
   const sendEmailLink = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -32,7 +41,7 @@ export function AlternativeAuthMethods({ mode, metadata }: AlternativeAuthMethod
       email: email.trim().toLowerCase(),
       options: {
         shouldCreateUser: mode === "register",
-        emailRedirectTo: callbackUrl(),
+        emailRedirectTo: callbackUrl(mode === "admin" ? "/admin" : "/dashboard"),
         data: mode === "register" ? metadata : undefined,
       },
     });
@@ -60,14 +69,16 @@ export function AlternativeAuthMethods({ mode, metadata }: AlternativeAuthMethod
   };
 
   return (
-    <div className="mt-6 space-y-4">
-      <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
-        <span className="h-px flex-1 bg-border" />
-        <span>or use another private sign-in method</span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
+    <div className={`${primary ? "space-y-4" : "mt-6 space-y-4"}`}>
+      {!primary && (
+        <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
+          <span className="h-px flex-1 bg-border" />
+          <span>or use another private sign-in method</span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+      )}
 
-      {config.emailSignIn && (
+      {emailEnabled && (
         <form className="space-y-2" onSubmit={sendEmailLink}>
           <label className="block">
             <span className="text-xs text-muted-foreground">Email address</span>
@@ -82,7 +93,11 @@ export function AlternativeAuthMethods({ mode, metadata }: AlternativeAuthMethod
             />
           </label>
           <button
-            disabled={loading !== null || !email.trim()}
+            disabled={
+              loading !== null ||
+              !email.trim() ||
+              (mode === "register" && !registrationAcknowledged)
+            }
             className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium disabled:opacity-60"
           >
             {loading === "email" ? (
@@ -95,7 +110,7 @@ export function AlternativeAuthMethods({ mode, metadata }: AlternativeAuthMethod
         </form>
       )}
 
-      {(config.googleSignIn || config.appleSignIn) && (
+      {socialEnabled && (
         <div className="grid gap-2">
           {config.googleSignIn && (
             <button
@@ -132,10 +147,12 @@ export function AlternativeAuthMethods({ mode, metadata }: AlternativeAuthMethod
         </div>
       )}
 
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
-        Already use a mobile number here? Sign in by SMS first and link another method from your
-        profile so your journeys stay in one account.
-      </p>
+      {mode !== "admin" && (
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          If you previously used mobile sign-in, add an email sign-in method from your profile
+          before phone delivery is switched off.
+        </p>
+      )}
       {message && <p className="text-xs text-primary">{message}</p>}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>

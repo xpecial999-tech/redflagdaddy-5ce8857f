@@ -13,6 +13,7 @@ import { ConstructionPage } from "@/components/ConstructionPage";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
 import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
 import { AlternativeAuthMethods } from "@/components/AlternativeAuthMethods";
+import { getAuthMethodsConfig } from "@/lib/auth-methods-config";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -20,13 +21,12 @@ export const Route = createFileRoute("/register")({
       { title: "Create account — RedFlagDaddy" },
       {
         name: "description",
-        content:
-          "Create your RedFlagDaddy account with your mobile number — we'll text you a 6-digit code.",
+        content: "Create your RedFlagDaddy account using the enabled private sign-in method.",
       },
       { property: "og:title", content: "Create account — RedFlagDaddy" },
       {
         property: "og:description",
-        content: "Sign up with your mobile number. Consent-first, 18+ only.",
+        content: "Sign up privately. Consent-first, 18+ only.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -49,6 +49,8 @@ function Register() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const construction = useConstructionMode();
+  const authMethods = getAuthMethodsConfig();
+  const [emailConsentAcknowledged, setEmailConsentAcknowledged] = useState(false);
 
   const e164 = toE164(phone);
 
@@ -141,61 +143,97 @@ function Register() {
               <p className="text-sm text-muted-foreground mb-6">
                 18+ only. Consent-first by design.
               </p>
-              <form className="space-y-3" onSubmit={sendCode}>
-                <Field
-                  label="Display name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Used on your journeys"
-                />
-                <label className="block">
-                  <span className="text-xs text-muted-foreground">Mobile number</span>
-                  <InternationalPhoneInput
-                    id="register-phone"
-                    required
-                    value={phone}
-                    onValueChange={setPhone}
-                    className="mt-1"
-                    aria-label="Mobile number"
+              {authMethods.phoneSignIn && (
+                <form className="space-y-3" onSubmit={sendCode}>
+                  <Field
+                    label="Display name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Used on your journeys"
                   />
-                </label>
+                  <label className="block">
+                    <span className="text-xs text-muted-foreground">Mobile number</span>
+                    <InternationalPhoneInput
+                      id="register-phone"
+                      required
+                      value={phone}
+                      onValueChange={setPhone}
+                      className="mt-1"
+                      aria-label="Mobile number"
+                    />
+                  </label>
 
-                <div>
-                  <span className="text-xs text-muted-foreground">Primary identity</span>
-                  <div className="mt-2 space-y-3 max-h-64 overflow-y-auto pr-1">
-                    <RoleSelector value={role} onChange={setRole} />
+                  <div>
+                    <span className="text-xs text-muted-foreground">Primary identity</span>
+                    <div className="mt-2 space-y-3 max-h-64 overflow-y-auto pr-1">
+                      <RoleSelector value={role} onChange={setRole} />
+                    </div>
                   </div>
-                </div>
 
-                <label className="flex items-start gap-2 text-xs text-muted-foreground pt-2">
-                  <input type="checkbox" required className="mt-0.5 accent-primary" />I confirm I am
-                  18+ and agree to the{" "}
-                  <Link
-                    to="/consent-safety"
-                    className="text-primary underline hover:text-foreground"
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground pt-2">
+                    <input type="checkbox" required className="mt-0.5 accent-primary" />I confirm I
+                    am 18+ and agree to the{" "}
+                    <Link
+                      to="/consent-safety"
+                      className="text-primary underline hover:text-foreground"
+                    >
+                      consent & safety guidelines
+                    </Link>
+                    .
+                  </label>
+
+                  {error && (
+                    <p role="alert" className="text-xs text-destructive">
+                      {error}
+                    </p>
+                  )}
+
+                  <button
+                    disabled={loading}
+                    className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
                   >
-                    consent & safety guidelines
-                  </Link>
-                  .
-                </label>
-
-                {error && (
-                  <p role="alert" className="text-xs text-destructive">
-                    {error}
+                    {loading ? "Sending code…" : "Create account"}
+                  </button>
+                </form>
+              )}
+              {!authMethods.phoneSignIn && (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Create your account with a private email sign-in link. You can add your profile
+                    details after signing in.
                   </p>
-                )}
-
-                <button
-                  disabled={loading}
-                  className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
-                >
-                  {loading ? "Sending code…" : "Create account"}
-                </button>
-              </form>
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={emailConsentAcknowledged}
+                      onChange={(event) => setEmailConsentAcknowledged(event.target.checked)}
+                      className="mt-0.5 accent-primary"
+                    />
+                    <span>
+                      I confirm I am 18+ and agree to the{" "}
+                      <Link
+                        to="/consent-safety"
+                        className="text-primary underline hover:text-foreground"
+                      >
+                        consent & safety guidelines
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                </div>
+              )}
               <AlternativeAuthMethods
                 mode="register"
                 metadata={{ name: name || undefined, role }}
+                primary={!authMethods.phoneSignIn}
+                registrationAcknowledged={authMethods.phoneSignIn || emailConsentAcknowledged}
               />
+              {!authMethods.phoneSignIn && !authMethods.emailSignIn && (
+                <p role="alert" className="mt-4 text-xs text-destructive">
+                  Account creation is temporarily unavailable. An administrator must finish the
+                  email setup.
+                </p>
+              )}
               <p className="text-xs text-muted-foreground text-center mt-6">
                 Already a member?{" "}
                 <Link to="/login" className="inline-flex min-h-11 items-center px-1 text-primary">

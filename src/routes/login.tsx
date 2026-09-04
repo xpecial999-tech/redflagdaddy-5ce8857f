@@ -11,6 +11,7 @@ import { ConstructionPage } from "@/components/ConstructionPage";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
 import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
 import { AlternativeAuthMethods } from "@/components/AlternativeAuthMethods";
+import { getAuthMethodsConfig } from "@/lib/auth-methods-config";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -18,12 +19,12 @@ export const Route = createFileRoute("/login")({
       { title: "Sign in — RedFlagDaddy" },
       {
         name: "description",
-        content: "Sign in to RedFlagDaddy with your mobile number and a one-time SMS code.",
+        content: "Sign in to RedFlagDaddy using the enabled private sign-in method.",
       },
       { property: "og:title", content: "Sign in — RedFlagDaddy" },
       {
         property: "og:description",
-        content: "Sign in with your mobile number and a one-time SMS code.",
+        content: "Sign in using the enabled private sign-in method.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -45,6 +46,7 @@ export function Login({ adminOnly = false }: { adminOnly?: boolean }) {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const construction = useConstructionMode();
+  const authMethods = getAuthMethodsConfig();
 
   const e164 = toE164(phone);
 
@@ -135,33 +137,45 @@ export function Login({ adminOnly = false }: { adminOnly?: boolean }) {
                 {adminOnly ? "Administrator sign in" : "Welcome back"}
               </h1>
               <p className="text-sm text-muted-foreground mb-6">
-                Enter your mobile number and we'll text you a code.
+                {authMethods.phoneSignIn
+                  ? "Enter your mobile number and we'll text you a code."
+                  : "Use your email address to receive a private sign-in link."}
               </p>
-              <form className="space-y-3" onSubmit={sendCode}>
-                <label className="block">
-                  <span className="text-xs text-muted-foreground">Mobile number</span>
-                  <InternationalPhoneInput
-                    id={adminOnly ? "admin-phone" : "login-phone"}
-                    required
-                    value={phone}
-                    onValueChange={setPhone}
-                    className="mt-1"
-                    aria-label="Mobile number"
-                  />
-                </label>
-                {error && (
-                  <p role="alert" className="text-xs text-destructive">
-                    {error}
-                  </p>
-                )}
-                <button
-                  disabled={loading}
-                  className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
-                >
-                  {loading ? "Sending code…" : "Send code"}
-                </button>
-              </form>
-              {!adminOnly && <AlternativeAuthMethods mode="login" />}
+              {authMethods.phoneSignIn && (
+                <form className="space-y-3" onSubmit={sendCode}>
+                  <label className="block">
+                    <span className="text-xs text-muted-foreground">Mobile number</span>
+                    <InternationalPhoneInput
+                      id={adminOnly ? "admin-phone" : "login-phone"}
+                      required
+                      value={phone}
+                      onValueChange={setPhone}
+                      className="mt-1"
+                      aria-label="Mobile number"
+                    />
+                  </label>
+                  {error && (
+                    <p role="alert" className="text-xs text-destructive">
+                      {error}
+                    </p>
+                  )}
+                  <button
+                    disabled={loading}
+                    className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
+                  >
+                    {loading ? "Sending code…" : "Send code"}
+                  </button>
+                </form>
+              )}
+              <AlternativeAuthMethods
+                mode={adminOnly ? "admin" : "login"}
+                primary={!authMethods.phoneSignIn}
+              />
+              {!authMethods.phoneSignIn && !authMethods.emailSignIn && (
+                <p role="alert" className="text-xs text-destructive">
+                  Sign-in is temporarily unavailable. An administrator must finish the email setup.
+                </p>
+              )}
               {!adminOnly && (
                 <p className="text-xs text-muted-foreground text-center mt-6">
                   New here?{" "}
