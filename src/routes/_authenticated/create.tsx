@@ -5,10 +5,30 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RoleSelector } from "@/components/RoleSelector";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Copy, Sparkles, ArrowRight, Link2, KeyRound, Loader2, UserCircle2, Lock, Layers, Zap, MessageSquare } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Sparkles,
+  ArrowRight,
+  Link2,
+  KeyRound,
+  Loader2,
+  UserCircle2,
+  Lock,
+  Layers,
+  Zap,
+  MessageSquare,
+} from "lucide-react";
 import { createJourney, sendJourneyInvite } from "@/lib/journeys.functions";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -39,7 +59,6 @@ function Create() {
   const [mode, setMode] = useState<"full" | "quick" | "deep">("full");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [recipientName, setRecipientName] = useState("");
-  const [recipientPhone, setRecipientPhone] = useState("");
   const [notes, setNotes] = useState("");
 
   const mutation = useMutation({
@@ -49,7 +68,7 @@ function Create() {
           title: title.trim(),
           participantType,
           recipientName: recipientName.trim() || null,
-          recipientPhone: recipientPhone.trim() ? toE164(recipientPhone.trim()) : null,
+          recipientPhone: null,
           notes: notes.trim() || null,
           categoryIds: mode === "deep" && categoryIds.length > 0 ? categoryIds : null,
           questionLimit: mode === "quick" ? 50 : null,
@@ -78,7 +97,7 @@ function Create() {
     (step === 1 && title.trim().length > 0) ||
     (step === 2 && !!participantType) ||
     (step === 3 && (mode !== "deep" || categoryIds.length > 0)) ||
-    (step === 4 && (!recipientPhone.trim() || isValidE164(toE164(recipientPhone.trim()))));
+    step === 4;
 
   return (
     <div className="space-y-6">
@@ -92,21 +111,31 @@ function Create() {
         {ent.data?.paidModeEnabled && !ent.data.isPaid && (
           <div className="mt-3 glass rounded-xl p-3 text-xs flex items-center justify-between gap-2">
             <span className="text-muted-foreground">
-              Free plan · {qLimit} questions · {ent.data.activeJourneys}/{ent.data.freeJourneyCap} journeys used
+              Free plan · {qLimit} questions · {ent.data.activeJourneys}/{ent.data.freeJourneyCap}{" "}
+              journeys used
             </span>
-            <Link to="/upgrade" className="text-primary font-medium">Upgrade</Link>
+            <Link to="/upgrade" className="text-primary font-medium">
+              Upgrade
+            </Link>
           </div>
         )}
         {!canCreate && (
           <div className="mt-3 glass rounded-xl p-3 text-sm text-destructive">
-            You've hit the free-plan journey limit. <Link to="/upgrade" className="underline">Upgrade</Link> for unlimited.
+            You've hit the free-plan journey limit.{" "}
+            <Link to="/upgrade" className="underline">
+              Upgrade
+            </Link>{" "}
+            for unlimited.
           </div>
         )}
       </header>
 
       {step < 5 && (
         <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-          <motion.div className="h-full bg-gradient-to-r from-aurora-1 to-aurora-2" animate={{ width: `${(step / 4) * 100}%` }} />
+          <motion.div
+            className="h-full bg-gradient-to-r from-aurora-1 to-aurora-2"
+            animate={{ width: `${(step / 4) * 100}%` }}
+          />
         </div>
       )}
 
@@ -122,7 +151,9 @@ function Create() {
               maxLength={120}
               className="w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <p className="text-xs text-muted-foreground mt-2">Only you and your partner see this.</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Only you and your partner see this.
+            </p>
           </StepWrap>
         )}
 
@@ -130,7 +161,7 @@ function Create() {
           <StepWrap key="2">
             <h2 className="font-semibold mb-3">Their role in the dynamic</h2>
             <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                <RoleSelector value={participantType} onChange={setParticipantType} />
+              <RoleSelector value={participantType} onChange={setParticipantType} />
             </div>
           </StepWrap>
         )}
@@ -145,8 +176,12 @@ function Create() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="font-medium flex items-center gap-2"><Sparkles className="w-4 h-4 text-aurora-2" /> Full assessment</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">≈{qLimit} questions across all categories.</div>
+                    <div className="font-medium flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-aurora-2" /> Full assessment
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      ≈{qLimit} questions across all categories.
+                    </div>
                   </div>
                   {mode === "full" && <Check className="w-4 h-4 text-primary" />}
                 </div>
@@ -157,7 +192,9 @@ function Create() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="font-medium flex items-center gap-2"><Zap className="w-4 h-4 text-aurora-1" /> Quick assessment</div>
+                    <div className="font-medium flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-aurora-1" /> Quick assessment
+                    </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
                       ≈{Math.min(50, qLimit)} questions — a fair spread across all categories.
                     </div>
@@ -173,10 +210,17 @@ function Create() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="font-medium flex items-center gap-2">
-                      {canDeepDive ? <Layers className="w-4 h-4 text-aurora-1" /> : <Lock className="w-4 h-4" />} Category deep-dive
+                      {canDeepDive ? (
+                        <Layers className="w-4 h-4 text-aurora-1" />
+                      ) : (
+                        <Lock className="w-4 h-4" />
+                      )}{" "}
+                      Category deep-dive
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
-                      {canDeepDive ? "Pick categories — get every question in them." : "Upgrade to unlock."}
+                      {canDeepDive
+                        ? "Pick categories — get every question in them."
+                        : "Upgrade to unlock."}
                     </div>
                   </div>
                   {mode === "deep" && <Check className="w-4 h-4 text-primary" />}
@@ -216,22 +260,15 @@ function Create() {
           <StepWrap key="4">
             <h2 className="font-semibold mb-3">Partner details</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Leave the mobile number blank if you prefer — the next step will generate a unique link you can share directly with your partner.
+              The next step generates a unique private link you can share directly with your
+              partner.
             </p>
-            <Field label="Partner name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Optional" />
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Partner mobile (SMS invite)</span>
-              <InternationalPhoneInput
-                id="create-partner-phone"
-                value={recipientPhone}
-                onValueChange={setRecipientPhone}
-                className="mt-1"
-                aria-label="Partner mobile number"
-              />
-            </label>
-            {recipientPhone.trim() && !isValidE164(toE164(recipientPhone)) && (
-              <p className="text-xs text-destructive -mt-2">Enter a valid mobile number.</p>
-            )}
+            <Field
+              label="Partner name"
+              value={recipientName}
+              onChange={(e) => setRecipientName(e.target.value)}
+              placeholder="Optional"
+            />
             <label className="block">
               <span className="text-xs text-muted-foreground">Notes for them</span>
               <textarea
@@ -252,14 +289,10 @@ function Create() {
         {step === 5 && mutation.data && (
           <SuccessScreen
             key="5"
-            journeyId={mutation.data.journey.id}
             url={mutation.data.journey.invite_url ?? ""}
             code={mutation.data.journey.invite_code}
             title={mutation.data.journey.title}
             partnerType={mutation.data.journey.participant_type as Role}
-            smsSent={mutation.data.smsSent}
-            phone={recipientPhone.trim() ? toE164(recipientPhone.trim()) : null}
-            recipientName={recipientName.trim() || null}
           />
         )}
       </AnimatePresence>
@@ -267,7 +300,10 @@ function Create() {
       {step < 5 && (
         <div className="flex gap-3">
           {step > 1 && (
-            <button onClick={() => setStep((step - 1) as Step)} className="flex-1 rounded-xl glass py-3 text-sm font-medium">
+            <button
+              onClick={() => setStep((step - 1) as Step)}
+              className="flex-1 rounded-xl glass py-3 text-sm font-medium"
+            >
               Back
             </button>
           )}
@@ -279,16 +315,37 @@ function Create() {
             }}
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-50"
           >
-            {mutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating…</> :
-              step < 4 ? <>Continue <ArrowRight className="w-4 h-4" /></> :
-              <>Create journey <Sparkles className="w-4 h-4" /></>}
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Creating…
+              </>
+            ) : step < 4 ? (
+              <>
+                Continue <ArrowRight className="w-4 h-4" />
+              </>
+            ) : (
+              <>
+                Create journey <Sparkles className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
       )}
 
       {step === 5 && mutation.data && (
         <div className="flex gap-3">
-          <button onClick={() => { setStep(1); setTitle(""); setNotes(""); setRecipientName(""); setMode("full"); setCategoryIds([]); mutation.reset(); }} className="flex-1 rounded-xl glass py-3 text-sm font-medium">
+          <button
+            onClick={() => {
+              setStep(1);
+              setTitle("");
+              setNotes("");
+              setRecipientName("");
+              setMode("full");
+              setCategoryIds([]);
+              mutation.reset();
+            }}
+            className="flex-1 rounded-xl glass py-3 text-sm font-medium"
+          >
             Create another
           </button>
           <Link
@@ -318,51 +375,37 @@ function StepWrap({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+function Field({
+  label,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
     <label className="block">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <input {...props} className="mt-1 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+      <input
+        {...props}
+        className="mt-1 w-full rounded-xl bg-input border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      />
     </label>
   );
 }
 
-function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phone, recipientName }: { journeyId: string; url: string; code: string; title: string; partnerType: Role; smsSent?: boolean; phone?: string | null; recipientName?: string | null }) {
+function SuccessScreen({
+  url,
+  code,
+  title,
+  partnerType,
+}: {
+  url: string;
+  code: string;
+  title: string;
+  partnerType: Role;
+}) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
   const navigate = useNavigate();
   const createFn = useServerFn(createJourney);
   const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
   const [selfType, setSelfType] = useState<Role | "">(opposite);
-  const sendFn = useServerFn(sendJourneyInvite);
-  const [smsOpen, setSmsOpen] = useState(false);
-  const [rName, setRName] = useState(recipientName ?? "");
-  const [rPhone, setRPhone] = useState(phone ?? "");
-  const [rNote, setRNote] = useState("");
-  const [sending, setSending] = useState(false);
-
-  const submitSms = async () => {
-    setSending(true);
-    try {
-      const res = await sendFn({
-        data: {
-          id: journeyId,
-          channel: "sms" as const,
-          recipientPhone: rPhone.trim() ? toE164(rPhone.trim()) : "",
-          recipientName: rName.trim() || undefined,
-          notes: rNote.trim() || undefined,
-        },
-      });
-      if (res.ok) {
-        toast.success("Invite sent by SMS");
-        setSmsOpen(false);
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setSending(false);
-    }
-  };
-
 
   const selfMutation = useMutation({
     mutationFn: () =>
@@ -404,83 +447,58 @@ function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phon
           <Check className="w-8 h-8 text-primary-foreground" strokeWidth={3} />
         </motion.div>
         <h2 className="text-xl font-display font-semibold">"{title}" is live</h2>
-        <p className="text-sm text-muted-foreground mt-1">Share the link or code with your partner. Expires in 7 days.</p>
-        {phone && (
-          <p className={`text-xs mt-2 ${smsSent ? "text-primary" : "text-destructive"}`}>
-            {smsSent ? `Invite SMS sent to ${formatPhone(phone)}.` : "We couldn't send the SMS — share the link below instead."}
-          </p>
-        )}
+        <p className="text-sm text-muted-foreground mt-1">
+          Share the link or code with your partner. Expires in 7 days.
+        </p>
       </div>
 
       <div className="glass rounded-2xl p-4 space-y-3">
         <div>
-          <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5"><Link2 className="w-3.5 h-3.5" /> Invite URL</div>
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+            <Link2 className="w-3.5 h-3.5" /> Invite URL
+          </div>
           <div className="flex gap-2">
-            <input readOnly value={url} className="flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-xs font-mono truncate" />
-            <button onClick={() => copy(url, "url")} className="rounded-xl bg-primary/15 text-primary px-3 text-xs font-medium inline-flex items-center gap-1.5 min-w-[88px] justify-center">
-              {copied === "url" ? <><Check className="w-3.5 h-3.5" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy URL</>}
+            <input
+              readOnly
+              value={url}
+              className="flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-xs font-mono truncate"
+            />
+            <button
+              onClick={() => copy(url, "url")}
+              className="rounded-xl bg-primary/15 text-primary px-3 text-xs font-medium inline-flex items-center gap-1.5 min-w-[88px] justify-center"
+            >
+              {copied === "url" ? (
+                <>
+                  <Check className="w-3.5 h-3.5" /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" /> Copy URL
+                </>
+              )}
             </button>
           </div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5"><KeyRound className="w-3.5 h-3.5" /> Invite code</div>
-          <input readOnly value={code} className="w-full rounded-xl bg-input border border-border px-3 py-2.5 text-sm font-mono tracking-[0.3em] text-center" />
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+            <KeyRound className="w-3.5 h-3.5" /> Invite code
+          </div>
+          <input
+            readOnly
+            value={code}
+            className="w-full rounded-xl bg-input border border-border px-3 py-2.5 text-sm font-mono tracking-[0.3em] text-center"
+          />
         </div>
       </div>
-
-
-      <button
-        onClick={() => setSmsOpen(true)}
-        className="block w-full inline-flex items-center justify-center gap-2 rounded-xl bg-input border border-border py-3 text-sm font-medium"
-      >
-        <MessageSquare className="w-4 h-4" /> Send by SMS
-      </button>
-
-      <Dialog open={smsOpen} onOpenChange={(o) => !o && setSmsOpen(false)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Send invite by SMS</DialogTitle>
-            <DialogDescription>We'll text the invite link straight to their phone.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="s-name">Partner name (optional)</Label>
-              <Input id="s-name" value={rName} onChange={(e) => setRName(e.target.value)} placeholder="e.g. Natasha" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="s-phone">Partner mobile number</Label>
-              <InternationalPhoneInput
-                id="s-phone"
-                value={rPhone}
-                onValueChange={setRPhone}
-                aria-label="Partner mobile number"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="s-note">Personal note (optional)</Label>
-              <Input id="s-note" value={rNote} onChange={(e) => setRNote(e.target.value)} placeholder="Add a line of context for them" maxLength={500} />
-            </div>
-          </div>
-          <DialogFooter>
-            <button
-              onClick={submitSms}
-              disabled={sending || !rPhone.trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-50"
-            >
-              {sending && <Loader2 className="w-4 h-4 animate-spin" />}
-              {sending ? "Sending…" : "Send SMS"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
 
       <div className="glass-strong rounded-3xl p-6 text-center space-y-4">
         <div className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-br from-aurora-1 to-aurora-2 items-center justify-center mx-auto">
           <UserCircle2 className="w-5 h-5 text-primary-foreground" />
         </div>
         <div>
-          <h3 className="font-display text-lg font-semibold tracking-tight">Take your own assessment too</h3>
+          <h3 className="font-display text-lg font-semibold tracking-tight">
+            Take your own assessment too
+          </h3>
           <p className="text-sm text-muted-foreground mt-1">
             Add your perspective — we'll compare both sides in the final report.
           </p>
@@ -488,7 +506,7 @@ function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phon
         <div>
           <span className="text-xs uppercase tracking-wider text-muted-foreground">I am a…</span>
           <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
-                <RoleSelector value={selfType} onChange={setSelfType} />
+            <RoleSelector value={selfType} onChange={setSelfType} />
           </div>
         </div>
         {selfMutation.error && (
@@ -499,7 +517,15 @@ function SuccessScreen({ journeyId, url, code, title, partnerType, smsSent, phon
           disabled={!selfType || selfMutation.isPending}
           className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
         >
-          {selfMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Preparing…</> : <>Start my assessment <ArrowRight className="w-4 h-4" /></>}
+          {selfMutation.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" /> Preparing…
+            </>
+          ) : (
+            <>
+              Start my assessment <ArrowRight className="w-4 h-4" />
+            </>
+          )}
         </button>
       </div>
     </motion.div>

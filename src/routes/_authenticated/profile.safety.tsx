@@ -41,8 +41,8 @@ function Safety() {
 
       <section className="space-y-3">
         <SectionLabel>Account access</SectionLabel>
-        <SafetyCard icon={KeyRound} title="One-time SMS codes">
-          Sign-in uses a code sent to your registered phone number. Never share a sign-in code with
+        <SafetyCard icon={KeyRound} title="Private email links">
+          Sign-in uses a private link sent to your email address. Never forward a sign-in link to
           anyone, including someone claiming to represent RedFlagDaddy.
         </SafetyCard>
         <button

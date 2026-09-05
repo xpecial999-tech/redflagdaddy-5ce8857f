@@ -43,7 +43,7 @@ export function AnalyticsConsent() {
     >
       <p className="text-sm font-medium">Help improve RedFlagDaddy?</p>
       <p className="mt-1 text-xs text-muted-foreground">
-        Allow anonymous funnel analytics. We never include assessment answers, messages, phone
+        Allow anonymous funnel analytics. We never include assessment answers, messages, contact
         numbers, profile details, or private links.
       </p>
       <div className="mt-3 flex justify-end gap-2">

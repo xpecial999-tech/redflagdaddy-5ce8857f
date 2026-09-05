@@ -19,10 +19,10 @@ import {
   Scale,
   ArrowRight,
   Activity,
-  Smartphone,
   Link2,
   Timer,
   Monitor,
+  Mail,
 } from "lucide-react";
 
 export const Route = createFileRoute("/about")({
@@ -134,9 +134,9 @@ const privacy = [
 
 const security = [
   {
-    icon: Smartphone,
-    title: "One-time-code account access",
-    body: "Signed-in accounts use an SMS one-time code. This verifies control of a phone number, not a person's identity or trustworthiness.",
+    icon: Mail,
+    title: "Email-link account access",
+    body: "Signed-in accounts use a private email link. It verifies control of an email inbox, not a person's identity or trustworthiness.",
   },
   {
     icon: Link2,

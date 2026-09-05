@@ -16,7 +16,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { useMe } from "@/hooks/use-me";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPhone } from "@/lib/phone";
 import { exportMyData, deleteMyAccount } from "@/lib/data-privacy.functions";
 import {
   Dialog,
@@ -64,7 +63,7 @@ function Profile() {
     );
   }
 
-  const displayName = me.name || formatPhone(me.phone) || "Member";
+  const displayName = me.name || me.email || "Member";
   const initial = displayName.charAt(0).toUpperCase();
   const role = me.role || "member";
 
@@ -83,7 +82,7 @@ function Profile() {
           {role}
           {me.isAdmin ? " · admin" : ""}
         </p>
-        <p className="text-xs text-muted-foreground mt-1">{formatPhone(me.phone)}</p>
+        {me.email && <p className="text-xs text-muted-foreground mt-1">{me.email}</p>}
       </motion.section>
 
       <LinkedAuthMethods />

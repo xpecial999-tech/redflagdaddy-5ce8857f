@@ -147,12 +147,6 @@ export function AlternativeAuthMethods({
         </div>
       )}
 
-      {mode !== "admin" && (
-        <p className="text-[11px] leading-relaxed text-muted-foreground">
-          If you previously used mobile sign-in, add an email sign-in method from your profile
-          before phone delivery is switched off.
-        </p>
-      )}
       {message && <p className="text-xs text-primary">{message}</p>}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>

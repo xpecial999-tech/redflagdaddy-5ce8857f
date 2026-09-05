@@ -1,40 +1,26 @@
-import { oppositeRole, type Role } from "@/lib/roles";
+import { type Role } from "@/lib/roles";
 import { RoleSelector } from "@/components/RoleSelector";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { createGuestJourney, lookupAnonymousJourney, sendGuestInvite } from "@/lib/guest.functions";
-import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { createGuestJourney, lookupAnonymousJourney } from "@/lib/guest.functions";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-import { formatPhone } from "@/lib/phone";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
-import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
 import { ReportView } from "@/components/ReportView";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   UserCircle2,
-  Smartphone,
+  Mail,
   ClipboardList,
   Copy,
   Check,
   CheckCircle2,
   MessageCircle,
-  MessageSquare,
   BellRing,
   BellOff,
   KeyRound,
@@ -56,9 +42,9 @@ export const Route = createFileRoute("/guest")({
 
 const steps = [
   {
-    icon: Smartphone,
+    icon: Mail,
     title: "Choose how to return",
-    body: "Receive a private SMS when the report is ready, or save a private lookup code and receive no notifications.",
+    body: "Save a private lookup code and return when the report is ready. No contact details are required.",
   },
   {
     icon: ClipboardList,
@@ -71,14 +57,13 @@ function GuestPage() {
   const createFn = useServerFn(createGuestJourney);
   const construction = useConstructionMode();
 
-  const [phone, setPhone] = useState("");
-  const [notificationMode, setNotificationMode] = useState<"sms" | "owner_code">("sms");
+  const [notificationMode] = useState<"owner_code">("owner_code");
   const [partnerType, setPartnerType] = useState<Role | "">("");
 
   const mutation = useMutation({
     mutationFn: () =>
       createFn({
-        data: { guestPhone: phone, notificationMode, partnerType },
+        data: { guestPhone: "", notificationMode, partnerType },
       }),
     onSuccess: () => {
       void captureMarketingEvent("core_action_completed", "guest", { once: true });
@@ -91,8 +76,6 @@ function GuestPage() {
     return (
       <PartnerLinkView
         code={mutation.data.code}
-        guestPhone={phone}
-        notificationMode={notificationMode}
         ownerCode={mutation.data.ownerCode}
         ownerExpiresAt={mutation.data.ownerExpiresAt}
         partnerType={partnerType}
@@ -115,8 +98,8 @@ function GuestPage() {
             Continue as guest
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Take the assessment without creating an account. Choose a text notification or a
-            completely no-contact return code.
+            Take the assessment without creating an account. Your private return code means no
+            contact details are required.
           </p>
         </div>
 
@@ -162,15 +145,8 @@ function GuestPage() {
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 <ModeCard
-                  selected={notificationMode === "sms"}
-                  onClick={() => setNotificationMode("sms")}
-                  icon={BellRing}
-                  title="Text me when ready"
-                  body="Receive one private report link by SMS."
-                />
-                <ModeCard
-                  selected={notificationMode === "owner_code"}
-                  onClick={() => setNotificationMode("owner_code")}
+                  selected
+                  onClick={() => undefined}
                   icon={BellOff}
                   title="No notifications"
                   body="Save a code and return here within 30 days."
@@ -178,28 +154,11 @@ function GuestPage() {
               </div>
             </div>
 
-            {notificationMode === "sms" ? (
-              <div>
-                <span className="text-sm font-medium">Your mobile number</span>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  We'll text your private report link here when the assessment is done.
-                </p>
-                <InternationalPhoneInput
-                  id="guest-owner-phone"
-                  value={phone}
-                  onValueChange={setPhone}
-                  required
-                  className="mt-2"
-                  aria-label="Your mobile number"
-                />
-              </div>
-            ) : (
-              <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-xs text-muted-foreground leading-relaxed">
-                <strong className="text-foreground">No contact details are required.</strong> You'll
-                receive a private owner code once. It cannot be recovered, and the journey and
-                report are automatically deleted after 30 days.
-              </div>
-            )}
+            <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-xs text-muted-foreground leading-relaxed">
+              <strong className="text-foreground">No contact details are required.</strong> You'll
+              receive a private owner code once. It cannot be recovered, and the journey and report
+              are automatically deleted after 30 days.
+            </div>
 
             <div>
               <span className="text-sm font-medium">Which assessment do you want to do?</span>
@@ -223,9 +182,7 @@ function GuestPage() {
             )}
 
             <button
-              disabled={
-                mutation.isPending || !partnerType || (notificationMode === "sms" && !phone)
-              }
+              disabled={mutation.isPending || !partnerType}
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
             >
               {mutation.isPending ? "Creating…" : "Generate partner link"}
@@ -375,68 +332,17 @@ function JourneyLookup() {
 
 function PartnerLinkView({
   code,
-  guestPhone,
-  notificationMode,
   ownerCode,
   ownerExpiresAt,
   partnerType,
 }: {
   code: string;
-  guestPhone?: string;
-  notificationMode: "sms" | "owner_code";
   ownerCode: string | null;
   ownerExpiresAt: string | null;
   partnerType: Role | "";
 }) {
-  const navigate = useNavigate();
-  const createFn = useServerFn(createGuestJourney);
   const [copied, setCopied] = useState(false);
   const [ownerCodeCopied, setOwnerCodeCopied] = useState(false);
-  const sendInviteFn = useServerFn(sendGuestInvite);
-  const [smsOpen, setSmsOpen] = useState(false);
-  const [rName, setRName] = useState("");
-  const [rPhone, setRPhone] = useState("");
-  const [rNote, setRNote] = useState("");
-  const [sending, setSending] = useState(false);
-
-  const submitSms = async () => {
-    setSending(true);
-    try {
-      await sendInviteFn({
-        data: {
-          code,
-          recipientPhone: rPhone.trim(),
-          recipientName: rName.trim() || undefined,
-          notes: rNote.trim() || undefined,
-        },
-      });
-      toast.success("Invite sent by SMS");
-      setSmsOpen(false);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
-  const [selfType, setSelfType] = useState<Role | "">(opposite);
-
-  const selfMutation = useMutation({
-    mutationFn: () =>
-      createFn({
-        data: {
-          guestPhone: guestPhone ?? "",
-          notificationMode: "sms" as const,
-          partnerType: selfType as Role,
-          isSelf: true,
-        },
-      }),
-
-    onSuccess: (res) => {
-      navigate({ to: "/journey/$code", params: { code: res.code } });
-    },
-  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -494,10 +400,7 @@ function PartnerLinkView({
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Send this link to your partner so they can take the {partnerType} assessment. They'll
-            answer privately.{" "}
-            {notificationMode === "sms"
-              ? "We'll text the combined report link to your mobile number."
-              : "Return with your private owner code to check the report."}
+            answer privately. Return with your private owner code to check the report.
           </p>
         </div>
 
@@ -532,20 +435,14 @@ function PartnerLinkView({
               </li>
               <li>They open the link, confirm they're 18+, and complete the assessment.</li>
               <li>
-                {notificationMode === "sms" ? (
-                  <>
-                    Once they finish, we'll text the combined report link to:{" "}
-                    <span className="text-foreground">{formatPhone(guestPhone) || guestPhone}</span>
-                  </>
-                ) : (
-                  "Return to this page and enter your private owner code to check progress or view the report."
-                )}
+                Return to this page and enter your private owner code to check progress or view the
+                report.
               </li>
             </ol>
           </div>
         </section>
 
-        {notificationMode === "owner_code" && ownerCode && (
+        {ownerCode && (
           <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/25">
             <div className="flex items-start gap-3">
               <KeyRound className="w-5 h-5 text-primary mt-0.5" />
@@ -594,18 +491,9 @@ function PartnerLinkView({
             Send the invite
           </span>
           <p className="text-xs text-muted-foreground">
-            Send the invite by SMS from RedFlagDaddy — just enter their number — or share it on
-            WhatsApp yourself.
+            Share the private link yourself by email or WhatsApp.
           </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setSmsOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium hover:bg-white/5 transition"
-            >
-              <MessageSquare className="w-4 h-4" />
-              SMS
-            </button>
+          <div className="grid gap-2">
             <a
               href={whatsappHref}
               target="_blank"
@@ -616,91 +504,7 @@ function PartnerLinkView({
               WhatsApp
             </a>
           </div>
-
-          <Dialog open={smsOpen} onOpenChange={(o) => !o && setSmsOpen(false)}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Send invite by SMS</DialogTitle>
-                <DialogDescription>
-                  We'll text the invite link straight to their phone.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="g-name">Partner name (optional)</Label>
-                  <Input
-                    id="g-name"
-                    value={rName}
-                    onChange={(e) => setRName(e.target.value)}
-                    placeholder="e.g. Natasha"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="g-phone">Partner mobile number</Label>
-                  <InternationalPhoneInput
-                    id="g-phone"
-                    value={rPhone}
-                    onValueChange={setRPhone}
-                    aria-label="Partner mobile number"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="g-note">Personal note (optional)</Label>
-                  <Input
-                    id="g-note"
-                    value={rNote}
-                    onChange={(e) => setRNote(e.target.value)}
-                    placeholder="Add a line of context for them"
-                    maxLength={500}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <button
-                  type="button"
-                  onClick={submitSms}
-                  disabled={sending || !rPhone.trim()}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-50"
-                >
-                  {sending ? "Sending…" : "Send SMS"}
-                </button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </section>
-
-        {notificationMode === "sms" && (
-          <section className="glass-strong rounded-3xl p-6 sm:p-7 text-center space-y-4">
-            <h3 className="font-display text-lg font-semibold tracking-tight">
-              Want to take your own assessment too?
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Pick your own dynamic — we'll compare both perspectives in the final report.
-            </p>
-            <div>
-              <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                I am a…
-              </span>
-              <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
-                <RoleSelector value={selfType} onChange={setSelfType} />
-              </div>
-            </div>
-            {selfMutation.error && (
-              <p role="alert" className="text-xs text-destructive">
-                {(selfMutation.error as Error).message}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={() => selfMutation.mutate()}
-              disabled={!selfType || selfMutation.isPending}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
-            >
-              {selfMutation.isPending ? "Preparing…" : "Start my assessment"}
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </section>
-        )}
       </motion.div>
     </div>
   );

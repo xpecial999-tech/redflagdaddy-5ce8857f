@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Apple, Check, Link2, Loader2, Mail, Smartphone } from "lucide-react";
+import { Apple, Check, Link2, Loader2, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthMethodsConfig } from "@/lib/auth-methods-config";
 import { Input } from "@/components/ui/input";
@@ -51,7 +51,7 @@ export function LinkedAuthMethods() {
       setError("We could not link that email address. It may already belong to another account.");
       return;
     }
-    setMessage("Check that inbox to confirm the address. Your mobile sign-in remains available.");
+    setMessage("Check that inbox to confirm the address.");
   };
 
   const linked = (provider: string) => providers.includes(provider);
@@ -69,12 +69,6 @@ export function LinkedAuthMethods() {
             together.
           </p>
         </div>
-      </div>
-
-      <div className="flex items-center gap-2 rounded-xl border border-border bg-input p-3 text-sm">
-        <Smartphone className="w-4 h-4 text-primary" />
-        Mobile SMS
-        <Check className="ml-auto w-4 h-4 text-primary" aria-label="Linked" />
       </div>
 
       {config.emailSignIn && !linked("email") && (
@@ -124,10 +118,6 @@ export function LinkedAuthMethods() {
           />
         ))}
 
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
-        Mobile SMS stays available as a recovery method. Removing linked identities will be added
-        only after the recovery policy is approved.
-      </p>
       {message && <p className="text-xs text-primary">{message}</p>}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </section>
