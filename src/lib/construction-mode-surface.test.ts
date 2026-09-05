@@ -12,7 +12,7 @@ describe("construction mode", () => {
 
     expect(component).toContain('src="/under-construction.png"');
     expect(component).toContain('id="construction-title"');
-    expect(component).toContain("private assessment or report link");
+    expect(component).toContain("We will be back soon.");
     expect(image.subarray(1, 4).toString("ascii")).toBe("PNG");
     expect(image.readUInt32BE(16)).toBe(1122);
     expect(image.readUInt32BE(20)).toBe(1402);
@@ -43,15 +43,14 @@ describe("construction mode", () => {
     expect(register).toContain('purpose: "register"');
   });
 
-  it("keeps existing private assessment and report routes outside the construction guard", () => {
-    for (const path of [
-      "src/routes/assessment.$code.tsx",
-      "src/routes/journey.$code.tsx",
-      "src/routes/j.$code.tsx",
-      "src/routes/report.$token.tsx",
-    ]) {
-      expect(source(path)).not.toContain("construction-mode");
-    }
+  it("uses a Worker-level construction wall to lock every production route", () => {
+    const server = source("src/server.ts");
+
+    expect(server).toContain('runtime?.CONSTRUCTION_MODE === "enabled"');
+    expect(server).toContain("globalThis.__env__");
+    expect(server).toContain("return constructionWall()");
+    expect(server).toContain("status: 503");
+    expect(server).toContain('"x-robots-tag": "noindex, nofollow, noarchive"');
   });
 
   it("provides a confirmed admin toggle and hides public conversion controls", () => {

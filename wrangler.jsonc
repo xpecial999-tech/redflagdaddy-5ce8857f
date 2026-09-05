@@ -6,30 +6,36 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "binding": "ASSETS",
-    "directory": ".output/public"
+    "directory": ".output/public",
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "env": {
     "staging": {
       "name": "redflagdaddy-staging",
+      "vars": {
+        "CONSTRUCTION_MODE": "disabled",
+      },
       "routes": [
         {
           "pattern": "staging.redflagdaddy.com",
-          "custom_domain": true
-        }
-      ]
+          "custom_domain": true,
+        },
+      ],
     },
     "production": {
       "name": "redflagdaddy-production",
+      "vars": {
+        "CONSTRUCTION_MODE": "enabled",
+      },
       "workers_dev": true,
       "routes": [
         {
           "pattern": "redflagdaddy.com",
-          "custom_domain": true
-        }
-      ]
-    }
-  }
+          "custom_domain": true,
+        },
+      ],
+    },
+  },
 }
