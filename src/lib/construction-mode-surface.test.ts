@@ -48,6 +48,7 @@ describe("construction mode", () => {
 
     expect(server).toContain('runtime?.CONSTRUCTION_MODE === "enabled"');
     expect(server).toContain("globalThis.__env__");
+    expect(server).toContain("bindWorkerEnvironment(runtime)");
     expect(server).toContain("return constructionWall()");
     expect(server).toContain("status: 503");
     expect(server).toContain('"x-robots-tag": "noindex, nofollow, noarchive"');

@@ -7,9 +7,30 @@ export type ConstructionModeState = {
   statusAvailable: boolean;
 };
 
+function workerConstructionMode(): boolean | undefined {
+  const buildMode = import.meta.env.VITE_CONSTRUCTION_MODE;
+  if (buildMode === "enabled") return true;
+  if (buildMode === "disabled") return false;
+
+  const runtime = (
+    globalThis as typeof globalThis & {
+      __env__?: Record<string, unknown>;
+    }
+  ).__env__;
+
+  if (runtime?.CONSTRUCTION_MODE === "enabled") return true;
+  if (runtime?.CONSTRUCTION_MODE === "disabled") return false;
+  return undefined;
+}
+
 export async function loadConstructionMode(
   options: { strict?: boolean } = {},
 ): Promise<ConstructionModeState> {
+  const workerMode = workerConstructionMode();
+  if (workerMode !== undefined) {
+    return { enabled: workerMode, updatedAt: null, statusAvailable: true };
+  }
+
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("app_settings")

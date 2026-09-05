@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPublicSettings } from "@/lib/entitlement.functions";
 
 export function useConstructionMode() {
+  const deploymentForcesOpen = import.meta.env.VITE_CONSTRUCTION_MODE === "disabled";
   const getSettings = useServerFn(getPublicSettings);
   const query = useQuery({
     queryKey: ["public-settings"],
@@ -12,7 +13,7 @@ export function useConstructionMode() {
   });
 
   return {
-    enabled: query.data?.constructionModeEnabled ?? true,
+    enabled: deploymentForcesOpen ? false : (query.data?.constructionModeEnabled ?? true),
     statusAvailable: query.data?.settingsAvailable ?? false,
     isLoading: query.isLoading,
   };

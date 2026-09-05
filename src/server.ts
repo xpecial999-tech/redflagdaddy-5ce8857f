@@ -1,5 +1,6 @@
 import "./lib/error-capture";
 
+import process from "node:process";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
@@ -9,6 +10,7 @@ type ServerEntry = {
 
 type RuntimeEnv = {
   CONSTRUCTION_MODE?: string;
+  [key: string]: unknown;
 };
 
 declare global {
@@ -118,10 +120,22 @@ function isConstructionAsset(pathname: string): boolean {
   ].includes(pathname);
 }
 
+function bindWorkerEnvironment(runtime: RuntimeEnv | undefined): void {
+  if (!runtime) return;
+
+  // Nitro retains Worker bindings on globalThis but application server functions
+  // use Node's process.env. Populate it per request so server-only Supabase
+  // clients and configuration checks receive the same Cloudflare bindings.
+  for (const [key, value] of Object.entries(runtime)) {
+    if (typeof value === "string") process.env[key] = value;
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const runtime = (env as RuntimeEnv | undefined) ?? globalThis.__env__;
+      bindWorkerEnvironment(runtime);
       const url = new URL(request.url);
       if (runtime?.CONSTRUCTION_MODE === "enabled" && !isConstructionAsset(url.pathname)) {
         return constructionWall();

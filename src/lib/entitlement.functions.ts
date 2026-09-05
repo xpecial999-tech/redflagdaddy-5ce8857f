@@ -19,11 +19,12 @@ async function loadSettings() {
     .maybeSingle();
   if (error || !data) {
     console.error("[app-settings] Could not load settings", error);
+    const constructionModeEnabled = import.meta.env.VITE_CONSTRUCTION_MODE !== "disabled";
     return {
       paidModeEnabled: false,
       priceCents: 100,
       currency: "USD",
-      constructionModeEnabled: true,
+      constructionModeEnabled,
       constructionModeUpdatedAt: null,
       settingsAvailable: false,
     };
