@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -32,45 +32,8 @@ export type Database = {
         }
         Relationships: []
       }
-      admin_settings_audit: {
-        Row: {
-          changed_at: string
-          changed_by: string
-          id: string
-          new_value: Json
-          previous_value: Json
-          setting: string
-        }
-        Insert: {
-          changed_at?: string
-          changed_by: string
-          id?: string
-          new_value: Json
-          previous_value: Json
-          setting: string
-        }
-        Update: {
-          changed_at?: string
-          changed_by?: string
-          id?: string
-          new_value?: Json
-          previous_value?: Json
-          setting?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_settings_audit_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       app_settings: {
         Row: {
-          construction_mode_enabled: boolean
-          construction_mode_updated_at: string | null
           currency: string
           id: boolean
           paid_mode_enabled: boolean
@@ -78,8 +41,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          construction_mode_enabled?: boolean
-          construction_mode_updated_at?: string | null
           currency?: string
           id?: boolean
           paid_mode_enabled?: boolean
@@ -87,8 +48,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          construction_mode_enabled?: boolean
-          construction_mode_updated_at?: string | null
           currency?: string
           id?: boolean
           paid_mode_enabled?: boolean
@@ -224,9 +183,6 @@ export type Database = {
       }
       journeys: {
         Row: {
-          anonymous_no_contact: boolean
-          anonymous_owner_code_hash: string | null
-          anonymous_owner_expires_at: string | null
           category_ids: string[] | null
           created_at: string
           creator_id: string | null
@@ -243,9 +199,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          anonymous_no_contact?: boolean
-          anonymous_owner_code_hash?: string | null
-          anonymous_owner_expires_at?: string | null
           category_ids?: string[] | null
           created_at?: string
           creator_id?: string | null
@@ -262,9 +215,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          anonymous_no_contact?: boolean
-          anonymous_owner_code_hash?: string | null
-          anonymous_owner_expires_at?: string | null
           category_ids?: string[] | null
           created_at?: string
           creator_id?: string | null
@@ -529,66 +479,6 @@ export type Database = {
           },
         ]
       }
-      rate_limit_events: {
-        Row: {
-          action: string
-          created_at: string
-          id: number
-          key_hash: string
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          id?: number
-          key_hash: string
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          id?: number
-          key_hash?: string
-        }
-        Relationships: []
-      }
-      marketing_events: {
-        Row: {
-          environment: string
-          event_name: string
-          flow: string
-          id: number
-          occurred_at: string
-          session_id: string
-          utm_campaign: string | null
-          utm_content: string | null
-          utm_medium: string | null
-          utm_source: string | null
-        }
-        Insert: {
-          environment: string
-          event_name: string
-          flow: string
-          id?: number
-          occurred_at?: string
-          session_id: string
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-        }
-        Update: {
-          environment?: string
-          event_name?: string
-          flow?: string
-          id?: number
-          occurred_at?: string
-          session_id?: string
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-        }
-        Relationships: []
-      }
       sms_log: {
         Row: {
           content_preview: string | null
@@ -736,15 +626,6 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_phone_otps: { Args: never; Returns: undefined }
-      consume_rate_limit: {
-        Args: {
-          action_name: string
-          hashed_key: string
-          max_events: number
-          window_seconds: number
-        }
-        Returns: boolean
-      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -847,12 +728,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -876,11 +757,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -901,11 +782,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -926,11 +807,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -943,11 +824,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
