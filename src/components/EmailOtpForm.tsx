@@ -11,6 +11,8 @@ type EmailOtpFormProps = {
   onAuthenticated?: () => Promise<void> | void;
 };
 
+const EMAIL_OTP_LENGTH = 8;
+
 export function EmailOtpForm({
   mode,
   metadata,
@@ -48,7 +50,7 @@ export function EmailOtpForm({
 
   const verifyCode = async (event?: React.FormEvent) => {
     event?.preventDefault();
-    if (token.length !== 6 || loading) return;
+    if (token.length !== EMAIL_OTP_LENGTH || loading) return;
     setLoading(true);
     setError(null);
     const { error: verifyError } = await supabase.auth.verifyOtp({
@@ -73,7 +75,7 @@ export function EmailOtpForm({
   };
 
   useEffect(() => {
-    if (step !== "code" || token.length !== 6 || loading) return;
+    if (step !== "code" || token.length !== EMAIL_OTP_LENGTH || loading) return;
     if (submittedToken.current === token) return;
     submittedToken.current = token;
     void verifyCode();
@@ -85,12 +87,17 @@ export function EmailOtpForm({
     return (
       <form className="space-y-4" onSubmit={verifyCode}>
         <p className="text-sm text-muted-foreground">
-          Enter the six-digit code sent to <span className="text-foreground">{email}</span>.
+          Enter the eight-digit code sent to <span className="text-foreground">{email}</span>.
         </p>
         <div className="flex justify-center">
-          <InputOTP maxLength={6} value={token} onChange={setToken} autoComplete="one-time-code">
+          <InputOTP
+            maxLength={EMAIL_OTP_LENGTH}
+            value={token}
+            onChange={setToken}
+            autoComplete="one-time-code"
+          >
             <InputOTPGroup>
-              {[0, 1, 2, 3, 4, 5].map((index) => (
+              {Array.from({ length: EMAIL_OTP_LENGTH }, (_, index) => index).map((index) => (
                 <InputOTPSlot key={index} index={index} className="h-12 w-12 text-lg" />
               ))}
             </InputOTPGroup>
@@ -102,7 +109,7 @@ export function EmailOtpForm({
           </p>
         )}
         <button
-          disabled={loading || token.length !== 6}
+          disabled={loading || token.length !== EMAIL_OTP_LENGTH}
           className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-medium text-primary-foreground disabled:opacity-60"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
