@@ -170,6 +170,14 @@ export function Login({ adminOnly = false }: { adminOnly?: boolean }) {
               <AlternativeAuthMethods
                 mode={adminOnly ? "admin" : "login"}
                 primary={!authMethods.phoneSignIn}
+                onAuthenticated={async () => {
+                  const adminStatus = await checkAdmin().catch(() => ({ isAdmin: false }));
+                  if (adminOnly && !adminStatus.isAdmin) {
+                    await supabase.auth.signOut();
+                    throw new Error("This account does not have administrator access.");
+                  }
+                  navigate({ to: adminStatus.isAdmin ? "/admin" : "/dashboard", replace: true });
+                }}
               />
               {!authMethods.phoneSignIn && !authMethods.emailSignIn && (
                 <p role="alert" className="text-xs text-destructive">

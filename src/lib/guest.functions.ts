@@ -4,6 +4,7 @@ import { generateInviteCode } from "./utils.server";
 import { isValidE164, toE164 } from "./phone";
 import { ALL_ROLES } from "./roles";
 import { throwPublicDataError } from "./public-data-error";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const CreateGuestSchema = z
   .object({
@@ -96,6 +97,27 @@ export const createGuestJourney = createServerFn({ method: "POST" })
   });
 
 const OwnerCodeSchema = z.object({ ownerCode: z.string().trim().min(1).max(64) });
+
+export const claimAnonymousJourney = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => OwnerCodeSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { isValidOwnerCode, hashOwnerCode } = await import("./anonymous-owner-code.server");
+    if (!isValidOwnerCode(data.ownerCode)) throw new Error("That private owner code is invalid.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: journeyId, error } = await (supabaseAdmin as any).rpc("claim_anonymous_journey", {
+      p_owner_code_hash: await hashOwnerCode(data.ownerCode),
+      p_owner_id: context.userId,
+    });
+    if (error) {
+      console.error("[guest-journey] Claim failed", { code: error.code });
+      throw new Error("We couldn't save this journey to your account. Please try again.");
+    }
+    if (!journeyId)
+      throw new Error("This private owner code is invalid, expired, or already claimed.");
+    return { journeyId };
+  });
 
 export const lookupAnonymousJourney = createServerFn({ method: "POST" })
   .validator((d: unknown) => OwnerCodeSchema.parse(d))

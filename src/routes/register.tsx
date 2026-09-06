@@ -227,6 +227,10 @@ function Register() {
                 metadata={{ name: name || undefined, role }}
                 primary={!authMethods.phoneSignIn}
                 registrationAcknowledged={authMethods.phoneSignIn || emailConsentAcknowledged}
+                onAuthenticated={async () => {
+                  await captureMarketingEvent("signup_completed", "account", { once: true });
+                  navigate({ to: "/dashboard" });
+                }}
               />
               {!authMethods.phoneSignIn && !authMethods.emailSignIn && (
                 <p role="alert" className="mt-4 text-xs text-destructive">

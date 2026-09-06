@@ -63,9 +63,9 @@ function Landing() {
           transition={{ duration: 1, delay: 1 }}
           className="text-muted-foreground max-w-md mx-auto"
         >
-          RedFlagDaddy helps Dominants, submissives, switches and the full spectrum
-          of BDSM archetypes discuss consent, compatibility, safety practices and potential red flags
-          — with structure, not guesswork.
+          RedFlagDaddy helps Dominants, submissives, switches and the full spectrum of BDSM
+          archetypes discuss consent, compatibility, safety practices and potential red flags — with
+          structure, not guesswork.
         </motion.p>
 
         <motion.div
@@ -75,22 +75,22 @@ function Landing() {
           className="flex flex-col sm:flex-row gap-3 justify-center pt-2"
         >
           <Link
-            to="/register"
+            to="/guest"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30 hover:scale-[1.02] transition"
           >
-            Create an account <ArrowRight className="w-4 h-4" />
+            Start a private assessment <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            to="/guest"
+            to="/login"
             className="inline-flex items-center justify-center rounded-xl glass px-5 py-3 text-sm font-medium hover:bg-white/5 transition"
           >
-            Continue as guest
+            Sign in to track journeys
           </Link>
         </motion.div>
 
         <p className="text-xs text-muted-foreground max-w-lg mx-auto">
-          For adults 18+. RedFlagDaddy is a structured conversation aid—not identity verification,
-          a background check, a diagnosis, proof of consent, an emergency service or a guarantee of
+          For adults 18+. RedFlagDaddy is a structured conversation aid—not identity verification, a
+          background check, a diagnosis, proof of consent, an emergency service or a guarantee of
           safety.
         </p>
 

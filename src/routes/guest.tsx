@@ -4,12 +4,17 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { createGuestJourney, lookupAnonymousJourney } from "@/lib/guest.functions";
+import {
+  claimAnonymousJourney,
+  createGuestJourney,
+  lookupAnonymousJourney,
+} from "@/lib/guest.functions";
 import { Input } from "@/components/ui/input";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
 import { ReportView } from "@/components/ReportView";
+import { EmailOtpForm } from "@/components/EmailOtpForm";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -341,8 +346,12 @@ function PartnerLinkView({
   ownerExpiresAt: string | null;
   partnerType: Role | "";
 }) {
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [ownerCodeCopied, setOwnerCodeCopied] = useState(false);
+  const claimFn = useServerFn(claimAnonymousJourney);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [claimed, setClaimed] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -483,6 +492,40 @@ function PartnerLinkView({
                 : "30 days after creation"}
               . The journey and report are then deleted.
             </p>
+          </section>
+        )}
+
+        {ownerCode && !claimed && (
+          <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/25">
+            <div>
+              <h2 className="font-display text-lg font-semibold tracking-tight">
+                Save and track this journey
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                Optional: create an account after sharing. This journey will appear on your
+                dashboard, where you can track it, create more, and build custom journeys.
+              </p>
+            </div>
+            <EmailOtpForm
+              mode="register"
+              onAuthenticated={async () => {
+                try {
+                  await claimFn({ data: { ownerCode } });
+                  setClaimed(true);
+                  navigate({ to: "/dashboard" });
+                } catch (error) {
+                  setClaimError(
+                    error instanceof Error ? error.message : "We couldn't save this journey.",
+                  );
+                  throw error;
+                }
+              }}
+            />
+            {claimError && (
+              <p role="alert" className="text-xs text-destructive">
+                {claimError}
+              </p>
+            )}
           </section>
         )}
 
