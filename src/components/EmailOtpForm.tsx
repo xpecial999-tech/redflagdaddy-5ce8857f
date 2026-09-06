@@ -11,7 +11,7 @@ type EmailOtpFormProps = {
   onAuthenticated?: () => Promise<void> | void;
 };
 
-const EMAIL_OTP_LENGTH = 8;
+const EMAIL_OTP_LENGTH = 6;
 
 export function EmailOtpForm({
   mode,
@@ -87,7 +87,7 @@ export function EmailOtpForm({
     return (
       <form className="space-y-4" onSubmit={verifyCode}>
         <p className="text-sm text-muted-foreground">
-          Enter the eight-digit code sent to <span className="text-foreground">{email}</span>.
+          Enter the six-digit code sent to <span className="text-foreground">{email}</span>.
         </p>
         <div className="flex justify-center">
           <InputOTP
