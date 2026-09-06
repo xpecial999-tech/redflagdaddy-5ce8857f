@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ export function EmailOtpForm({
   const [step, setStep] = useState<"email" | "code">("email");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submittedToken = useRef<string | null>(null);
 
   const requestCode = async (event?: React.FormEvent) => {
     event?.preventDefault();
@@ -41,6 +42,7 @@ export function EmailOtpForm({
       return;
     }
     setToken("");
+    submittedToken.current = null;
     setStep("code");
   };
 
@@ -55,6 +57,7 @@ export function EmailOtpForm({
       type: "email",
     });
     if (verifyError) {
+      submittedToken.current = null;
       setLoading(false);
       setError("That code is invalid or has expired. Request a new one and try again.");
       return;
@@ -68,6 +71,15 @@ export function EmailOtpForm({
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (step !== "code" || token.length !== 6 || loading) return;
+    if (submittedToken.current === token) return;
+    submittedToken.current = token;
+    void verifyCode();
+    // verifyCode intentionally reads the latest form state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, step, loading]);
 
   if (step === "code") {
     return (
