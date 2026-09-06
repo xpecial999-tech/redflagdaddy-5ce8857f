@@ -136,7 +136,7 @@ const security = [
   {
     icon: Mail,
     title: "Email-link account access",
-    body: "Signed-in accounts use a private email link. It verifies control of an email inbox, not a person's identity or trustworthiness.",
+    body: "Signed-in accounts use a private email code. It verifies control of an email inbox, not a person's identity or trustworthiness.",
   },
   {
     icon: Link2,

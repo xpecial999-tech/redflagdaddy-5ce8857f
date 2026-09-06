@@ -139,7 +139,7 @@ export function Login({ adminOnly = false }: { adminOnly?: boolean }) {
               <p className="text-sm text-muted-foreground mb-6">
                 {authMethods.phoneSignIn
                   ? "Enter your mobile number and we'll text you a code."
-                  : "Use your email address to receive a private sign-in link."}
+                  : "Use your email address to receive a private sign-in code."}
               </p>
               {authMethods.phoneSignIn && (
                 <form className="space-y-3" onSubmit={sendCode}>

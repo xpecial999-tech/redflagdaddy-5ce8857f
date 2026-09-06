@@ -32,13 +32,13 @@ function AuthCallback() {
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) {
-          if (!cancelled) setError("This sign-in link is invalid or has expired.");
+          if (!cancelled) setError("This sign-in request is invalid or has expired.");
           return;
         }
       } else {
         const { data } = await supabase.auth.getSession();
         if (!data.session) {
-          if (!cancelled) setError("This sign-in link is invalid or has expired.");
+          if (!cancelled) setError("This sign-in request is invalid or has expired.");
           return;
         }
       }

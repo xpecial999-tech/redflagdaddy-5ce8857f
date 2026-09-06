@@ -41,8 +41,8 @@ function Safety() {
 
       <section className="space-y-3">
         <SectionLabel>Account access</SectionLabel>
-        <SafetyCard icon={KeyRound} title="Private email links">
-          Sign-in uses a private link sent to your email address. Never forward a sign-in link to
+        <SafetyCard icon={KeyRound} title="Private email codes">
+          Sign-in uses a private code sent to your email address. Never share a sign-in code with
           anyone, including someone claiming to represent RedFlagDaddy.
         </SafetyCard>
         <button

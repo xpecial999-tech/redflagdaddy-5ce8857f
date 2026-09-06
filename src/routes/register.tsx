@@ -199,7 +199,7 @@ function Register() {
               {!authMethods.phoneSignIn && (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Create your account with a private email sign-in link. You can add your profile
+                    Create your account with a private email sign-in code. You can add your profile
                     details after signing in.
                   </p>
                   <label className="flex items-start gap-2 text-xs text-muted-foreground">
