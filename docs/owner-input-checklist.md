@@ -15,10 +15,10 @@ only completion and non-secret test results.
 
 ### 1. Public support routing
 
-- [ ] In Cloudflare Email Routing, verify the private destination.
-- [ ] Route only support@redflagdaddy.com to that destination; leave catch-all
+- [x] In Cloudflare Email Routing, verify the private destination.
+- [x] Route only support@redflagdaddy.com to that destination; leave catch-all
       disabled.
-- [ ] Send a normal test email and confirm arrival.
+- [x] Send a normal test email and confirm arrival.
 - [ ] Confirm replies use an acceptable public sender and do not unexpectedly
       expose the private destination.
 
@@ -38,6 +38,8 @@ support form notification.
 ### 3. Cloudflare Turnstile and staging origin
 
 - [ ] Create a Managed Turnstile widget for the staging and production hostnames.
+      Owner confirmed on 7 September 2026 that staging Turnstile is not yet
+      configured.
 - [ ] Enter the public site key, encrypted secret and exact expected hostname in
       their respective environment configurations.
 - [ ] Confirm the exact non-secret staging hostname.
@@ -59,29 +61,29 @@ selected.
 
 ### 5. Private operational roles
 
-- [ ] Assign routine support operator.
-- [ ] Assign backup support operator.
-- [ ] Assign incident decision-maker.
-- [ ] Assign recovery-code holder.
-- [ ] Store assignments and recovery material privately, then report only roles
+- [x] Assign routine support operator: `RedFlagDaddy-Support`.
+- [x] Assign backup support operator: `RedFlagDaddy-Support`.
+- [x] Assign incident decision-maker: `RedFlagDaddy-Support`.
+- [x] Assign recovery-code holder: `RedFlagDaddy-Support`.
+- [x] Store assignments and recovery material privately, then report only roles
       assigned.
 
 ### 6. Response targets
 
-- [ ] Approve or replace: ordinary support within two business days.
-- [ ] Approve or replace: privacy or safety reports within one business day.
+- [x] Approve or replace: ordinary support within two business days.
+- [x] Approve or replace: privacy or safety reports within one business day.
 - [ ] Keep the public wording clear that RedFlagDaddy is not continuously
       monitored and is not an emergency service.
 
 ## Send these non-secret answers next
 
 - [ ] Exact staging hostname.
-- [ ] Support routing test result.
-- [ ] Outbound transactional-email status.
-- [ ] Turnstile configured: yes/no.
+- [x] Support routing test result: owner previously confirmed forwarding works.
+- [ ] Outbound transactional-email status: no verified support-form delivery yet.
+- [x] Turnstile configured: no for staging.
 - [ ] Future WhatsApp/SMS provider decision, if any.
-- [ ] Operational roles assigned: yes/no.
-- [ ] Response targets approved or revised.
+- [x] Operational roles assigned: yes, all assigned to `RedFlagDaddy-Support`.
+- [x] Response targets approved.
 
 ## Needed before public promotion
 
@@ -102,8 +104,8 @@ selected.
       production-account-inventory.md and privately verify MFA/recovery.
 - [ ] Inspect staging analytics payloads and approve final consent wording before
       enabling the approved 35-day production retention policy.
-- [ ] Approve a dedicated 1200 × 630 social-preview image derived from the brand
-      kit.
+- [ ] Approve `public/social-preview-20260907.png` as the dedicated 1200 x 630
+      social-preview image, or request a revision.
 - [ ] Confirm official social-account handles, MFA and recovery privately.
 
 ## Needed only when optional authentication is activated

@@ -37,9 +37,10 @@ handover docs where those notes describe the old launch path.
   sixth digit.
 - Guest journey claiming was implemented so a user can save and track after
   sharing.
-- Questions and categories were imported from the Lovable database export, but
-  staging should still be verified through the admin UI before relying on the
-  content.
+- Questions and categories were imported from the Lovable database export and
+  the owner confirmed they look correct in staging admin on 7 September 2026.
+- A 1200 x 630 social-preview image was generated and saved at
+  `public/social-preview-20260907.png`.
 
 ## Batch 1: documentation cleanup
 
@@ -55,10 +56,11 @@ Status: done locally on 7 September 2026.
 
 ## Batch 2: staging data verification
 
-Status: next.
+Status: partially done.
 
 - Verify `/admin` loads for the staging admin account.
 - Confirm Questions and Categories show imported content in the admin UI.
+  Owner confirmed on 7 September 2026.
 - Confirm at least one public guest journey uses those questions correctly.
 - If content is missing, re-import only questions and categories from the
   sanitized Lovable SQL export, then verify counts and visible admin pages.
@@ -81,8 +83,11 @@ Status: next.
 Status: next.
 
 - Verify Cloudflare Turnstile is configured for staging.
+  Owner confirmed on 7 September 2026 that Turnstile is not configured yet.
 - Submit normal, privacy/safety and immediate-danger synthetic support requests.
 - Confirm messages arrive at `support@redflagdaddy.com` and forward correctly.
+  Owner reported no mailbox receipt yet; Codex has not completed a verified
+  support-form delivery test in this batch.
 - Confirm no private destination, OTP, private link, access code, raw answer or
   secret appears in page source, logs, queued messages or screenshots.
 - Record support role ownership and response targets without country-specific
@@ -98,22 +103,18 @@ Status: blocked until staging passes.
 - Confirm there are no visible mobile-number prompts in the active flow.
 - Verify production remains locked after every staging deploy.
 - Obtain legal/privacy/safety text review before public promotion.
-- Create and approve a 1200 x 630 social-preview image.
+- Review and approve `public/social-preview-20260907.png` as the 1200 x 630
+  social-preview image, or request a revision.
 - Record exact commit, migration set, tester/date, accepted limitations and a
   go/no-go decision.
 
 ## Owner inputs needed
 
-- Confirm whether the imported Questions and Categories are correct once shown
-  in staging admin.
-- Confirm Turnstile is configured for staging, or provide access for Codex to
-  check it.
+- Configure Turnstile for staging.
 - Confirm support form test messages arrive at the private inbox when sent to
   `support@redflagdaddy.com`.
-- Assign the routine support operator, backup support operator, incident
-  decision-maker and recovery-code holder privately.
 - Decide when to start legal review of the counsel pack.
-- Approve or request a 1200 x 630 social-preview image direction.
+- Approve `public/social-preview-20260907.png` or request a revision.
 
 ## Suggested next Codex prompt
 

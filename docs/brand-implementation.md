@@ -1,6 +1,6 @@
 # RedFlagDaddy brand implementation
 
-Updated: 28 August 2026
+Updated: 7 September 2026
 
 The owner-supplied `RedFlagDaddy_CI_Branding_Kit.zip` is the visual source of
 truth for the current application work. Its documents are reference material;
@@ -36,6 +36,8 @@ project backlog.
   two pixels and use the approved lavender ring token.
 - Automated tests protect the token mapping, font selection, icon dimensions
   manifest configuration and semantic-colour usage.
+- A generated 1200 x 630 social-preview candidate is saved at
+  `public/social-preview-20260907.png` for owner review.
 
 ## Release checks still required
 
@@ -43,8 +45,8 @@ project backlog.
 - Confirm text, focus indicators and interactive states meet WCAG AA contrast.
 - Verify the favicon, Apple touch icon and install icons on real browsers and
   devices, including circular or rounded platform crops.
-- Approve a dedicated 1200 x 630 social-sharing image. The kit contains square
-  and portrait social assets, but no asset at the required link-preview ratio.
+- Approve `public/social-preview-20260907.png` or request a revised 1200 x 630
+  social-sharing image.
 - Commission the clean SVG/EPS redraw recommended by the kit before print,
   signage, merchandise or other large-format production. The current approved
   masters are raster artwork.

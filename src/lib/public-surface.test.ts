@@ -133,18 +133,31 @@ describe("public launch surface", () => {
     );
   });
 
-  it("keeps account creation primary and the public safety boundary explicit", () => {
+  it("keeps guest journey creation primary and the public safety boundary explicit", () => {
     const landing = source("src/routes/index.tsx");
-    const accountCta = landing.indexOf("Create an account");
-    const guestCta = landing.indexOf("Continue as guest");
+    const guestCta = landing.indexOf("Start a private assessment");
+    const accountCta = landing.indexOf("Sign in to track journeys");
 
-    expect(accountCta).toBeGreaterThan(-1);
-    expect(guestCta).toBeGreaterThan(accountCta);
-    expect(landing).toContain("a background check");
+    expect(guestCta).toBeGreaterThan(-1);
+    expect(accountCta).toBeGreaterThan(guestCta);
+    expect(landing).toMatch(/background check/);
     expect(landing).toContain("proof of consent");
     expect(landing).toContain("a guarantee of");
     expect(landing).toContain("Structured conversations for adults");
     expect(landing).not.toContain("Structured assessments for");
+  });
+
+  it("publishes a large-card social preview image", () => {
+    const root = source("src/routes/__root.tsx");
+    const image = readFileSync(
+      new URL("../../public/social-preview-20260907.png", import.meta.url),
+    );
+
+    expect(root).toContain("summary_large_image");
+    expect(root).toContain("https://redflagdaddy.com/social-preview-20260907.png");
+    expect(image.subarray(1, 4).toString("ascii")).toBe("PNG");
+    expect(image.readUInt32BE(16)).toBe(1200);
+    expect(image.readUInt32BE(20)).toBe(630);
   });
 
   it("serves the full-size header logo from local public assets", () => {

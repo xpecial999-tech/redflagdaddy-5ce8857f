@@ -71,7 +71,7 @@ Current priorities and owner actions are maintained in
 - [ ] Obtain appropriate legal review using
       `docs/legal-policy-counsel-review-pack.md`, then publish the approved privacy
       notice, terms and safety policy for allowed jurisdictions.
-- [ ] **OWNER APPROVED / CODE MERGED:** public support contact and escalation
+- [ ] **OWNER APPROVED / CODE MERGED / ROLES ASSIGNED:** public support contact and escalation
       procedure. Configure Cloudflare Email Routing and Turnstile, deploy, then pass
       the synthetic delivery and escalation tests.
 - [x] **DONE:** use approved local-emergency wording and Find A Helpline for the
@@ -86,8 +86,8 @@ Current priorities and owner actions are maintained in
       commercial review; it does not automatically enable charging.
 - [x] **DONE:** owner supplied the current CI branding kit and it is treated as
       the local visual source of truth.
-- [ ] Create and approve a dedicated 1200×630 social-sharing image; the kit has
-      square and portrait social artwork, but no image at this ratio.
+- [ ] Review and approve `public/social-preview-20260907.png` as the dedicated
+      1200 x 630 social-sharing image.
 - [ ] Confirm all public account handles. **DONE:** owner-controlled MFA and
       recovery details are confirmed; finish the non-secret account inventory.
 
