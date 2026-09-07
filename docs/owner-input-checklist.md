@@ -27,8 +27,8 @@ only completion and non-secret test results.
 Cloudflare Email Routing receives and forwards email; it does not send the
 support form notification.
 
-- [ ] Confirm whether the migrated transactional-email queue can send a test
-      message to support@redflagdaddy.com.
+- [ ] Confirm whether staging support-form reference `RFD-20260907-9F995B`
+      arrived at the private inbox through support@redflagdaddy.com.
 - [ ] If it cannot, create the recommended Resend account and sending subdomain
       using auth-provider-setup-guide.md.
 - [ ] Use separate staging and production credentials.
@@ -40,7 +40,7 @@ support form notification.
 - [x] Create a Managed Turnstile widget for the staging hostname.
 - [x] Enter the public staging site key and exact expected hostname in the local
       staging build and Worker configuration.
-- [ ] Confirm the encrypted staging `TURNSTILE_SECRET_KEY` is still present in
+- [x] Confirm the encrypted staging `TURNSTILE_SECRET_KEY` is still present in
       the Cloudflare Worker variables/secrets screen after deployment.
 - [x] Confirm the exact non-secret staging hostname:
       `staging.redflagdaddy.com`.
@@ -80,9 +80,9 @@ selected.
 
 - [ ] Exact staging hostname.
 - [x] Support routing test result: owner previously confirmed forwarding works.
-- [ ] Outbound transactional-email status: no verified support-form delivery yet.
-- [ ] Turnstile configured: public staging config is present; encrypted secret
-      still needs final confirmation after deploy.
+- [ ] Outbound transactional-email status: staging form accepted
+      `RFD-20260907-9F995B`; mailbox delivery still needs owner confirmation.
+- [x] Turnstile configured for staging.
 - [ ] Future WhatsApp/SMS provider decision, if any.
 - [x] Operational roles assigned: yes, all assigned to `RedFlagDaddy-Support`.
 - [x] Response targets approved.

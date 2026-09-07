@@ -93,10 +93,12 @@ Status: in progress.
   The staging site key and expected hostname are now in the local build and
   Worker configuration. Confirm the encrypted Cloudflare secret still exists in
   the staging Worker after deployment.
-- Submit normal, privacy/safety and immediate-danger synthetic support requests.
+- A normal synthetic support request submitted successfully on staging on
+  7 September 2026 with reference `RFD-20260907-9F995B`.
+- Submit privacy/safety and immediate-danger synthetic support requests.
 - Confirm messages arrive at `support@redflagdaddy.com` and forward correctly.
-  Owner reported no mailbox receipt yet; Codex has not completed a verified
-  support-form delivery test in this batch.
+  Owner reported no mailbox receipt before the successful Turnstile test; mailbox
+  delivery for `RFD-20260907-9F995B` still needs owner confirmation.
 - Confirm no private destination, OTP, private link, access code, raw answer or
   secret appears in page source, logs, queued messages or screenshots.
 - Record support role ownership and response targets without country-specific
@@ -121,8 +123,8 @@ Status: blocked until staging passes.
 
 - Confirm the encrypted `TURNSTILE_SECRET_KEY` is still present in the
   `redflagdaddy-staging` Worker variables/secrets screen.
-- Confirm support form test messages arrive at the private inbox when sent to
-  `support@redflagdaddy.com`.
+- Confirm support form test `RFD-20260907-9F995B` arrives at the private inbox
+  through `support@redflagdaddy.com`.
 - Send `docs/consolidated-legal-review-pack.md` for legal/privacy feedback.
 
 ## Suggested next Codex prompt

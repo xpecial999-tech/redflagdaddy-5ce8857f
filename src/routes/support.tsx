@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CheckCircle2, LifeBuoy, LockKeyhole, Send } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,26 @@ import { submitSupportRequest } from "@/lib/support.functions";
 
 const SUPPORT_EMAIL = "support@redflagdaddy.com";
 const TURNSTILE_SITE_KEY = import.meta.env["VITE_TURNSTILE_SITE_KEY"] ?? "";
+const TURNSTILE_SCRIPT_ID = "cloudflare-turnstile-api";
+
+type TurnstileApi = {
+  render: (
+    container: HTMLElement,
+    options: {
+      sitekey: string;
+      theme: "dark";
+      action: string;
+    },
+  ) => string | undefined;
+  remove: (widgetId: string) => void;
+  reset: (widgetId?: string) => void;
+};
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileApi;
+  }
+}
 
 export const Route = createFileRoute("/support")({
   head: () => ({
@@ -63,8 +83,7 @@ function SupportPage() {
       });
       setReference(result.reference);
       form.reset();
-      const turnstileWindow = window as Window & { turnstile?: { reset: () => void } };
-      turnstileWindow.turnstile?.reset();
+      window.turnstile?.reset();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Your request could not be sent.");
     } finally {
@@ -230,15 +249,7 @@ function SupportPage() {
           </label>
 
           {TURNSTILE_SITE_KEY ? (
-            <>
-              <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-              <div
-                className="cf-turnstile"
-                data-sitekey={TURNSTILE_SITE_KEY}
-                data-theme="dark"
-                data-action="support_request"
-              />
-            </>
+            <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} />
           ) : (
             <div
               role="status"
@@ -297,4 +308,48 @@ function SupportPage() {
       </p>
     </div>
   );
+}
+
+function TurnstileWidget({ siteKey }: { siteKey: string }) {
+  const id = useId();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const widgetIdRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const renderWidget = () => {
+      if (cancelled || widgetIdRef.current || !containerRef.current || !window.turnstile) return;
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        theme: "dark",
+        action: "support_request",
+      });
+    };
+
+    const existingScript = document.getElementById(TURNSTILE_SCRIPT_ID) as HTMLScriptElement | null;
+    if (window.turnstile) {
+      renderWidget();
+    } else if (existingScript) {
+      existingScript.addEventListener("load", renderWidget, { once: true });
+    } else {
+      const script = document.createElement("script");
+      script.id = TURNSTILE_SCRIPT_ID;
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+      script.addEventListener("load", renderWidget, { once: true });
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      cancelled = true;
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+      }
+      widgetIdRef.current = undefined;
+    };
+  }, [siteKey]);
+
+  return <div id={id} ref={containerRef} className="cf-turnstile" aria-label="Security check" />;
 }
