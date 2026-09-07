@@ -8,6 +8,14 @@ type RateLimitRule = {
   maxEvents: number;
 };
 
+function rateLimitMultiplier(): number {
+  const raw = process.env["RATE_LIMIT_MULTIPLIER"];
+  if (!raw) return 1;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 1) return 1;
+  return Math.min(Math.floor(parsed), 50);
+}
+
 export class RateLimitError extends Error {
   constructor() {
     super("Too many requests. Please wait and try again.");
@@ -32,6 +40,7 @@ function hashRateLimitKey(value: string): string {
 
 export async function consumeRateLimits(rules: RateLimitRule[]): Promise<void> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const multiplier = rateLimitMultiplier();
 
   for (const rule of rules) {
     if (!rule.value) continue;
@@ -39,7 +48,7 @@ export async function consumeRateLimits(rules: RateLimitRule[]): Promise<void> {
       action_name: rule.action,
       hashed_key: hashRateLimitKey(rule.value),
       window_seconds: rule.windowSeconds,
-      max_events: rule.maxEvents,
+      max_events: rule.maxEvents * multiplier,
     });
     if (error) {
       console.error("[rate-limit] Check failed", { action: rule.action, code: error.code });
