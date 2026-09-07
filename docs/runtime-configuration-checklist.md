@@ -28,6 +28,7 @@ control rather than a plaintext variable or repository file.
 | `SUPABASE_SERVICE_ROLE_KEY`     | Encrypted secret   | Trusted server-only database operations            | Never expose to browser code or logs                     |
 | `OTP_SECRET`                    | Encrypted secret   | OTP hashing and hashed abuse/rate-limit keys       | Unique, long and different per environment               |
 | `PUBLIC_SITE_URL`               | Plain server value | Origin used in copied/email invitation links       | Exact HTTPS origin only; staging must not use production |
+| `VITE_CONSTRUCTION_MODE`        | Public build value | Client-visible construction display flag           | Disabled on staging; production locked at Worker level   |
 
 `PUBLIC_APP_URL` is a temporary compatibility fallback only. Leave it unset once
 `PUBLIC_SITE_URL` is configured and remove it from platform configuration after
@@ -78,18 +79,18 @@ mail service.
 
 ## Email queue and authentication email
 
-The current queue/webhook implementation still uses the existing email-provider
-integration while Resend is used for Supabase authentication email.
+The current support-form queue processor sends transactional email through
+Resend. Supabase authentication email also uses Resend SMTP, but those are
+separate credentials/configuration surfaces.
 
-| Name               | Handling           | Purpose                                           | Activation rule                              |
-| ------------------ | ------------------ | ------------------------------------------------- | -------------------------------------------- |
-| `LOVABLE_API_KEY`  | Encrypted secret   | Existing protected email queue/webhook dispatcher | Confirm it still works after migration       |
-| `LOVABLE_SEND_URL` | Plain server value | Optional provider send endpoint override          | Leave absent unless the provider requires it |
+| Name              | Handling         | Purpose                                      | Activation rule                                  |
+| ----------------- | ---------------- | -------------------------------------------- | ------------------------------------------------ |
+| `RESEND_API_KEY`  | Encrypted secret | Sends queued support-form transactional mail | Required in the Worker; never use a `VITE_` name |
+| `LOVABLE_API_KEY` | Encrypted secret | Legacy Lovable-only webhook/AI admin paths   | Leave absent unless those legacy paths are used  |
 
-If the existing dispatcher is retired, replace this integration deliberately;
-do not silently point these names at an unrelated provider credential. Resend
-SMTP credentials belong in Supabase Auth/provider configuration and encrypted
-platform storage, not in browser variables.
+Resend SMTP credentials for Supabase Auth belong in Supabase Auth/provider
+configuration. The Worker queue processor needs its own encrypted
+`RESEND_API_KEY` secret because it sends application transactional email.
 
 ## Analytics — disabled unless explicitly configured
 

@@ -47,6 +47,7 @@ describe("runtime configuration inventory", () => {
     for (const name of [
       "SUPABASE_SERVICE_ROLE_KEY",
       "OTP_SECRET",
+      "RESEND_API_KEY",
       "CLICKATELL_API_KEY",
       "CLICKATELL_CALLBACK_PASSWORD",
       "TURNSTILE_SECRET_KEY",

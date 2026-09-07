@@ -99,6 +99,12 @@ Status: in progress.
 - Confirm messages arrive at `support@redflagdaddy.com` and forward correctly.
   Owner reported no mailbox receipt before the successful Turnstile test; mailbox
   delivery for `RFD-20260907-9F995B` still needs owner confirmation.
+- On 7 September 2026, `RFD-20260907-9F995B` was confirmed in
+  `email_send_log` as `pending` and present in `pgmq.q_transactional_emails`.
+  Staging had no `process-email-queue` cron job. The queue processor was updated
+  to use `RESEND_API_KEY` through Resend's HTTPS API instead of the old Lovable
+  sender, but staging still needs the encrypted Worker secret and scheduler
+  activation before mailbox delivery can pass.
 - Confirm no private destination, OTP, private link, access code, raw answer or
   secret appears in page source, logs, queued messages or screenshots.
 - Record support role ownership and response targets without country-specific
@@ -125,6 +131,10 @@ Status: blocked until staging passes.
   `redflagdaddy-staging` Worker variables/secrets screen.
 - Confirm support form test `RFD-20260907-9F995B` arrives at the private inbox
   through `support@redflagdaddy.com`.
+- Add encrypted Worker secret `RESEND_API_KEY` to `redflagdaddy-staging`, using a
+  restricted Resend API key for staging transactional email.
+- Activate the staging email queue scheduler or manually trigger
+  `/lovable/email/queue/process` with the configured service-role bearer token.
 - Send `docs/consolidated-legal-review-pack.md` for legal/privacy feedback.
 
 ## Suggested next Codex prompt
