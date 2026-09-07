@@ -23,6 +23,9 @@ import {
   Download,
   Send,
   FileCheck2,
+  Mail,
+  MessageSquare,
+  Share2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/guest")({
@@ -243,7 +246,98 @@ function PartnerLinkView({
     }
   };
 
+  const nativeShare = async () => {
+    if (typeof navigator === "undefined" || !("share" in navigator)) return;
+    try {
+      await navigator.share({
+        title: "RedFlagDaddy private assessment",
+        text: shareMessage,
+        url: link,
+      });
+    } catch {
+      /* User cancelled or the device blocked sharing. */
+    }
+  };
+
+  const saveOwnerCodeImage = () => {
+    if (!ownerCode || typeof document === "undefined") return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1080;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const bg = ctx.createLinearGradient(0, 0, 1080, 1080);
+    bg.addColorStop(0, "#05020d");
+    bg.addColorStop(0.45, "#15082b");
+    bg.addColorStop(1, "#06010b");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 1080, 1080);
+
+    const glow = ctx.createRadialGradient(540, 330, 80, 540, 330, 620);
+    glow.addColorStop(0, "rgba(236,72,153,0.42)");
+    glow.addColorStop(0.5, "rgba(124,58,237,0.18)");
+    glow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, 1080, 1080);
+
+    ctx.strokeStyle = "rgba(236,72,153,0.45)";
+    ctx.lineWidth = 4;
+    roundRect(ctx, 96, 96, 888, 888, 48);
+    ctx.stroke();
+
+    ctx.fillStyle = "#f8f5ff";
+    ctx.textAlign = "center";
+    ctx.font = "700 72px Georgia, serif";
+    ctx.fillText("RedFlagDaddy", 540, 260);
+
+    const accent = ctx.createLinearGradient(320, 0, 760, 0);
+    accent.addColorStop(0, "#ec4899");
+    accent.addColorStop(1, "#7c3aed");
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(290, 315);
+    ctx.lineTo(790, 315);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
+    ctx.font = "500 34px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("Private owner code", 540, 430);
+
+    ctx.fillStyle = "rgba(12,8,28,0.78)";
+    roundRect(ctx, 150, 480, 780, 180, 36);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.16)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, 150, 480, 780, 180, 36);
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 42px ui-monospace, SFMono-Regular, Menlo, monospace";
+    wrapText(ctx, ownerCode, 540, 560, 700, 54);
+
+    ctx.fillStyle = "rgba(255,255,255,0.62)";
+    ctx.font = "400 28px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("Keep this separate from the partner link.", 540, 760);
+    ctx.fillText("Anyone with this code can view the summary.", 540, 805);
+
+    ctx.fillStyle = "#ec4899";
+    ctx.font = "700 30px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("Consent. Compatibility. Safety. Red flags.", 540, 910);
+
+    const anchor = document.createElement("a");
+    anchor.download = `redflagdaddy-owner-code-${code}.png`;
+    anchor.href = canvas.toDataURL("image/png");
+    anchor.click();
+  };
+
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
+  const mailHref = `mailto:?subject=${encodeURIComponent(
+    "Private RedFlagDaddy assessment",
+  )}&body=${encodeURIComponent(shareMessage)}`;
+  const smsHref = `sms:?&body=${encodeURIComponent(shareMessage)}`;
 
   return (
     <div className="py-2 sm:py-6">
@@ -288,6 +382,13 @@ function PartnerLinkView({
             </p>
           </div>
 
+          <div className="flex flex-wrap justify-center gap-2 no-print">
+            <ShareButton onClick={nativeShare} icon={Share2} label="Share" />
+            <ShareLink href={mailHref} icon={Mail} label="Email" />
+            <ShareLink href={smsHref} icon={MessageSquare} label="SMS" />
+            <ShareLink href={whatsappHref} icon={MessageCircle} label="WhatsApp" />
+          </div>
+
           <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
             <h3 className="text-sm font-medium">How to send it to your partner</h3>
             <ol className="mt-2 space-y-1.5 text-xs text-muted-foreground list-decimal pl-4">
@@ -295,16 +396,27 @@ function PartnerLinkView({
                 Share the link using one of the buttons below — your contacts stay on your device.
               </li>
               <li>They open the link, confirm they're 18+, and complete the assessment.</li>
-              <li>
-                Return to this page and enter your private owner code to check progress or view the
-                report.
-              </li>
             </ol>
           </div>
         </section>
 
         {ownerCode && (
           <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/25">
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <h2 className="font-display text-lg font-semibold tracking-tight">
+                I've sent it, what next?
+              </h2>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-xs leading-relaxed text-muted-foreground">
+                <li>
+                  Wait for your partner to complete the questionnaire and then check using your code
+                  below.
+                </li>
+                <li>
+                  Enter your email address below and receive a notification when they have completed
+                  the questionnaire.
+                </li>
+              </ul>
+            </div>
             <div className="flex items-start gap-3">
               <KeyRound className="w-5 h-5 text-primary mt-0.5" />
               <div>
@@ -331,10 +443,10 @@ function PartnerLinkView({
               </button>
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={saveOwnerCodeImage}
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium"
               >
-                <Download className="w-4 h-4" /> Save / print
+                <Download className="w-4 h-4" /> Save code image
               </button>
             </div>
             <p className="text-xs text-muted-foreground text-center">
@@ -380,27 +492,91 @@ function PartnerLinkView({
             )}
           </section>
         )}
-
-        <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-3">
-          <span className="text-xs uppercase tracking-wider text-muted-foreground">
-            Send the invite
-          </span>
-          <p className="text-xs text-muted-foreground">
-            Share the private link yourself by email or WhatsApp.
-          </p>
-          <div className="grid gap-2">
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium hover:bg-white/5 transition"
-            >
-              <MessageCircle className="w-4 h-4" />
-              WhatsApp
-            </a>
-          </div>
-        </section>
       </motion.div>
     </div>
   );
+}
+
+function ShareButton({
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  onClick: () => void;
+  icon: typeof Share2;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-input px-4 text-xs font-medium hover:bg-white/5 transition"
+    >
+      <Icon className="h-4 w-4 text-primary" />
+      {label}
+    </button>
+  );
+}
+
+function ShareLink({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: typeof Share2;
+  label: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-input px-4 text-xs font-medium hover:bg-white/5 transition"
+    >
+      <Icon className="h-4 w-4 text-primary" />
+      {label}
+    </a>
+  );
+}
+
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
+}
+
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+) {
+  const words = text.split("-");
+  let line = "";
+  let currentY = y;
+  for (let i = 0; i < words.length; i += 1) {
+    const candidate = line ? `${line}-${words[i]}` : words[i];
+    if (ctx.measureText(candidate).width > maxWidth && line) {
+      ctx.fillText(line, x, currentY);
+      line = words[i];
+      currentY += lineHeight;
+    } else {
+      line = candidate;
+    }
+  }
+  ctx.fillText(line, x, currentY);
 }
