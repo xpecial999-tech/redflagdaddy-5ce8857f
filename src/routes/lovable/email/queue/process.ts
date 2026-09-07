@@ -38,6 +38,16 @@ type ResendError = Error & {
   retryAfterSeconds?: number | null;
 };
 
+function runtimeValue(name: string): string | undefined {
+  const workerEnv = (
+    globalThis as typeof globalThis & {
+      __env__?: Record<string, unknown>;
+    }
+  ).__env__;
+  const value = workerEnv?.[name];
+  return typeof value === "string" ? value : process.env[name];
+}
+
 function isSendableEmailPayload(payload: EmailQueuePayload): payload is SendableEmailPayload {
   return ["to", "from", "sender_domain", "subject", "html", "text"].every((key) => {
     const value = payload[key as keyof EmailQueuePayload];
@@ -147,9 +157,10 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env["RESEND_API_KEY"];
-        const supabaseUrl = import.meta.env["VITE_SUPABASE_URL"];
-        const supabaseServiceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+        const apiKey = runtimeValue("RESEND_API_KEY");
+        const processorSecret = runtimeValue("QUEUE_PROCESSOR_SECRET");
+        const supabaseUrl = runtimeValue("SUPABASE_URL");
+        const supabaseServiceKey = runtimeValue("SUPABASE_SERVICE_ROLE_KEY");
 
         if (!apiKey || !supabaseUrl || !supabaseServiceKey) {
           console.error("Missing required environment variables");
@@ -164,7 +175,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
         }
 
         const token = authHeader.slice("Bearer ".length).trim();
-        if (token !== supabaseServiceKey) {
+        if (token !== (processorSecret || supabaseServiceKey)) {
           return Response.json({ error: "Forbidden" }, { status: 403 });
         }
 

@@ -48,6 +48,7 @@ describe("runtime configuration inventory", () => {
       "SUPABASE_SERVICE_ROLE_KEY",
       "OTP_SECRET",
       "RESEND_API_KEY",
+      "QUEUE_PROCESSOR_SECRET",
       "CLICKATELL_API_KEY",
       "CLICKATELL_CALLBACK_PASSWORD",
       "TURNSTILE_SECRET_KEY",

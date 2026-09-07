@@ -83,10 +83,11 @@ The current support-form queue processor sends transactional email through
 Resend. Supabase authentication email also uses Resend SMTP, but those are
 separate credentials/configuration surfaces.
 
-| Name              | Handling         | Purpose                                      | Activation rule                                  |
-| ----------------- | ---------------- | -------------------------------------------- | ------------------------------------------------ |
-| `RESEND_API_KEY`  | Encrypted secret | Sends queued support-form transactional mail | Required in the Worker; never use a `VITE_` name |
-| `LOVABLE_API_KEY` | Encrypted secret | Legacy Lovable-only webhook/AI admin paths   | Leave absent unless those legacy paths are used  |
+| Name                     | Handling         | Purpose                                               | Activation rule                                                 |
+| ------------------------ | ---------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
+| `RESEND_API_KEY`         | Encrypted secret | Sends queued support-form transactional mail          | Required in the Worker; never use a `VITE_` name                |
+| `QUEUE_PROCESSOR_SECRET` | Encrypted secret | Authorizes Supabase cron/manual queue processor calls | Store the same generated value in the Worker and Supabase Vault |
+| `LOVABLE_API_KEY`        | Encrypted secret | Legacy Lovable-only webhook/AI admin paths            | Leave absent unless those legacy paths are used                 |
 
 Resend SMTP credentials for Supabase Auth belong in Supabase Auth/provider
 configuration. The Worker queue processor needs its own encrypted

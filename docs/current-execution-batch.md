@@ -103,8 +103,16 @@ Status: in progress.
   `email_send_log` as `pending` and present in `pgmq.q_transactional_emails`.
   Staging had no `process-email-queue` cron job. The queue processor was updated
   to use `RESEND_API_KEY` through Resend's HTTPS API instead of the old Lovable
-  sender, but staging still needs the encrypted Worker secret and scheduler
-  activation before mailbox delivery can pass.
+  sender. The processor now supports a separate `QUEUE_PROCESSOR_SECRET` for
+  Supabase cron/manual calls, rather than requiring the service-role key as the
+  scheduler bearer token.
+- A matching `QUEUE_PROCESSOR_SECRET` was generated and stored in
+  `redflagdaddy-staging` plus Supabase Vault as `email_queue_processor_token`.
+  A manual Vault-authenticated queue trigger reached the Worker and Resend on
+  7 September 2026.
+- Resend rejected the current staging `RESEND_API_KEY` with HTTP 401
+  `API key is invalid`. Replace the encrypted Worker secret with a valid staging
+  Resend API key before enabling cron or retrying delivery.
 - Confirm no private destination, OTP, private link, access code, raw answer or
   secret appears in page source, logs, queued messages or screenshots.
 - Record support role ownership and response targets without country-specific
@@ -132,9 +140,16 @@ Status: blocked until staging passes.
 - Confirm support form test `RFD-20260907-9F995B` arrives at the private inbox
   through `support@redflagdaddy.com`.
 - Add encrypted Worker secret `RESEND_API_KEY` to `redflagdaddy-staging`, using a
-  restricted Resend API key for staging transactional email.
+  restricted Resend API key for staging transactional email. Owner reported this
+  was added on 7 September 2026.
+- Generate and store a shared `QUEUE_PROCESSOR_SECRET` in both
+  `redflagdaddy-staging` and Supabase Vault for the staging scheduler. Completed
+  on 7 September 2026.
+- Replace the staging Worker `RESEND_API_KEY`; the current value was rejected by
+  Resend as invalid during a manual queue run.
 - Activate the staging email queue scheduler or manually trigger
-  `/lovable/email/queue/process` with the configured service-role bearer token.
+  `/lovable/email/queue/process` with the configured queue-processor bearer
+  token.
 - Send `docs/consolidated-legal-review-pack.md` for legal/privacy feedback.
 
 ## Suggested next Codex prompt
