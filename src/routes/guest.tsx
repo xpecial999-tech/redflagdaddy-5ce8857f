@@ -4,33 +4,25 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import {
-  claimAnonymousJourney,
-  createGuestJourney,
-  lookupAnonymousJourney,
-} from "@/lib/guest.functions";
-import { Input } from "@/components/ui/input";
+import { claimAnonymousJourney, createGuestJourney } from "@/lib/guest.functions";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
-import { ReportView } from "@/components/ReportView";
 import { EmailOtpForm } from "@/components/EmailOtpForm";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   UserCircle2,
-  Mail,
   ClipboardList,
   Copy,
   Check,
   CheckCircle2,
   MessageCircle,
-  BellRing,
-  BellOff,
   KeyRound,
-  Search,
   Download,
+  Send,
+  FileCheck2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/guest")({
@@ -47,14 +39,24 @@ export const Route = createFileRoute("/guest")({
 
 const steps = [
   {
-    icon: Mail,
-    title: "Choose how to return",
-    body: "Save a private lookup code and return when the report is ready. No contact details are required.",
-  },
-  {
     icon: ClipboardList,
     title: "Pick the dynamic you're assessing",
-    body: "Choose the role that best matches your partner. This shapes the questions they will answer.",
+    body: "Choose the role that best suits your partner.",
+  },
+  {
+    icon: Send,
+    title: "Send a link to your partner",
+    body: "They open a private link and complete their side of the assessment.",
+  },
+  {
+    icon: UserCircle2,
+    title: "Fill out your matching assessment",
+    body: "Answer your own side so the summary can compare both perspectives.",
+  },
+  {
+    icon: FileCheck2,
+    title: "Receive a summary once both are done",
+    body: "Come back with your private code to view the result when both sides are complete.",
   },
 ];
 
@@ -64,6 +66,7 @@ function GuestPage() {
 
   const [notificationMode] = useState<"owner_code">("owner_code");
   const [partnerType, setPartnerType] = useState<Role | "">("");
+  const [consentAcknowledged, setConsentAcknowledged] = useState(false);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -100,11 +103,11 @@ function GuestPage() {
             <UserCircle2 className="w-5 h-5 text-primary-foreground" />
           </div>
           <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight">
-            Continue as guest
+            Start a private assessment
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Take the assessment without creating an account. Your private return code means no
-            contact details are required.
+            Start with your partner's side. We'll create a private link you can send them, then you
+            can complete your own matching assessment.
           </p>
         </div>
 
@@ -131,8 +134,6 @@ function GuestPage() {
           </ol>
         </section>
 
-        <JourneyLookup />
-
         <section className="glass-strong rounded-3xl p-6 sm:p-7">
           <form
             className="space-y-5"
@@ -141,34 +142,10 @@ function GuestPage() {
               mutation.mutate();
             }}
           >
-            <div className="space-y-3">
-              <div>
-                <span className="text-sm font-medium">How should we let you know?</span>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Your choice only affects how you return to this journey.
-                </p>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <ModeCard
-                  selected
-                  onClick={() => undefined}
-                  icon={BellOff}
-                  title="No notifications"
-                  body="Save a code and return here within 30 days."
-                />
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-xs text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">No contact details are required.</strong> You'll
-              receive a private owner code once. It cannot be recovered, and the journey and report
-              are automatically deleted after 30 days.
-            </div>
-
             <div>
-              <span className="text-sm font-medium">Which assessment do you want to do?</span>
+              <span className="text-sm font-medium">Which role best suits your partner?</span>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Choose the role that best matches your partner.
+                This shapes the questions they'll answer first.
               </p>
               <div className="mt-3 max-h-64 overflow-y-auto pr-1 space-y-3">
                 <RoleSelector value={partnerType} onChange={setPartnerType} />
@@ -176,8 +153,14 @@ function GuestPage() {
             </div>
 
             <label className="flex items-start gap-2 text-xs text-muted-foreground pt-1">
-              <input type="checkbox" required className="mt-0.5 accent-primary" />I confirm I am 18+
-              and agree to the consent &amp; safety guidelines.
+              <input
+                type="checkbox"
+                required
+                checked={consentAcknowledged}
+                onChange={(event) => setConsentAcknowledged(event.target.checked)}
+                className="mt-0.5 accent-primary"
+              />
+              I confirm I am 18+ and agree to the consent &amp; safety guidelines.
             </label>
 
             {mutation.error && (
@@ -187,7 +170,7 @@ function GuestPage() {
             )}
 
             <button
-              disabled={mutation.isPending || !partnerType}
+              disabled={mutation.isPending || !partnerType || !consentAcknowledged}
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
             >
               {mutation.isPending ? "Creating…" : "Generate partner link"}
@@ -196,142 +179,11 @@ function GuestPage() {
           </form>
 
           <p className="text-xs text-muted-foreground text-center mt-6">
-            Want to save your history?{" "}
-            <Link to="/register" className="text-primary">
-              Create an account
-            </Link>
+            No account or email is needed to start.
           </p>
         </section>
       </motion.div>
     </div>
-  );
-}
-
-function ModeCard({
-  selected,
-  onClick,
-  icon: Icon,
-  title,
-  body,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  icon: typeof BellRing;
-  title: string;
-  body: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={selected}
-      onClick={onClick}
-      className={`rounded-xl border p-4 text-left transition ${
-        selected ? "border-primary bg-primary/10" : "border-border bg-input hover:bg-white/5"
-      }`}
-    >
-      <Icon className={`w-4 h-4 ${selected ? "text-primary" : "text-muted-foreground"}`} />
-      <span className="block mt-2 text-sm font-medium">{title}</span>
-      <span className="block mt-1 text-xs text-muted-foreground leading-relaxed">{body}</span>
-    </button>
-  );
-}
-
-function JourneyLookup() {
-  const lookupFn = useServerFn(lookupAnonymousJourney);
-  const [ownerCode, setOwnerCode] = useState("");
-  const lookup = useMutation({
-    mutationFn: () => lookupFn({ data: { ownerCode } }),
-  });
-
-  const result = lookup.data;
-
-  return (
-    <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-4">
-      <div className="flex items-start gap-3">
-        <Search className="w-5 h-5 text-primary mt-0.5" />
-        <div>
-          <h2 className="font-display text-lg font-semibold tracking-tight">
-            Check a journey code
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Enter the private owner code you saved. Codes and reports expire after 30 days.
-          </p>
-        </div>
-      </div>
-
-      <form
-        className="flex flex-col sm:flex-row gap-2 no-print"
-        onSubmit={(event) => {
-          event.preventDefault();
-          lookup.mutate();
-        }}
-      >
-        <Input
-          value={ownerCode}
-          onChange={(event) => {
-            setOwnerCode(event.target.value.toUpperCase());
-            if (lookup.data) lookup.reset();
-          }}
-          aria-label="Private owner code"
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
-          maxLength={32}
-          placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX"
-          className="font-mono tracking-wide"
-        />
-        <button
-          disabled={lookup.isPending || !ownerCode.trim()}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium disabled:opacity-60"
-        >
-          <Search className="w-4 h-4" /> {lookup.isPending ? "Checking…" : "Check code"}
-        </button>
-      </form>
-
-      {lookup.error && (
-        <p className="text-xs text-destructive">
-          Could not check this code. Please wait and try again.
-        </p>
-      )}
-      {result?.status === "unavailable" && (
-        <p className="text-xs text-muted-foreground rounded-xl border border-border bg-input p-4">
-          This code is invalid, expired, or no longer available. For privacy, we cannot recover
-          anonymous codes.
-        </p>
-      )}
-      {(result?.status === "waiting" || result?.status === "in_progress") && (
-        <p className="text-xs text-muted-foreground rounded-xl border border-border bg-input p-4">
-          {result.status === "waiting"
-            ? "The partner assessment has not started yet."
-            : "The partner assessment is still in progress."}{" "}
-          Return with the same code later. This journey expires{" "}
-          {new Date(result.expiresAt).toLocaleDateString()}.
-        </p>
-      )}
-      {result?.status === "completed" && (
-        <div className="space-y-4 pt-2">
-          <div className="flex justify-end no-print">
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input px-4 py-2.5 text-sm font-medium"
-            >
-              <Download className="w-4 h-4" /> Save / print report
-            </button>
-          </div>
-          <ReportView
-            title={result.journey.title}
-            participantType={result.journey.participantType}
-            scores={result.scores}
-            analysis={result.analysis}
-          />
-          <p className="text-center text-xs text-muted-foreground no-print">
-            Available until {new Date(result.expiresAt).toLocaleDateString()}.
-          </p>
-        </div>
-      )}
-    </section>
   );
 }
 

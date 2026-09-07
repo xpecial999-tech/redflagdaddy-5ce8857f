@@ -1,8 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, Compass } from "lucide-react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowRight, Compass, Download, Search } from "lucide-react";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { getPublicSettings } from "@/lib/entitlement.functions";
+import { lookupAnonymousJourney } from "@/lib/guest.functions";
+import { ReportView } from "@/components/ReportView";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
@@ -97,11 +103,110 @@ function Landing() {
           </Link>
         </motion.div>
       </section>
+      <JourneyLookup />
       <p className="mx-auto max-w-2xl border-t border-white/10 pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/70">
         For adults 18+. RedFlagDaddy is a structured conversation aid — not identity verification, a
         background check, a diagnosis, proof of consent, an emergency service or a guarantee of
         safety.
       </p>
     </div>
+  );
+}
+
+function JourneyLookup() {
+  const lookupFn = useServerFn(lookupAnonymousJourney);
+  const [ownerCode, setOwnerCode] = useState("");
+  const lookup = useMutation({
+    mutationFn: () => lookupFn({ data: { ownerCode } }),
+  });
+
+  const result = lookup.data;
+
+  return (
+    <section className="glass-strong mx-auto max-w-xl rounded-3xl p-6 sm:p-7 space-y-4">
+      <div className="flex items-start gap-3">
+        <Search className="mt-0.5 h-5 w-5 text-primary" />
+        <div>
+          <h2 className="font-display text-lg font-semibold tracking-tight">
+            Returning to a journey?
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Enter your private owner code to check progress or view your summary.
+          </p>
+        </div>
+      </div>
+
+      <form
+        className="flex flex-col gap-2 sm:flex-row no-print"
+        onSubmit={(event) => {
+          event.preventDefault();
+          lookup.mutate();
+        }}
+      >
+        <Input
+          value={ownerCode}
+          onChange={(event) => {
+            setOwnerCode(event.target.value.toUpperCase());
+            if (lookup.data) lookup.reset();
+          }}
+          aria-label="Private owner code"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={32}
+          placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX"
+          className="font-mono tracking-wide"
+        />
+        <button
+          disabled={lookup.isPending || !ownerCode.trim()}
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        >
+          <Search className="h-4 w-4" /> {lookup.isPending ? "Checking…" : "Check code"}
+        </button>
+      </form>
+
+      {lookup.error && (
+        <p className="text-xs text-destructive">
+          Could not check this code. Please wait and try again.
+        </p>
+      )}
+      {result?.status === "unavailable" && (
+        <p className="rounded-xl border border-border bg-input p-4 text-xs text-muted-foreground">
+          This code is invalid, expired, or no longer available. For privacy, we cannot recover
+          anonymous codes.
+        </p>
+      )}
+      {(result?.status === "waiting" || result?.status === "in_progress") && (
+        <p className="rounded-xl border border-border bg-input p-4 text-xs text-muted-foreground">
+          {result.status === "waiting"
+            ? "The partner assessment has not started yet."
+            : "The partner assessment is still in progress."}{" "}
+          Return with the same code later. This journey expires{" "}
+          {new Date(result.expiresAt).toLocaleDateString()}.
+        </p>
+      )}
+      {result?.status === "completed" && (
+        <div className="space-y-4 pt-2">
+          <div className="flex justify-end no-print">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input px-4 py-2.5 text-sm font-medium"
+            >
+              <Download className="h-4 w-4" /> Save / print report
+            </button>
+          </div>
+          <ReportView
+            title={result.journey.title}
+            participantType={result.journey.participantType}
+            scores={result.scores}
+            analysis={result.analysis}
+          />
+          <p className="text-center text-xs text-muted-foreground no-print">
+            Available until {new Date(result.expiresAt).toLocaleDateString()}.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
