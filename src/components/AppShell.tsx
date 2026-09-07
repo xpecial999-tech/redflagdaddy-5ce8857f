@@ -27,9 +27,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { me } = useMe();
   const construction = useConstructionMode();
-  const userNavItems = construction.enabled && !me?.isAdmin
-    ? baseNavItems.filter((item) => item.to !== "/create")
-    : baseNavItems;
+  const userNavItems =
+    construction.enabled && !me?.isAdmin
+      ? baseNavItems.filter((item) => item.to !== "/create")
+      : baseNavItems;
   const navItems = me?.isAdmin
     ? [...userNavItems, { to: "/admin", label: "Admin", icon: Shield }]
     : userNavItems;
@@ -57,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 width={1200}
                 height={400}
                 loading="eager"
-                className="h-auto w-[180px] sm:w-[240px]"
+                className="h-auto w-[160px] sm:w-[220px]"
               />
             </Link>
             {showPublicSignIn && (
@@ -87,11 +88,21 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {PUBLIC_PATHS.includes(pathname) && (
         <footer className="px-4 pb-8 text-center text-xs text-muted-foreground">
-          <Link to="/about" className="hover:text-foreground">About</Link>
-          <span aria-hidden="true" className="px-2">·</span>
-          <Link to="/consent-safety" className="hover:text-foreground">Consent, safety &amp; analytics</Link>
-          <span aria-hidden="true" className="px-2">·</span>
-          <Link to="/support" className="hover:text-foreground">Support</Link>
+          <Link to="/about" className="hover:text-foreground">
+            About
+          </Link>
+          <span aria-hidden="true" className="px-2">
+            ·
+          </span>
+          <Link to="/consent-safety" className="hover:text-foreground">
+            Consent, safety &amp; analytics
+          </Link>
+          <span aria-hidden="true" className="px-2">
+            ·
+          </span>
+          <Link to="/support" className="hover:text-foreground">
+            Support
+          </Link>
         </footer>
       )}
 
@@ -115,8 +126,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
-                  <Icon className={`w-5 h-5 relative ${active ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className={`relative ${active ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                  <Icon
+                    className={`w-5 h-5 relative ${active ? "text-primary" : "text-muted-foreground"}`}
+                  />
+                  <span
+                    className={`relative ${active ? "text-foreground font-medium" : "text-muted-foreground"}`}
+                  >
                     {item.label}
                   </span>
                 </Link>

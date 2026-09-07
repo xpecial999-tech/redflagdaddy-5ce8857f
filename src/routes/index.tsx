@@ -78,21 +78,9 @@ function Landing() {
             to="/guest"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30 hover:scale-[1.02] transition"
           >
-            Start a private assessment <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            to="/login"
-            className="inline-flex items-center justify-center rounded-xl glass px-5 py-3 text-sm font-medium hover:bg-white/5 transition"
-          >
-            Sign in to track journeys
+            Get started <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
-
-        <p className="text-xs text-muted-foreground max-w-lg mx-auto">
-          For adults 18+. RedFlagDaddy is a structured conversation aid—not identity verification, a
-          background check, a diagnosis, proof of consent, an emergency service or a guarantee of
-          safety.
-        </p>
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -108,6 +96,11 @@ function Landing() {
           </Link>
         </motion.div>
       </section>
+      <p className="mx-auto max-w-2xl border-t border-white/10 pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/70">
+        For adults 18+. RedFlagDaddy is a structured conversation aid — not identity verification, a
+        background check, a diagnosis, proof of consent, an emergency service or a guarantee of
+        safety.
+      </p>
     </div>
   );
 }
