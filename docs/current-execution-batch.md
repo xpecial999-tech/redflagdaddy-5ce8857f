@@ -113,6 +113,11 @@ Status: in progress.
 - Resend rejected the current staging `RESEND_API_KEY` with HTTP 401
   `API key is invalid`. Replace the encrypted Worker secret with a valid staging
   Resend API key before enabling cron or retrying delivery.
+- The staging `RESEND_API_KEY` was replaced by the owner on 7 September 2026.
+  The queued support email then sent successfully.
+- A fresh support-form test `RFD-20260907-5AD1FD` was accepted by the app and
+  processed automatically by the active `process-email-queue` cron job. The owner
+  confirmed mailbox receipt on 7 September 2026.
 - Confirm no private destination, OTP, private link, access code, raw answer or
   secret appears in page source, logs, queued messages or screenshots.
 - Record support role ownership and response targets without country-specific
@@ -137,19 +142,19 @@ Status: blocked until staging passes.
 
 - Confirm the encrypted `TURNSTILE_SECRET_KEY` is still present in the
   `redflagdaddy-staging` Worker variables/secrets screen.
-- Confirm support form test `RFD-20260907-9F995B` arrives at the private inbox
-  through `support@redflagdaddy.com`.
+- Confirm support form test `RFD-20260907-5AD1FD` arrives at the private inbox
+  through `support@redflagdaddy.com`. Completed on 7 September 2026.
 - Add encrypted Worker secret `RESEND_API_KEY` to `redflagdaddy-staging`, using a
   restricted Resend API key for staging transactional email. Owner reported this
   was added on 7 September 2026.
 - Generate and store a shared `QUEUE_PROCESSOR_SECRET` in both
   `redflagdaddy-staging` and Supabase Vault for the staging scheduler. Completed
   on 7 September 2026.
-- Replace the staging Worker `RESEND_API_KEY`; the current value was rejected by
-  Resend as invalid during a manual queue run.
+- Replace the staging Worker `RESEND_API_KEY`; completed on 7 September 2026.
 - Activate the staging email queue scheduler or manually trigger
   `/lovable/email/queue/process` with the configured queue-processor bearer
-  token.
+  token. Completed on 7 September 2026 with the active Supabase cron job
+  `process-email-queue`.
 - Send `docs/consolidated-legal-review-pack.md` for legal/privacy feedback.
 
 ## Suggested next Codex prompt

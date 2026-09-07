@@ -27,8 +27,8 @@ only completion and non-secret test results.
 Cloudflare Email Routing receives and forwards email; it does not send the
 support form notification.
 
-- [ ] Confirm whether staging support-form reference `RFD-20260907-9F995B`
-      arrived at the private inbox through support@redflagdaddy.com.
+- [x] Confirm staging support-form reference `RFD-20260907-5AD1FD` arrived at
+      the private inbox through support@redflagdaddy.com.
 - [ ] If it cannot, create the recommended Resend account and sending subdomain
       using auth-provider-setup-guide.md.
 - [ ] Use separate staging and production credentials.
@@ -80,8 +80,9 @@ selected.
 
 - [ ] Exact staging hostname.
 - [x] Support routing test result: owner previously confirmed forwarding works.
-- [ ] Outbound transactional-email status: staging form accepted
-      `RFD-20260907-9F995B`; mailbox delivery still needs owner confirmation.
+- [x] Outbound transactional-email status: staging form accepted
+      `RFD-20260907-5AD1FD`, the automatic queue scheduler processed it, and the
+      owner confirmed mailbox receipt.
 - [x] Turnstile configured for staging.
 - [ ] Future WhatsApp/SMS provider decision, if any.
 - [x] Operational roles assigned: yes, all assigned to `RedFlagDaddy-Support`.
