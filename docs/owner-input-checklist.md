@@ -90,6 +90,16 @@ selected.
 
 ## Needed before public promotion
 
+### Guest journey and mobile feedback
+
+- [ ] On mobile, test landing → Start a private assessment → guest role choice →
+      Generate partner link.
+- [ ] Decide whether the guest invite screen should keep the WhatsApp share
+      shortcut as a user-controlled sharing convenience, or hide it until the
+      future WhatsApp/SMS decision is made.
+- [ ] Manually complete Save and track this journey with the owner email OTP,
+      then confirm the claimed journey appears in the dashboard.
+
 ### Legal and policy review
 
 - [ ] Send legal-policy-counsel-review-pack.md to a qualified privacy/technology

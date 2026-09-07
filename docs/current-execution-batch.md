@@ -63,27 +63,36 @@ Status: done locally on 7 September 2026.
 
 ## Batch 2: staging data verification
 
-Status: partially done.
+Status: done for the current staging pass.
 
 - Verify `/admin` loads for the staging admin account.
 - Confirm Questions and Categories show imported content in the admin UI.
   Owner confirmed on 7 September 2026.
 - Confirm at least one public guest journey uses those questions correctly.
+  Completed on 7 September 2026: a synthetic guest journey loaded the imported
+  Switch assessment questions on the public partner invite path.
 - If content is missing, re-import only questions and categories from the
   sanitized Lovable SQL export, then verify counts and visible admin pages.
 
 ## Batch 3: guest-first staging smoke test
 
-Status: next.
+Status: partially passed on desktop staging on 7 September 2026.
 
-- Landing page primary action opens the private guest start.
-- Guest can select their role and create a journey without email.
-- Partner link opens and starts the assessment.
-- Assessment completion rejects duplicate or incomplete submissions.
-- Owner can view results.
-- Owner can choose to save/track the journey.
-- Email OTP signs the owner in without requiring a magic-link browser round trip.
-- Claimed journey appears in the dashboard.
+- [x] Landing page primary action is visible as `Start a private assessment`.
+- [x] Guest can select a role and create a journey without email, phone or SMS.
+- [x] Partner link opens, validates and starts the imported assessment.
+- [x] A synthetic partner completed the full 100-question Switch assessment on
+      staging.
+- [x] Completed invite reuse is rejected with the expected single-use message.
+- [x] Owner can return with the private owner code and view the report summary.
+- [x] Report rendering works with external AI analysis disabled; the app shows
+      the score summary and a clear "detailed analysis is not available yet"
+      message.
+- [ ] Owner can choose to save/track the journey. The card is visible after
+      guest creation, but the full claim path still needs an authenticated manual
+      pass because it requires a real email OTP session.
+- [ ] Claimed journey appears in the dashboard after the owner completes the
+      save/track flow.
 
 ## Batch 4: support and safety activation
 
@@ -131,6 +140,9 @@ Status: blocked until staging passes.
 - Review desktop and mobile wording across public, auth, guest, dashboard,
   report, support and admin routes.
 - Confirm there are no visible mobile-number prompts in the active flow.
+- Confirm the guest "send invite" section wording is acceptable while WhatsApp is
+  not an active auth provider. The current staging page says users can share the
+  private link themselves by email or WhatsApp; no mobile-number entry is shown.
 - Verify production remains locked after every staging deploy.
 - Obtain legal/privacy/safety text review before public promotion.
 - Use `public/social-preview-20260907.png` as the approved 1200 x 630
