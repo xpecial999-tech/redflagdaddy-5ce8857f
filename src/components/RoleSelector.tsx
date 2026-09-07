@@ -11,15 +11,7 @@ const EXTRA_GROUPS: { label: string; roles: Role[] }[] = [
   { label: "Switch / fluid", roles: SWITCH_ROLES.filter((r) => !PRIMARY.includes(r)) },
 ];
 
-function Chip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -69,7 +61,9 @@ export function RoleSelector({
           }`}
         >
           <span className="truncate">{isOther ? value : "Other"}</span>
-          <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${showOther ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`w-3.5 h-3.5 shrink-0 transition-transform ${showOther ? "rotate-180" : ""}`}
+          />
         </button>
       </div>
 
@@ -82,19 +76,36 @@ export function RoleSelector({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="mt-3 space-y-3 max-h-56 overflow-y-auto pr-1">
-              {EXTRA_GROUPS.map((g) => (
-                <div key={g.label}>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                    {g.label}
-                  </span>
-                  <div className="mt-1 grid grid-cols-2 gap-2">
-                    {g.roles.map((r) => (
-                      <Chip key={r} label={r} active={value === r} onClick={() => onChange(r)} />
-                    ))}
-                  </div>
+            <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-3">
+              <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
+                More partner dynamics are available below. Scroll this section if you don't see the
+                right fit straight away.
+              </p>
+              <div className="relative">
+                <div className="space-y-3 max-h-72 overflow-y-auto pr-1 pb-6">
+                  {EXTRA_GROUPS.map((g) => (
+                    <div key={g.label}>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        {g.label}
+                      </span>
+                      <div className="mt-1 grid grid-cols-2 gap-2">
+                        {g.roles.map((r) => (
+                          <Chip
+                            key={r}
+                            label={r}
+                            active={value === r}
+                            onClick={() => onChange(r)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 rounded-b-xl bg-gradient-to-t from-card/95 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-0.5">
+                  <ChevronDown className="h-4 w-4 text-primary/80" />
+                </div>
+              </div>
             </div>
           </motion.div>
         )}

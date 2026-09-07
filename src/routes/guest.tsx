@@ -138,6 +138,20 @@ function GuestPage() {
         </section>
 
         <section className="glass-strong rounded-3xl p-6 sm:p-7">
+          <div className="space-y-5">
+            <div>
+              <span className="text-sm font-medium">Which role best suits your partner?</span>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                This shapes the questions they'll answer first.
+              </p>
+              <div className="mt-3 space-y-3">
+                <RoleSelector value={partnerType} onChange={setPartnerType} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="glass-strong rounded-3xl p-6 sm:p-7">
           <form
             className="space-y-5"
             onSubmit={(e) => {
@@ -145,16 +159,6 @@ function GuestPage() {
               mutation.mutate();
             }}
           >
-            <div>
-              <span className="text-sm font-medium">Which role best suits your partner?</span>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                This shapes the questions they'll answer first.
-              </p>
-              <div className="mt-3 max-h-64 overflow-y-auto pr-1 space-y-3">
-                <RoleSelector value={partnerType} onChange={setPartnerType} />
-              </div>
-            </div>
-
             <label className="flex items-start gap-2 text-xs text-muted-foreground pt-1">
               <input
                 type="checkbox"
