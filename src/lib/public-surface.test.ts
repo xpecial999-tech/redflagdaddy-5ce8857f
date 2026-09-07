@@ -145,6 +145,8 @@ describe("public launch surface", () => {
     expect(landing).toContain("a guarantee of");
     expect(landing).toContain("Structured conversations for adults");
     expect(landing).not.toContain("Structured assessments for");
+    expect(landing).not.toContain("leading-[1.05]");
+    expect(landing).toContain("leading-[1.16]");
   });
 
   it("publishes a large-card social preview image", () => {

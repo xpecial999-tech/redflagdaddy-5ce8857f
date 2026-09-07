@@ -52,7 +52,7 @@ function Landing() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0 }}
-          className="text-5xl md:text-6xl font-display font-semibold leading-[1.05]"
+          className="pb-2 text-5xl md:text-6xl font-display font-semibold leading-[1.16]"
         >
           Navigate dynamics with <span className="text-gradient">clarity</span>.
         </motion.h1>
