@@ -1,8 +1,10 @@
-# Authentication alternatives rollout
+# Authentication rollout
 
-The email, Google and Apple interfaces are implemented but disabled by default.
-SMS remains the supported sign-in and recovery method until the new providers
-are configured and the account-linking dry run passes.
+Updated: 7 September 2026
+
+Email OTP is the active staging authentication path. Google and Apple remain
+implemented but disabled by default. SMS/Clickatell is not part of the current
+staging or initial-launch path.
 
 ## Feature flags
 
@@ -15,13 +17,12 @@ Each method appears only when its exact value is `enabled`:
 
 Recommended rollout order:
 
-1. Configure production SMTP and the approved redirect URLs in Supabase.
-2. Enable account linking only and test from an existing phone account.
-3. Configure Google, test linking, sign-out and sign-in, then enable Google.
-4. Configure Apple, test linking, sign-out and sign-in, then enable Apple.
-5. Test email linking and passwordless email sign-in, then enable email.
-6. Keep SMS enabled throughout the first release and recovery observation
-   period.
+1. Configure staging SMTP and the approved redirect URLs in Supabase.
+2. Test six-digit email OTP signup, sign-in, sign-out and admin access.
+3. Test the guest-to-account claim flow after a journey is shared.
+4. Configure Google only after the email OTP path is stable.
+5. Configure Apple only when membership and operational rotation are ready.
+6. Revisit WhatsApp/SMS only as a separate approved provider pilot.
 
 ## Required Supabase settings
 
@@ -34,18 +35,19 @@ Recommended rollout order:
 
 ## Dry-run checks
 
-- Existing phone user links each approved method from Profile and keeps the same
+- Existing user links each approved method from Profile and keeps the same
   Supabase user ID, journeys, admin membership and entitlements.
 - The linked method signs back into that same account after sign-out.
 - A provider identity already attached to another account fails without leaking
   account details.
 - Invalid and expired callbacks show a generic error and never redirect to an
   arbitrary URL.
-- Administrator `/admin` login remains SMS-only.
+- Administrator `/admin` login uses the same enabled email OTP method and still
+  verifies admin membership server-side.
 - Construction mode hides ordinary login and registration while preserving the
   administrator entry.
 - No provider is enabled in production until its individual dry run passes.
 
 Telegram remains a demand-led custom identity project. Unofficial Signal
-automation is excluded. WhatsApp OTP is a separate Twilio/Verify decision and
-is not part of this batch.
+automation is excluded. WhatsApp OTP is a separate official-provider decision
+and is not part of this batch.

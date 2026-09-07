@@ -1,90 +1,84 @@
 # RedFlagDaddy
 
-Build a modern mobile-first web application called "Dynamic Compass".
+RedFlagDaddy is a consent-first compatibility and red-flag assessment app for
+adults. It helps someone start a private journey, invite a partner, compare
+answers and use the result as a structured conversation aid.
 
-Purpose:
+It is not a dating app, identity-verification tool, background check, diagnosis,
+proof of consent, emergency service or guarantee of safety.
 
-A consent, compatibility, safety and red-flag assessment platform designed for Dominants, submissives and switches.
+## Current Product Direction
 
-The platform is NOT a dating app.
+- Guest-first journey creation: visitors can start privately before creating an
+  account.
+- Email-only authentication for the current staging release: Supabase sends a
+  six-digit email OTP.
+- Optional account claim after a journey is shared, so users can save and track
+  their journeys later.
+- Production remains behind a full Worker-level construction wall until staging
+  passes the launch gates.
+- SMS, Clickatell, payments, external AI analysis and production analytics are
+  disabled for the current launch path.
 
-Users create assessment journeys and invite another person to complete a detailed questionnaire.
+## Environments
 
-Tech Requirements:
+| Environment | URL                              | Status                          |
+| ----------- | -------------------------------- | ------------------------------- |
+| Staging     | https://staging.redflagdaddy.com | Open for owner testing          |
+| Production  | https://redflagdaddy.com         | Locked behind construction mode |
 
-- Next.js
+Staging Supabase project: `lshnoprhmnmnhbhblcaw`.
 
+Production Supabase project: `bevniqflxhsqstfnviwz`.
+
+Do not commit API keys, passwords, database credentials, Cloudflare tokens,
+private forwarding addresses, OTPs or generated access links.
+
+## Tech Stack
+
+- TanStack Start
+- React
 - TypeScript
+- Vite
+- Tailwind CSS
+- Supabase
+- Cloudflare Workers
+- Resend through Supabase SMTP for authentication email
 
-- Tailwind
+## Local Development
 
-- Shadcn UI
-
-- Supabase backend
-
-- Supabase Auth
-
-- Responsive mobile-first design
-
-- Dark mode
-
-- Modern glassmorphism styling
-
-- Framer Motion animations
-
-Core User Roles:
-
-1. User
-
-2. Respondent
-
-3. Admin
-
-Pages:
-
-- Landing Page
-
-- Login
-
-- Register
-
-- Dashboard
-
-- Create Journey
-
-- Assessment
-
-- Results
-
-- Profile
-
-- Admin Panel
-
-Create navigation and routing for all pages.
-
-Use a modern BDSM-safe design language focused on trust, consent, safety and compatibility.
-
-Do not create dating functionality.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://redflagdaddy.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/c4e62bb1-63dc-4a13-acc4-adb8c85014e1).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Install dependencies:
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
 ```
+
+Run the local app:
+
+```sh
+bun run dev
+```
+
+Run checks:
+
+```sh
+bun run typecheck
+bun run test
+bun run build:staging
+```
+
+The repository-wide lint task still includes older formatting backlog. Treat
+focused type, test and staging-build checks as the practical gate until that
+backlog is cleared deliberately.
+
+## Current Execution Docs
+
+- `docs/current-execution-batch.md` is the short active batch.
+- `docs/current-backlog.md` is the priority backlog.
+- `docs/weekend-dry-run.md` is the staging smoke-test runbook.
+- `docs/go-live-checklist.md` controls production readiness.
+- `docs/runtime-configuration-checklist.md` records non-secret environment
+  configuration.
+
+Production changes require an explicit go/no-go decision. Staging work can
+continue independently while production stays locked.

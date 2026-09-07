@@ -1,9 +1,11 @@
 # RedFlagDaddy current backlog
 
-Updated: 31 August 2026
+Updated: 7 September 2026
 
 This is the short, authoritative priority view. Detailed feature history remains
 in product-marketing-backlog.md and backlog-prioritization-report.md.
+
+For the immediate execution queue, use `docs/current-execution-batch.md`.
 
 ## Status at a glance
 
@@ -24,6 +26,9 @@ in product-marketing-backlog.md and backlog-prioritization-report.md.
 - Cloudflare migration is complete and redflagdaddy.com is already served by
   Cloudflare. The newly merged application changes have not been deployed by
   this task.
+- Current local staging work has moved the active release path to guest-first
+  journeys and six-digit email OTP sign-in. Production remains behind the full
+  Cloudflare Worker construction wall.
 
 ### Current documentation release
 
@@ -42,11 +47,12 @@ in product-marketing-backlog.md and backlog-prioritization-report.md.
   same artifact to production.
 - Configure PUBLIC_SITE_URL and confirm staging and production generate links on
   their own HTTPS origins.
-- Configure Turnstile and outbound transactional email, then run the normal,
-  privacy, safety and immediate-danger support scenarios.
-- Confirm Clickatell sending and its authenticated callback capability. Keep
-  callbacks disabled if the provider cannot authenticate them.
-- Test account creation, OTP login, partner invitations, SMS success/failure,
+- Configure Turnstile and verify outbound transactional email through the
+  current Resend/Supabase SMTP path, then run the normal, privacy, safety and
+  immediate-danger support scenarios.
+- Keep Clickatell and SMS out of the current staging and initial-launch path.
+  A future WhatsApp/SMS provider requires a separate approval and pilot.
+- Test guest-first journey creation, email OTP login, partner invitations,
   anonymous owner codes, construction bypass resistance, administrator recovery,
   report revocation and account deletion.
 - Run the mobile, keyboard, screen-reader, reduced-motion, metadata, icon and
@@ -64,9 +70,9 @@ in product-marketing-backlog.md and backlog-prioritization-report.md.
 - Complete the non-secret production account inventory and privately verify MFA,
   recovery and billing ownership.
 - Create and review a dedicated 1200 × 630 social-preview image.
-- Enable email magic links and then Google sign-in only after provider
-  configuration and account-linking tests. Keep SMS fallback; defer Apple if it
-  delays launch.
+- Keep email OTP as the only active account method for the current staging
+  release. Add Google only after provider configuration and account-linking
+  tests; defer Apple if it delays launch.
 - Do not begin public promotion until the signed production go/no-go is complete.
 
 ## P2 — after a stable free launch
@@ -75,7 +81,7 @@ in product-marketing-backlog.md and backlog-prioritization-report.md.
 - Finish redacted PDF/image export and contextual approved resource links.
 - Add opt-in discreet status email notifications.
 - Build private redacted vibe cards and custom journey themes.
-- Review support volume, login/SMS success and consented funnel results weekly.
+- Review support volume, email OTP success and consented funnel results weekly.
 
 ## P3 — commercial review
 

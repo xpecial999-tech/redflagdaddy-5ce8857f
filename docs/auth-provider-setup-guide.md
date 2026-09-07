@@ -1,6 +1,6 @@
 # RedFlagDaddy email, Google and Apple authentication setup
 
-Updated: 28 August 2026
+Updated: 7 September 2026
 
 This guide explains where the required credentials originate. Supabase remains
 the authentication system; these providers supply delivery or identity
@@ -9,8 +9,8 @@ credentials to Supabase. Never paste secrets into Git, tickets or chat.
 ## Transactional email / SMTP
 
 Cloudflare Email Routing only forwards incoming mail such as
-`support@redflagdaddy.com` to a private inbox. It does not send Supabase magic
-links or authentication emails.
+`support@redflagdaddy.com` to a private inbox. It does not send Supabase email
+OTP or authentication emails.
 
 Recommended setup:
 
@@ -25,7 +25,7 @@ Recommended setup:
    Resend host, port, username, password, sender address and sender name.
 7. Use a real monitored reply-to/support address; do not expose the private
    forwarding destination.
-8. Test signup, magic link, expiry, resend, abuse throttling, delivery failure
+8. Test signup, six-digit email OTP, expiry, resend, abuse throttling, delivery failure
    and spam placement on several mailbox providers.
 
 Supabase's built-in sender is for testing and is rate-limited; it should not be
@@ -73,9 +73,9 @@ rotation do not hold up the first dry run.
 
 ## Activation order
 
-1. Resend SMTP and email magic links in staging.
+1. Resend SMTP and email OTP in staging.
 2. Google OAuth in staging.
-3. Retain and regression-test SMS fallback.
+3. Keep SMS disabled unless a future approved provider pilot requires it.
 4. Apple only when membership and operational rotation are ready.
 5. Enable one method at a time through the existing feature flags; roll it back
    if account attachment, consent gating or generic error behavior fails.

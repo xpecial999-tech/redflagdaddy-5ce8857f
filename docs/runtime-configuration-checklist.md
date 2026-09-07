@@ -1,6 +1,6 @@
 # RedFlagDaddy runtime configuration checklist
 
-Updated: 29 August 2026
+Updated: 7 September 2026
 
 This is the non-secret inventory for Cloudflare staging and production. It does
 not authorize deployment or provider activation. Use separate values for staging
@@ -27,38 +27,38 @@ control rather than a plaintext variable or repository file.
 | `SUPABASE_PUBLISHABLE_KEY`      | Plain server value | Auth middleware's restricted Supabase key          | Must be the publishable/anon key                         |
 | `SUPABASE_SERVICE_ROLE_KEY`     | Encrypted secret   | Trusted server-only database operations            | Never expose to browser code or logs                     |
 | `OTP_SECRET`                    | Encrypted secret   | OTP hashing and hashed abuse/rate-limit keys       | Unique, long and different per environment               |
-| `PUBLIC_SITE_URL`               | Plain server value | Origin used in SMS/email invitation links          | Exact HTTPS origin only; staging must not use production |
+| `PUBLIC_SITE_URL`               | Plain server value | Origin used in copied/email invitation links       | Exact HTTPS origin only; staging must not use production |
 
 `PUBLIC_APP_URL` is a temporary compatibility fallback only. Leave it unset once
 `PUBLIC_SITE_URL` is configured and remove it from platform configuration after
 the first successful staged release. If neither value is present, invitation
 creation fails closed rather than silently generating a production-domain link.
 
-## SMS — required for current login and notified journeys
+## SMS and Clickatell — inactive legacy path
 
-SMS is suspended for the staging email-first release. Leave every `CLICKATELL_*`
-value absent and set `VITE_AUTH_PHONE_MODE` to any value other than `enabled`.
-Do not remove the historical SMS data tables or callbacks; they remain inactive
-until an approved provider (such as WhatsApp through a supported provider) is
-configured and tested.
+SMS is not part of the current staging or initial-launch path. Leave every
+`CLICKATELL_*` value absent and set `VITE_AUTH_PHONE_MODE` to any value other
+than `enabled`. Do not remove the historical SMS data tables or callbacks; they
+remain inactive until an approved provider such as WhatsApp through a supported
+provider is configured and tested.
 
 | Name                           | Handling         | Purpose                                 | Activation rule                                 |
 | ------------------------------ | ---------------- | --------------------------------------- | ----------------------------------------------- |
-| `CLICKATELL_API_KEY`           | Encrypted secret | Sends OTP and journey SMS               | Required for real SMS tests                     |
+| `CLICKATELL_API_KEY`           | Encrypted secret | Legacy SMS OTP and journey messages     | Leave absent for the current launch path        |
 | `CLICKATELL_CALLBACK_USERNAME` | Encrypted secret | Authenticates delivery-status callbacks | Set only if the integration supports Basic auth |
 | `CLICKATELL_CALLBACK_PASSWORD` | Encrypted secret | Authenticates delivery-status callbacks | Must be set together with the callback username |
 
 If either callback credential is absent, the callback deliberately returns
-`503` and must remain disabled at the provider. SMS sending can still operate.
+`503` and must remain disabled at the provider.
 
 ## Interim email-first authentication
 
-| Name | Handling | Required staging value |
-| --- | --- | --- |
-| `VITE_AUTH_PHONE_MODE` | Public build value | Absent or `disabled` while Clickatell is not used |
+| Name                   | Handling           | Required staging value                              |
+| ---------------------- | ------------------ | --------------------------------------------------- |
+| `VITE_AUTH_PHONE_MODE` | Public build value | Absent or `disabled` while Clickatell is not used   |
 | `VITE_AUTH_EMAIL_MODE` | Public build value | `enabled` after Resend SMTP is verified in Supabase |
 
-With phone sign-in disabled, the app uses Supabase email magic links. Anonymous
+With phone sign-in disabled, the app uses Supabase email OTP. Anonymous
 owner-code journeys and copied private invite links remain available without a
 messaging provider. Configure an administrator email identity before publishing:
 the administrator entry accepts the same enabled email method and still checks
@@ -79,7 +79,7 @@ mail service.
 ## Email queue and authentication email
 
 The current queue/webhook implementation still uses the existing email-provider
-integration while Resend is evaluated for SMTP and magic links.
+integration while Resend is used for Supabase authentication email.
 
 | Name               | Handling           | Purpose                                           | Activation rule                              |
 | ------------------ | ------------------ | ------------------------------------------------- | -------------------------------------------- |
@@ -129,8 +129,8 @@ For staging and then production, record only pass/fail—not values—for each i
 - [ ] Core server Supabase values point to the same intended project.
 - [ ] Service-role and OTP secrets are present only in encrypted server storage.
 - [ ] `PUBLIC_SITE_URL` creates an invitation on the correct environment origin.
-- [ ] Real SMS sending passes; callback credentials are either both configured or
-      both absent.
+- [ ] SMS and Clickatell credentials are absent unless a future provider pilot is
+      explicitly approved.
 - [ ] Turnstile succeeds on the intended hostname and fails on the wrong hostname.
 - [ ] A support-form notification reaches the public support route and forwarding
       destination without exposing the private address.

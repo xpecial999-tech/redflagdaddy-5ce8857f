@@ -1,6 +1,6 @@
 # RedFlagDaddy weekend dry run
 
-Updated: 29 August 2026
+Updated: 7 September 2026
 
 This runbook is for the first combined staging test. It does not authorize
 public promotion or production provider activation. The Cloudflare migration is
@@ -11,16 +11,16 @@ complete; this runbook does not authorize further DNS/hosting changes.
 - [ ] Authenticate GitHub CLI.
 - [ ] Push and review the completed feature branches in the release order below.
 - [ ] Keep construction mode off unless its behavior is the specific test.
-- [ ] Keep email, Google, Apple, production analytics, AI analysis and paid mode
-      disabled unless their individual provider test is approved.
+- [ ] Keep Google, Apple, production analytics, AI analysis, paid mode and
+      WhatsApp/SMS disabled unless their individual provider test is approved.
 - [ ] Confirm the staging deployment uses the new Supabase project and synthetic
       test accounts only.
 - [ ] Set `PUBLIC_SITE_URL` to the exact HTTPS staging origin and confirm
-      `PUBLIC_APP_URL` is unnecessary; no staging SMS or copied invite may point
-      to production.
+      `PUBLIC_APP_URL` is unnecessary; no copied staging invite may point to
+      production.
 - [ ] Seed one journey with an old stored production `invite_url`; confirm the
-      staging tracking page, copy action, resend SMS and completion SMS all use
-      the current staging origin instead.
+      staging tracking page and copy action use the current staging origin
+      instead.
 - [ ] Apply `20260829000000_expand_marketing_sources.sql` before testing approved
       FetLife, Reddit or X attribution; confirm the constraint remains an exact
       allowlist rather than free text.
@@ -32,7 +32,8 @@ complete; this runbook does not authorize further DNS/hosting changes.
 
 1. Construction mode and secure `/admin` entry.
 2. Dedicated administrator workspace.
-3. International phone-number inputs.
+3. Historical international phone-number inputs, now inactive for the current
+   email-first path.
 4. Anonymous owner-code journeys and their database migration.
 5. Disabled-by-default email and social authentication preparation.
 6. Launch-hardening follow-up: account-consent gate, public copy, private
@@ -138,19 +139,15 @@ database migration with unrelated provider activation.
 - [ ] Protected or destructive actions still require their existing
       confirmation and authorization.
 
-### International phone inputs and SMS
+### Inactive SMS/Clickatell boundary
 
-- [ ] A South African request defaults to South Africa without a visible delay.
-- [ ] At least one non-South-African request selects the correct country.
-- [ ] Manual country override works.
-- [ ] Login, registration, account journey, account resend, guest journey, guest
-      resend and partner-invite fields all accept and display the number
-      consistently.
-- [ ] A real test SMS succeeds, and a deliberately failed provider request shows
-      a useful error without exposing secrets or raw provider details.
-- [ ] Configure separate staging callback credentials using
-      `docs/clickatell-sms-callback-setup.md`; verify valid delivery updates and
-      the missing, incorrect, oversized and malformed request cases.
+- [ ] No active login, registration, guest journey or partner-invite surface asks
+      for a mobile number.
+- [ ] `VITE_AUTH_PHONE_MODE` is absent or disabled in staging.
+- [ ] Clickatell credentials are absent from the staging Worker unless a future
+      approved provider pilot explicitly reintroduces them.
+- [ ] Hidden or direct legacy SMS paths fail closed and do not expose provider
+      configuration names or account-existence details.
 
 ### Anonymous owner-code journey
 
@@ -159,21 +156,20 @@ database migration with unrelated provider activation.
 - [ ] Confirm the owner code is absent from the address bar, analytics and logs.
 - [ ] An invalid code returns the same generic response as an expired code.
 - [ ] The valid code shows waiting, then in-progress, then the completed report.
-- [ ] No completion SMS or public report link is created for this journey.
+- [ ] No notification or public report link is created for this journey.
 - [ ] Report print/save works.
 - [ ] Confirm the displayed 30-day expiry and database cleanup schedule.
 
 ### Alternative authentication preparation
 
-- [ ] With every new authentication flag absent, login and registration remain
-      SMS-only.
-- [ ] `/admin` remains SMS-only even when ordinary alternative methods are
-      enabled in staging.
+- [ ] Login and registration use the enabled six-digit email OTP flow.
+- [ ] `/admin` uses the same email OTP entry and then verifies administrator
+      membership server-side.
 - [ ] The invalid callback page is generic, no-indexed and cannot redirect to an
       arbitrary destination.
 - [ ] A newly created email, Google or Apple identity is sent to the 18+ and
       consent confirmation page and cannot bypass it with a direct dashboard URL.
-- [ ] An established phone user still signs in without a new confirmation gate.
+- [ ] A returning email user still signs in without a new confirmation gate.
 - [ ] Do not activate a provider until the corresponding steps in
       `authentication-rollout.md` are complete.
 
@@ -190,7 +186,8 @@ database migration with unrelated provider activation.
 ### Core regression
 
 - [ ] Register, sign in, sign out and sign back in.
-- [ ] Create an account journey, send the partner invite and resend it.
+- [ ] Create a guest journey, send/copy the partner invite and then claim it
+      after signing in.
 - [ ] Complete an assessment once; confirm duplicate completion is rejected.
 - [ ] View owner results, enable sharing, open the shared report, disable
       sharing and confirm the old link stops working.
@@ -251,7 +248,7 @@ occur:
 - Owner codes, invitation links, report tokens, phone numbers or private answers
   appear in logs, analytics or unintended URLs.
 - A journey or result is attached to the wrong account.
-- SMS, authentication or payment errors expose whether another person's account
+- Email OTP, authentication or payment errors expose whether another person's account
   exists.
 - Database migration failure or count mismatch.
 - A provider is active without the matching owner approval and dry run.

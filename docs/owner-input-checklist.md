@@ -1,6 +1,6 @@
 # RedFlagDaddy owner action checklist
 
-Updated: 31 August 2026
+Updated: 7 September 2026
 
 This is the ordered list of work that requires an owner-controlled account,
 non-secret answer or external approval. Product code and documentation work that
@@ -47,19 +47,15 @@ support form notification.
 
 ### 4. Interim messaging and future WhatsApp
 
-Clickatell is paused for the staging email-first release. Do not configure its
-credentials or callbacks. Use email magic links, copied private invite links and
-anonymous owner codes until an approved WhatsApp provider is selected.
+Clickatell is removed from the current staging and initial-launch path. Do not
+configure its credentials or callbacks. Use email OTP, copied private invite
+links and anonymous owner codes until an approved WhatsApp/SMS provider is
+selected.
 
-- [ ] Confirm the official SMS provider and sender/integration label.
-- [ ] Fund only a small, capped test balance.
-- [ ] Ask whether the Clickatell integration can send authenticated delivery
-      callbacks using separate HTTP Basic credentials.
-- [ ] If supported, configure distinct staging callback credentials using
-      clickatell-sms-callback-setup.md.
-- [ ] If unsupported, leave callbacks disabled. SMS sending can still be tested.
-- [ ] Report the provider, sender label and callbacks supported or callbacks
-      unsupported; never send credentials.
+- [ ] Decide later whether WhatsApp/SMS belongs in the product at all.
+- [ ] If approved later, choose an official provider and keep the pilot capped.
+- [ ] Report only the provider and non-secret sender/integration label; never
+      send credentials.
 
 ### 5. Private operational roles
 
@@ -83,7 +79,7 @@ anonymous owner codes until an approved WhatsApp provider is selected.
 - [ ] Support routing test result.
 - [ ] Outbound transactional-email status.
 - [ ] Turnstile configured: yes/no.
-- [ ] SMS provider, sender label and callback support.
+- [ ] Future WhatsApp/SMS provider decision, if any.
 - [ ] Operational roles assigned: yes/no.
 - [ ] Response targets approved or revised.
 
@@ -112,13 +108,13 @@ anonymous owner codes until an approved WhatsApp provider is selected.
 
 ## Needed only when optional authentication is activated
 
-- [ ] Email magic links: verify a RedFlagDaddy sending subdomain with Resend or
+- [ ] Email OTP: verify a RedFlagDaddy sending subdomain with Resend or
       the selected SMTP provider and configure Supabase Auth. SMTP credentials
       come from that sender, not Cloudflare Email Routing.
 - [ ] Google sign-in: create an owner-controlled Google Cloud project and OAuth
       web client, then enter its client ID and secret in Supabase.
 - [ ] Apple sign-in: enroll in the Apple Developer Program and create the
-      identifier and key. Defer until email, Google and SMS are stable.
+      identifier and key. Defer until email and Google are stable.
 - [ ] WhatsApp OTP: use official Meta or Twilio assets only. Do not use Baileys,
       unofficial Signal automation or a personal WhatsApp session for auth.
 
@@ -145,13 +141,13 @@ anonymous owner codes until an approved WhatsApp provider is selected.
 - [x] Adults 18+ only; global English-first launch where lawful and supported.
 - [x] Primary audience is FetLife and wider kink communities; voice is fun,
       clear, non-political and serious around safety.
-- [x] Create an account is primary; guest mode is secondary; canonical URL is
-      https://redflagdaddy.com.
+- [x] Guest-first is the current product direction; account creation is offered
+      after sharing so users can save and track journeys.
 - [x] RedFlagDaddy is a structured conversation aid, not identity verification,
       a background check, diagnosis, proof of consent, emergency response or a
       guarantee of safety.
 - [x] Supabase Auth remains the identity platform; Clerk is not required.
-- [x] Existing phone accounts are test users and need no linking migration.
+- [x] Existing phone accounts are test users and need no launch migration.
 - [x] Construction mode blocks new journeys while issued private links continue.
 - [x] Anonymous journeys expire after 30 days.
 - [x] Support escalation procedure, local-emergency wording and Find A Helpline
@@ -174,11 +170,10 @@ anonymous owner codes until an approved WhatsApp provider is selected.
 3. Cloudflare Email Routing and Turnstile free services.
 4. Resend free tier for transactional and authentication email.
 5. Google OAuth through Supabase; no separate identity platform.
-6. Existing official SMS provider with a capped test balance.
-7. Optional Buffer free tier after manual publishing establishes a baseline.
-8. Twilio Verify only if current global OTP delivery or fraud controls are weak.
-9. Apple Developer membership when Apple sign-in is scheduled.
-10. Paid mailbox, helpdesk, analytics or infrastructure tiers only when measured
-    volume justifies them.
-11. Qualified legal/privacy review before public promotion.
-12. Stripe-versus-Peach review only when commercial launch is scheduled.
+6. Optional Buffer free tier after manual publishing establishes a baseline.
+7. Official WhatsApp/SMS provider only if later research proves it is needed.
+8. Apple Developer membership when Apple sign-in is scheduled.
+9. Paid mailbox, helpdesk, analytics or infrastructure tiers only when measured
+   volume justifies them.
+10. Qualified legal/privacy review before public promotion.
+11. Stripe-versus-Peach review only when commercial launch is scheduled.

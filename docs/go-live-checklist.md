@@ -1,6 +1,6 @@
 # RedFlagDaddy go-live gates
 
-Updated: 31 August 2026
+Updated: 7 September 2026
 
 Public promotion stays paused until every blocking item below is complete. This
 list covers product and marketing readiness. The Cloudflare migration is
@@ -40,6 +40,8 @@ Current priorities and owner actions are maintained in
   consent, an emergency service or a guarantee of safety.
 - Alternative account methods require an explicit 18+ and consent-guideline
   acknowledgement before a new email, Google or Apple account can continue.
+- Current staging sign-in uses six-digit email OTP. Clickatell/SMS is inactive
+  for the current launch path.
 - Private Markdown, topics-only Markdown, versioned JSON and discreet calendar
   exports are generated on-device without adding server-side retention.
 - The first static accessibility hardening pass adds reduced-motion handling,
@@ -106,9 +108,9 @@ Current priorities and owner actions are maintained in
 - [ ] Verify an assessment cannot submit an unassigned question, an invalid
       answer value or a completion request while a visible answer is still unsaved.
 - [ ] Test owner results, explicit report sharing, sharing disablement and unauthorized access.
-- [ ] Test SMS provider failure, rate-limit messages and log redaction.
-- [ ] Configure and verify authenticated SMS delivery callbacks using
-      `docs/clickatell-sms-callback-setup.md`.
+- [ ] Verify inactive SMS/Clickatell paths fail closed without exposing provider
+      details, and keep provider credentials absent unless a future pilot is
+      approved.
 - [x] **NOT AN INITIAL-LAUNCH GATE:** paid mode stays disabled. At the later
       1,000-account commercial review, compare Stripe and Peach for supported
       countries, currencies, adult-content policies, tax, refunds, payouts and
