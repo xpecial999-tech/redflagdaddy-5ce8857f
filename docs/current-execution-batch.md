@@ -41,6 +41,9 @@ handover docs where those notes describe the old launch path.
   the owner confirmed they look correct in staging admin on 7 September 2026.
 - A 1200 x 630 social-preview image was generated and saved at
   `public/social-preview-20260907.png`.
+- The owner approved `public/social-preview-20260907.png` on 7 September 2026.
+- A consolidated legal review pack was created at
+  `docs/consolidated-legal-review-pack.md`.
 
 ## Batch 1: documentation cleanup
 
@@ -103,8 +106,8 @@ Status: blocked until staging passes.
 - Confirm there are no visible mobile-number prompts in the active flow.
 - Verify production remains locked after every staging deploy.
 - Obtain legal/privacy/safety text review before public promotion.
-- Review and approve `public/social-preview-20260907.png` as the 1200 x 630
-  social-preview image, or request a revision.
+- Use `public/social-preview-20260907.png` as the approved 1200 x 630
+  social-preview image.
 - Record exact commit, migration set, tester/date, accepted limitations and a
   go/no-go decision.
 
@@ -113,8 +116,7 @@ Status: blocked until staging passes.
 - Configure Turnstile for staging.
 - Confirm support form test messages arrive at the private inbox when sent to
   `support@redflagdaddy.com`.
-- Decide when to start legal review of the counsel pack.
-- Approve `public/social-preview-20260907.png` or request a revision.
+- Send `docs/consolidated-legal-review-pack.md` for legal/privacy feedback.
 
 ## Suggested next Codex prompt
 

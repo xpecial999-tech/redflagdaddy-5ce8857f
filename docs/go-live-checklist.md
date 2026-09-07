@@ -86,7 +86,7 @@ Current priorities and owner actions are maintained in
       commercial review; it does not automatically enable charging.
 - [x] **DONE:** owner supplied the current CI branding kit and it is treated as
       the local visual source of truth.
-- [ ] Review and approve `public/social-preview-20260907.png` as the dedicated
+- [x] Review and approve `public/social-preview-20260907.png` as the dedicated
       1200 x 630 social-sharing image.
 - [ ] Confirm all public account handles. **DONE:** owner-controlled MFA and
       recovery details are confirmed; finish the non-secret account inventory.

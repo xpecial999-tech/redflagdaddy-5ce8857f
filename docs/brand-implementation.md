@@ -36,8 +36,8 @@ project backlog.
   two pixels and use the approved lavender ring token.
 - Automated tests protect the token mapping, font selection, icon dimensions
   manifest configuration and semantic-colour usage.
-- A generated 1200 x 630 social-preview candidate is saved at
-  `public/social-preview-20260907.png` for owner review.
+- A generated 1200 x 630 social-preview image is saved at
+  `public/social-preview-20260907.png` and was owner-approved on 7 September 2026.
 
 ## Release checks still required
 
@@ -45,8 +45,8 @@ project backlog.
 - Confirm text, focus indicators and interactive states meet WCAG AA contrast.
 - Verify the favicon, Apple touch icon and install icons on real browsers and
   devices, including circular or rounded platform crops.
-- Approve `public/social-preview-20260907.png` or request a revised 1200 x 630
-  social-sharing image.
+- Verify `public/social-preview-20260907.png` renders correctly when social link
+  previews are inspected after deployment.
 - Commission the clean SVG/EPS redraw recommended by the kit before print,
   signage, merchandise or other large-format production. The current approved
   masters are raster artwork.

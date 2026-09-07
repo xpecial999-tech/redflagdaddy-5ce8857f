@@ -104,8 +104,8 @@ selected.
       production-account-inventory.md and privately verify MFA/recovery.
 - [ ] Inspect staging analytics payloads and approve final consent wording before
       enabling the approved 35-day production retention policy.
-- [ ] Approve `public/social-preview-20260907.png` as the dedicated 1200 x 630
-      social-preview image, or request a revision.
+- [x] Approve `public/social-preview-20260907.png` as the dedicated 1200 x 630
+      social-preview image.
 - [ ] Confirm official social-account handles, MFA and recovery privately.
 
 ## Needed only when optional authentication is activated
