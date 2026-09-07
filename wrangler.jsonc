@@ -16,6 +16,8 @@
       "name": "redflagdaddy-staging",
       "vars": {
         "CONSTRUCTION_MODE": "disabled",
+        "TURNSTILE_EXPECTED_HOSTNAME": "staging.redflagdaddy.com",
+        "VITE_TURNSTILE_SITE_KEY": "0x4AAAAAAErlu0pxQpbQkeVD",
       },
       "routes": [
         {

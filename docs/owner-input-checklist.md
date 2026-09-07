@@ -37,12 +37,13 @@ support form notification.
 
 ### 3. Cloudflare Turnstile and staging origin
 
-- [ ] Create a Managed Turnstile widget for the staging and production hostnames.
-      Owner confirmed on 7 September 2026 that staging Turnstile is not yet
-      configured.
-- [ ] Enter the public site key, encrypted secret and exact expected hostname in
-      their respective environment configurations.
-- [ ] Confirm the exact non-secret staging hostname.
+- [x] Create a Managed Turnstile widget for the staging hostname.
+- [x] Enter the public staging site key and exact expected hostname in the local
+      staging build and Worker configuration.
+- [ ] Confirm the encrypted staging `TURNSTILE_SECRET_KEY` is still present in
+      the Cloudflare Worker variables/secrets screen after deployment.
+- [x] Confirm the exact non-secret staging hostname:
+      `staging.redflagdaddy.com`.
 - [ ] Set staging PUBLIC_SITE_URL to its exact HTTPS origin and production
       PUBLIC_SITE_URL to https://redflagdaddy.com.
 - [ ] Do not send the Turnstile secret in chat.
@@ -80,7 +81,8 @@ selected.
 - [ ] Exact staging hostname.
 - [x] Support routing test result: owner previously confirmed forwarding works.
 - [ ] Outbound transactional-email status: no verified support-form delivery yet.
-- [x] Turnstile configured: no for staging.
+- [ ] Turnstile configured: public staging config is present; encrypted secret
+      still needs final confirmation after deploy.
 - [ ] Future WhatsApp/SMS provider decision, if any.
 - [x] Operational roles assigned: yes, all assigned to `RedFlagDaddy-Support`.
 - [x] Response targets approved.

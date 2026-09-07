@@ -44,6 +44,10 @@ handover docs where those notes describe the old launch path.
 - The owner approved `public/social-preview-20260907.png` on 7 September 2026.
 - A consolidated legal review pack was created at
   `docs/consolidated-legal-review-pack.md`.
+- Staging Turnstile public configuration was added to the local build and
+  Worker configuration on 7 September 2026. The encrypted
+  `TURNSTILE_SECRET_KEY` must remain set in Cloudflare and must never be
+  committed.
 
 ## Batch 1: documentation cleanup
 
@@ -83,10 +87,12 @@ Status: next.
 
 ## Batch 4: support and safety activation
 
-Status: next.
+Status: in progress.
 
 - Verify Cloudflare Turnstile is configured for staging.
-  Owner confirmed on 7 September 2026 that Turnstile is not configured yet.
+  The staging site key and expected hostname are now in the local build and
+  Worker configuration. Confirm the encrypted Cloudflare secret still exists in
+  the staging Worker after deployment.
 - Submit normal, privacy/safety and immediate-danger synthetic support requests.
 - Confirm messages arrive at `support@redflagdaddy.com` and forward correctly.
   Owner reported no mailbox receipt yet; Codex has not completed a verified
@@ -113,7 +119,8 @@ Status: blocked until staging passes.
 
 ## Owner inputs needed
 
-- Configure Turnstile for staging.
+- Confirm the encrypted `TURNSTILE_SECRET_KEY` is still present in the
+  `redflagdaddy-staging` Worker variables/secrets screen.
 - Confirm support form test messages arrive at the private inbox when sent to
   `support@redflagdaddy.com`.
 - Send `docs/consolidated-legal-review-pack.md` for legal/privacy feedback.
