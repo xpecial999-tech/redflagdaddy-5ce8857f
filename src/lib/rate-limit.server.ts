@@ -18,7 +18,9 @@ function rateLimitMultiplier(): number {
 
 export class RateLimitError extends Error {
   constructor() {
-    super("Too many requests. Please wait and try again.");
+    super(
+      "For safety, we temporarily limit how many requests can be made from the same device or network. Please come back later and try again.",
+    );
     this.name = "RateLimitError";
   }
 }
