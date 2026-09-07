@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Compass } from "lucide-react";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { getPublicSettings } from "@/lib/entitlement.functions";
 
@@ -90,9 +90,10 @@ function Landing() {
         >
           <Link
             to="/about"
-            className="inline-flex min-h-11 items-center gap-1.5 px-3 text-sm text-muted-foreground hover:text-foreground transition"
+            className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-white/10 bg-[#100b24]/80 px-7 py-2.5 text-base text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_24px_rgba(236,72,153,0.10)] backdrop-blur-md transition hover:border-primary/40 hover:text-foreground hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_0_30px_rgba(236,72,153,0.18)]"
           >
-            Learn how it works <ArrowRight className="w-3.5 h-3.5" />
+            <Compass className="h-5 w-5 text-primary" />
+            About RedFlagDaddy
           </Link>
         </motion.div>
       </section>
