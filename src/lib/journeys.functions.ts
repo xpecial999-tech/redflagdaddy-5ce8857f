@@ -6,7 +6,6 @@ import { loadEntitlement, DEFAULT_QUESTION_LIMIT } from "./entitlement.functions
 import { ALL_ROLES } from "./roles";
 import { buildInviteSms } from "./invite-message";
 
-
 const CreateJourneySchema = z.object({
   title: z.string().trim().min(1).max(120),
   participantType: z.enum(ALL_ROLES),
@@ -38,7 +37,8 @@ export const createJourney = createServerFn({ method: "POST" })
       );
     }
     // Free users can't use category deep-dive
-    const categoryIds = ent.canDeepDive && data.categoryIds && data.categoryIds.length > 0 ? data.categoryIds : null;
+    const categoryIds =
+      ent.canDeepDive && data.categoryIds && data.categoryIds.length > 0 ? data.categoryIds : null;
     const entLimit = ent.questionLimit ?? DEFAULT_QUESTION_LIMIT;
     const questionLimit = categoryIds
       ? null
@@ -62,7 +62,9 @@ export const createJourney = createServerFn({ method: "POST" })
         category_ids: categoryIds,
         question_limit: questionLimit,
       })
-      .select("id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, category_ids, question_limit")
+      .select(
+        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, category_ids, question_limit",
+      )
       .single();
 
     if (error) {
@@ -75,10 +77,7 @@ export const createJourney = createServerFn({ method: "POST" })
       code,
     });
     if (inviteErr) {
-      const { error: cleanupError } = await supabase
-        .from("journeys")
-        .delete()
-        .eq("id", journey.id);
+      const { error: cleanupError } = await supabase.from("journeys").delete().eq("id", journey.id);
       if (cleanupError) {
         console.error("[journey] Incomplete journey cleanup failed", {
           code: cleanupError.code,
@@ -94,10 +93,19 @@ export const createJourney = createServerFn({ method: "POST" })
         const { consumeRateLimits } = await import("./rate-limit.server");
         await consumeRateLimits([
           { action: "account_invite_user", value: userId, windowSeconds: 60 * 60, maxEvents: 10 },
-          { action: "account_invite_phone", value: data.recipientPhone, windowSeconds: 24 * 60 * 60, maxEvents: 5 },
+          {
+            action: "account_invite_phone",
+            value: data.recipientPhone,
+            windowSeconds: 24 * 60 * 60,
+            maxEvents: 5,
+          },
         ]);
         const { sendClickatellSms } = await import("./phone-auth.server");
-        const { data: me } = await supabase.from("users").select("name").eq("id", userId).maybeSingle();
+        const { data: me } = await supabase
+          .from("users")
+          .select("name")
+          .eq("id", userId)
+          .maybeSingle();
         await sendClickatellSms(
           data.recipientPhone,
           buildInviteSms({
@@ -114,7 +122,6 @@ export const createJourney = createServerFn({ method: "POST" })
       }
     }
 
-
     return {
       journey,
       notes: data.notes ?? null,
@@ -128,7 +135,9 @@ export const listJourneys = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("journeys")
-      .select("id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at")
+      .select(
+        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at",
+      )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     const { publicInviteUrl } = await import("./site-url.server");
@@ -141,6 +150,9 @@ export const listJourneys = createServerFn({ method: "GET" })
   });
 
 const JourneyIdSchema = z.object({ id: z.string().uuid() });
+const RenameJourneySchema = JourneyIdSchema.extend({
+  title: z.string().trim().min(1).max(120),
+});
 
 export const getJourneyStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -208,6 +220,27 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
     };
   });
 
+export const renameJourney = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => RenameJourneySchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: journey, error: jErr } = await supabase
+      .from("journeys")
+      .select("id, creator_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (jErr) throw new Error(jErr.message);
+    if (!journey || journey.creator_id !== userId) throw new Error("Not authorized");
+
+    const { error } = await supabase
+      .from("journeys")
+      .update({ title: data.title })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const, title: data.title };
+  });
+
 export const sendJourneyInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) =>
@@ -251,31 +284,31 @@ export const sendJourneyInvite = createServerFn({ method: "POST" })
     const { publicInviteUrl } = await import("./site-url.server");
     const inviteUrl = publicInviteUrl(journey.invite_code);
 
-      const phone = data.recipientPhone?.trim();
-      if (!phone) throw new Error("Enter a valid mobile number.");
-      const { consumeRateLimits } = await import("./rate-limit.server");
-      await consumeRateLimits([
-        { action: "account_invite_user", value: userId, windowSeconds: 60 * 60, maxEvents: 10 },
-        { action: "account_invite_phone", value: phone, windowSeconds: 24 * 60 * 60, maxEvents: 5 },
-      ]);
-      const { sendClickatellSms } = await import("./phone-auth.server");
-      const { data: me } = await supabase.from("users").select("name").eq("id", userId).maybeSingle();
-      await sendClickatellSms(
-        phone,
-        buildInviteSms({
-          recipientName: data.recipientName,
-          senderName: me?.name ?? null,
-          notes: data.notes,
-          url: inviteUrl,
-        }),
-        "journey-invite",
-      );
+    const phone = data.recipientPhone?.trim();
+    if (!phone) throw new Error("Enter a valid mobile number.");
+    const { consumeRateLimits } = await import("./rate-limit.server");
+    await consumeRateLimits([
+      { action: "account_invite_user", value: userId, windowSeconds: 60 * 60, maxEvents: 10 },
+      { action: "account_invite_phone", value: phone, windowSeconds: 24 * 60 * 60, maxEvents: 5 },
+    ]);
+    const { sendClickatellSms } = await import("./phone-auth.server");
+    const { data: me } = await supabase.from("users").select("name").eq("id", userId).maybeSingle();
+    await sendClickatellSms(
+      phone,
+      buildInviteSms({
+        recipientName: data.recipientName,
+        senderName: me?.name ?? null,
+        notes: data.notes,
+        url: inviteUrl,
+      }),
+      "journey-invite",
+    );
 
-      const { error: updErr } = await supabase
-        .from("journeys")
-        .update({ guest_phone: phone })
-        .eq("id", journey.id);
-      if (updErr) console.error("Failed to store guest phone:", updErr.message);
+    const { error: updErr } = await supabase
+      .from("journeys")
+      .update({ guest_phone: phone })
+      .eq("id", journey.id);
+    if (updErr) console.error("Failed to store guest phone:", updErr.message);
     return { ok: true as const, channel: "sms" as const };
   });
 

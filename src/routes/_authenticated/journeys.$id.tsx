@@ -15,6 +15,7 @@ import {
   Mail,
   MessageCircle,
   MessageSquare,
+  Pencil,
   Share2,
   Loader2,
   CheckCircle2,
@@ -25,7 +26,12 @@ import {
   PlayCircle,
   UserCircle2,
 } from "lucide-react";
-import { getJourneyStatus, deleteJourney, createJourney } from "@/lib/journeys.functions";
+import {
+  getJourneyStatus,
+  deleteJourney,
+  createJourney,
+  renameJourney,
+} from "@/lib/journeys.functions";
 import { oppositeRole, type Role } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/journeys/$id")({
@@ -39,6 +45,7 @@ function JourneyTracker() {
   const qc = useQueryClient();
   const fetchStatus = useServerFn(getJourneyStatus);
   const removeFn = useServerFn(deleteJourney);
+  const renameFn = useServerFn(renameJourney);
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["journey", id],
@@ -54,6 +61,14 @@ function JourneyTracker() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["journeys"] });
       navigate({ to: "/dashboard", replace: true });
+    },
+  });
+
+  const rename = useMutation({
+    mutationFn: (title: string) => renameFn({ data: { id, title } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["journeys"] });
+      qc.invalidateQueries({ queryKey: ["journey", id] });
     },
   });
 
@@ -130,9 +145,28 @@ function JourneyTracker() {
         </div>
       </div>
 
-      <header className="space-y-1">
+      <header className="space-y-2">
         <p className="text-xs uppercase tracking-wider text-muted-foreground">All set</p>
-        <h1 className="text-3xl font-display font-semibold">Journey ready</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-3xl font-display font-semibold">Journey ready</h1>
+          <button
+            type="button"
+            onClick={() => {
+              const next = prompt("Rename this journey", journey.title);
+              const title = next?.trim();
+              if (title && title !== journey.title) rename.mutate(title);
+            }}
+            disabled={rename.isPending}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-input px-3 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-foreground disabled:opacity-60"
+          >
+            {rename.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Pencil className="h-3.5 w-3.5" />
+            )}
+            Rename
+          </button>
+        </div>
       </header>
 
       {/* Hero */}
@@ -174,6 +208,23 @@ function JourneyTracker() {
         </div>
       </motion.section>
 
+      <SelfAssessmentCard journey={journey} />
+
+      {/* Share & send */}
+      <section className="space-y-3">
+        <details className="group glass rounded-2xl p-4">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium">
+            <span>Need the partner link again?</span>
+            <span className="text-xs text-muted-foreground transition group-open:rotate-180">
+              ⌄
+            </span>
+          </summary>
+          <div className="mt-4">
+            <ShareCard url={url} code={journey.invite_code} />
+          </div>
+        </details>
+      </section>
+
       {/* Timeline */}
       <section className="space-y-3">
         <SectionLabel>Status timeline</SectionLabel>
@@ -183,14 +234,6 @@ function JourneyTracker() {
           ))}
         </div>
       </section>
-
-      {/* Share & send */}
-      <section className="space-y-3">
-        <SectionLabel>Send to partner</SectionLabel>
-        <ShareCard url={url} code={journey.invite_code} />
-      </section>
-
-      <SelfAssessmentCard journey={journey} />
 
       {/* View results */}
       <section className="space-y-2">
