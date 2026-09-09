@@ -96,9 +96,9 @@ function Landing() {
         >
           <Link
             to="/about"
-            className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-white/10 bg-[#100b24]/80 px-7 py-2.5 text-base text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_24px_rgba(236,72,153,0.10)] backdrop-blur-md transition hover:border-primary/40 hover:text-foreground hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_0_30px_rgba(236,72,153,0.18)]"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
           >
-            <Compass className="h-5 w-5 text-primary" />
+            <Compass className="h-3.5 w-3.5 text-primary" />
             About RedFlagDaddy
           </Link>
         </motion.div>
