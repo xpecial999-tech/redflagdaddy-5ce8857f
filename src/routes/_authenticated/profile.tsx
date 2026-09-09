@@ -106,7 +106,7 @@ function Profile() {
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="w-[calc(100vw-2rem)] max-w-md overflow-hidden rounded-2xl">
             <PrivacyModal onClose={() => setPrivacyOpen(false)} />
           </DialogContent>
         </Dialog>
@@ -148,16 +148,16 @@ function ProfileLink({
   return (
     <Link
       to={to}
-      className="w-full text-left glass rounded-2xl p-4 flex items-center gap-3 hover:bg-white/5 transition"
+      className="w-full text-left glass rounded-2xl p-4 flex items-center gap-3 hover:bg-white/5 transition active:bg-white/10"
     >
-      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
         <Icon className="w-5 h-5 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="font-medium text-sm">{label}</div>
         <div className="text-xs text-muted-foreground">{desc}</div>
       </div>
-      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
     </Link>
   );
 }
@@ -220,12 +220,12 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
       <div className="space-y-3 py-4">
         <Button
           variant="outline"
-          className="w-full justify-start h-auto py-3 px-4"
+          className="w-full min-w-0 justify-start whitespace-normal h-auto py-3 px-4 text-left"
           onClick={handleExport}
           disabled={exporting}
         >
           <Download className="w-5 h-5 mr-3 text-primary" />
-          <div className="text-left">
+          <div className="min-w-0 flex-1 text-left">
             <div className="text-sm font-medium">Download your data</div>
             <div className="text-xs text-muted-foreground">
               Get a JSON copy of your profile, preferences, journey metadata, results and payment
@@ -239,10 +239,10 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
           <AlertDialogTrigger asChild>
             <Button
               variant="outline"
-              className="w-full justify-start h-auto py-3 px-4 border-destructive/30 hover:bg-destructive/10"
+              className="w-full min-w-0 justify-start whitespace-normal h-auto py-3 px-4 text-left border-destructive/30 hover:bg-destructive/10"
             >
               <Trash2 className="w-5 h-5 mr-3 text-destructive" />
-              <div className="text-left">
+              <div className="min-w-0 flex-1 text-left">
                 <div className="text-sm font-medium text-destructive">Delete your account</div>
                 <div className="text-xs text-muted-foreground">
                   Permanently remove your account and associated product data.
