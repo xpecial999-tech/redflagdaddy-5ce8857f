@@ -13,7 +13,7 @@ describe("signed-in help and safety surfaces", () => {
     expect(safety).not.toContain("Stealth mode");
     expect(safety).not.toContain("Blocked accounts");
     expect(safety).not.toContain("Report a user");
-    expect(safety).toContain("One-time SMS codes");
+    expect(safety).toContain("Private email codes");
     expect(safety).toContain("supabase.auth.signOut()");
     expect(safety).toContain("not an emergency service");
   });
@@ -40,10 +40,7 @@ describe("signed-in help and safety surfaces", () => {
   });
 
   it("recognizes the server's already-unsubscribed status", () => {
-    const unsubscribe = readFileSync(
-      new URL("../routes/unsubscribe.tsx", import.meta.url),
-      "utf8",
-    );
+    const unsubscribe = readFileSync(new URL("../routes/unsubscribe.tsx", import.meta.url), "utf8");
 
     expect(unsubscribe).toContain('body?.reason === "already_unsubscribed"');
     expect(unsubscribe).not.toContain('body?.reason === "already_used"');

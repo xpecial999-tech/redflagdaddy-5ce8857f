@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -48,7 +48,10 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function Profile() {
   const { me, loading } = useMe();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [privacyOpen, setPrivacyOpen] = useState(false);
+
+  if (pathname !== "/profile") return <Outlet />;
 
   const signOut = async () => {
     await supabase.auth.signOut();
