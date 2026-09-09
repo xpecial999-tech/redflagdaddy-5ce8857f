@@ -417,13 +417,10 @@ function PartnerLinkView({
                 I've sent it, what next?
               </h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-xs leading-relaxed text-muted-foreground">
+                <li>Complete your own matching assessment while your partner answers theirs.</li>
                 <li>
-                  Enter your email address below and we'll let you know when your partner has
-                  completed the questionnaire.
-                </li>
-                <li>
-                  Then complete your own matching assessment so the summary can compare both
-                  perspectives.
+                  Enter your email address below and we’ll let you know when both sides are ready to
+                  compare.
                 </li>
               </ul>
             </div>
@@ -458,7 +455,7 @@ function PartnerLinkView({
               </p>
             )}
 
-            <p className="rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs leading-relaxed text-muted-foreground">
+            <p className="-mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground/80">
               We only use your email for account access and journey notifications; no personal
               profile details are required.
             </p>
