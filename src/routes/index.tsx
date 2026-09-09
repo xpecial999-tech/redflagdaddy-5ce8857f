@@ -103,12 +103,12 @@ function Landing() {
           </Link>
         </motion.div>
       </section>
-      <JourneyLookup />
       <p className="mx-auto max-w-2xl border-t border-white/10 pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/70">
         For adults 18+. RedFlagDaddy is a structured conversation aid — not identity verification, a
         background check, a diagnosis, proof of consent, an emergency service or a guarantee of
         safety.
       </p>
+      <JourneyLookup />
     </div>
   );
 }
@@ -123,11 +123,16 @@ function JourneyLookup() {
   const result = lookup.data;
 
   return (
-    <section className="glass-strong mx-auto max-w-xl rounded-3xl p-6 sm:p-7 space-y-4">
-      <div className="flex items-start gap-3">
-        <Search className="mt-0.5 h-5 w-5 text-primary" />
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, delay: 2.8 }}
+      className="glass mx-auto max-w-lg rounded-2xl p-4 sm:p-5 space-y-3"
+    >
+      <div className="flex items-start gap-2.5">
+        <Search className="mt-0.5 h-4 w-4 text-primary/80" />
         <div>
-          <h2 className="font-display text-lg font-semibold tracking-tight">
+          <h2 className="font-display text-base font-semibold tracking-tight">
             Returning to a journey?
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -155,13 +160,13 @@ function JourneyLookup() {
           spellCheck={false}
           maxLength={32}
           placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX"
-          className="font-mono tracking-wide"
+          className="min-h-10 font-mono text-xs tracking-wide"
         />
         <button
           disabled={lookup.isPending || !ownerCode.trim()}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
+          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary/90 px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
         >
-          <Search className="h-4 w-4" /> {lookup.isPending ? "Checking…" : "Check code"}
+          <Search className="h-3.5 w-3.5" /> {lookup.isPending ? "Checking…" : "Check code"}
         </button>
       </form>
 
@@ -207,6 +212,6 @@ function JourneyLookup() {
           </p>
         </div>
       )}
-    </section>
+    </motion.section>
   );
 }
