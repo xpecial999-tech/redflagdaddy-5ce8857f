@@ -308,7 +308,7 @@ function PartnerLinkView({
 
     ctx.fillStyle = "rgba(255,255,255,0.72)";
     ctx.font = "500 24px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("Private owner code", 360, 286);
+    ctx.fillText("🔑 Secret code", 360, 286);
 
     ctx.fillStyle = "rgba(12,8,28,0.78)";
     roundRect(ctx, 100, 320, 520, 120, 24);
@@ -320,16 +320,18 @@ function PartnerLinkView({
 
     ctx.fillStyle = "#ffffff";
     ctx.font = "700 28px ui-monospace, SFMono-Regular, Menlo, monospace";
-    wrapText(ctx, ownerCode, 360, 372, 460, 36);
+    ctx.textBaseline = "middle";
+    ctx.fillText(ownerCode, 360, 382);
+    ctx.textBaseline = "alphabetic";
 
     ctx.fillStyle = "rgba(255,255,255,0.62)";
     ctx.font = "400 20px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("Keep this separate from the partner link.", 360, 510);
-    ctx.fillText("Anyone with this code can view the summary.", 360, 542);
+    ctx.fillText("Save this secret code.", 360, 510);
+    ctx.fillText("You'll need it to return to your results.", 360, 542);
 
     ctx.fillStyle = "#f8f5ff";
     ctx.font = "600 22px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("Return at redflagdaddy.com", 360, 600);
+    ctx.fillText("View results at redflagdaddy.com", 360, 600);
 
     ctx.fillStyle = "#ec4899";
     ctx.font = "700 20px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
@@ -363,7 +365,7 @@ function PartnerLinkView({
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Send this link to your partner so they can take the {partnerType} assessment. They'll
-            answer privately. Return with your private owner code to check the report.
+            answer privately. Return with your secret code to check the report.
           </p>
         </div>
 
@@ -457,24 +459,30 @@ function PartnerLinkView({
             )}
 
             <p className="rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs leading-relaxed text-muted-foreground">
-              Rather not register? You can wait for your partner to complete the questionnaire, then
-              come back and check using your private owner code below. We only use your email for
-              account access and journey notifications; no personal profile details are required.
+              We only use your email for account access and journey notifications; no personal
+              profile details are required.
             </p>
           </section>
         )}
 
         {ownerCode && (
           <section className="glass rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/15">
+            {!claimed && (
+              <p className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
+                <span className="font-semibold text-foreground">Rather not register?</span> You can
+                wait for your partner to complete the questionnaire, then come back and check using
+                your secret code below.
+              </p>
+            )}
             <div className="flex items-start gap-3">
               <KeyRound className="w-5 h-5 text-primary mt-0.5" />
               <div>
                 <h2 className="font-display text-lg font-semibold tracking-tight">
-                  Save your private owner code
+                  Save your secret code
                 </h2>
                 <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                   This is shown once and cannot be recovered. Keep it separate from the partner
-                  link. Anyone with it can view the report until it expires.
+                  link. You’ll need it to view your results until the journey expires.
                 </p>
               </div>
             </div>

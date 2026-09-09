@@ -137,7 +137,7 @@ function JourneyLookup() {
             Returning to a journey?
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Enter your private owner code to check progress or view your summary.
+            Enter your secret code to check progress or view your summary.
           </p>
         </div>
       </div>
@@ -155,12 +155,12 @@ function JourneyLookup() {
             setOwnerCode(event.target.value.toUpperCase());
             if (lookup.data) lookup.reset();
           }}
-          aria-label="Private owner code"
+          aria-label="Secret code"
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
           maxLength={32}
-          placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX"
+          placeholder="XXXXXXXX-XXXXXXXX"
           className="min-h-10 font-mono text-xs tracking-wide"
         />
         <button

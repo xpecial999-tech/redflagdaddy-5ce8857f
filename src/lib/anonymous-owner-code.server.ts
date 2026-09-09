@@ -1,5 +1,5 @@
 const OWNER_CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-const OWNER_CODE_LENGTH = 24;
+const OWNER_CODE_LENGTH = 16;
 
 export function normalizeOwnerCode(value: string): string {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -15,7 +15,7 @@ export function isValidOwnerCode(value: string): boolean {
 
 export function formatOwnerCode(value: string): string {
   const normalized = normalizeOwnerCode(value);
-  return normalized.match(/.{1,6}/g)?.join("-") ?? normalized;
+  return normalized.match(/.{1,8}/g)?.join("-") ?? normalized;
 }
 
 export function generateOwnerCode(): string {

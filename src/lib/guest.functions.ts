@@ -103,7 +103,7 @@ export const claimAnonymousJourney = createServerFn({ method: "POST" })
   .validator((d: unknown) => OwnerCodeSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { isValidOwnerCode, hashOwnerCode } = await import("./anonymous-owner-code.server");
-    if (!isValidOwnerCode(data.ownerCode)) throw new Error("That private owner code is invalid.");
+    if (!isValidOwnerCode(data.ownerCode)) throw new Error("That secret code is invalid.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: journeyId, error } = await (supabaseAdmin as any).rpc("claim_anonymous_journey", {
@@ -114,8 +114,7 @@ export const claimAnonymousJourney = createServerFn({ method: "POST" })
       console.error("[guest-journey] Claim failed", { code: error.code });
       throw new Error("We couldn't save this journey to your account. Please try again.");
     }
-    if (!journeyId)
-      throw new Error("This private owner code is invalid, expired, or already claimed.");
+    if (!journeyId) throw new Error("This secret code is invalid, expired, or already claimed.");
     return { journeyId };
   });
 

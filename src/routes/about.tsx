@@ -74,7 +74,7 @@ const tracking = [
   {
     icon: Activity,
     title: "Private progress checks",
-    body: "Guest journeys include a private owner code so you can return to check whether your partner has started, completed or expired.",
+    body: "Guest journeys include a secret code so you can return to check whether your partner has started, completed or expired.",
   },
   {
     icon: Timer,
@@ -89,7 +89,7 @@ const tracking = [
   {
     icon: ShieldCheck,
     title: "Owner-controlled results",
-    body: "Results stay behind the private owner code or signed-in owner session. Optional report sharing is a separate, explicit action.",
+    body: "Results stay behind the secret code or signed-in owner session. Optional report sharing is a separate, explicit action.",
   },
 ];
 
@@ -285,7 +285,7 @@ function About() {
         <SectionHeader
           eyebrow="Journey tracking"
           title="See progress as it happens"
-          sub="Start privately first. If you want to keep track, your owner code or account can bring you back."
+          sub="Start privately first. If you want to keep track, your secret code or account can bring you back."
         />
         <div className="grid md:grid-cols-2 gap-4">
           {tracking.map((t, i) => (
