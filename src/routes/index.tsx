@@ -60,7 +60,8 @@ function Landing() {
           transition={{ duration: 1, delay: 0 }}
           className="pb-2 text-5xl md:text-6xl font-display font-semibold leading-[1.16]"
         >
-          Navigate dynamics with <span className="text-gradient">clarity</span>.
+          Navigate dynamics with{" "}
+          <span className="inline-block pb-[0.08em] text-gradient">clarity</span>.
         </motion.h1>
 
         <motion.p
