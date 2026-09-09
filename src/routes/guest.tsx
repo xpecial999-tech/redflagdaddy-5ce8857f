@@ -397,7 +397,7 @@ function PartnerLinkView({
             <h3 className="text-sm font-medium">How to send it to your partner</h3>
             <ol className="mt-2 space-y-1.5 text-xs text-muted-foreground list-decimal pl-4">
               <li>
-                Share the link using one of the buttons below — your contacts stay on your device.
+                Share this link using one of the buttons above — your contacts stay on your device.
               </li>
               <li>They open the link, confirm they're 18+, and complete the assessment.</li>
             </ol>
