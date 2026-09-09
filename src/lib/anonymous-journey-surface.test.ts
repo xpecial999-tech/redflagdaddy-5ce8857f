@@ -18,7 +18,7 @@ describe("anonymous journey privacy surface", () => {
     expect(guestRoute).not.toContain("sessionStorage.setItem");
     expect(guestRoute).not.toMatch(/search:\s*\{[^}]*ownerCode/);
     expect(guestRoute).not.toMatch(/params:\s*\{[^}]*ownerCode/);
-    expect(guestRoute).toContain('autoComplete="off"');
+    expect(guestRoute).toContain('emailAutoComplete="off"');
     expect(guestRoute).toMatch(/noindex,\s*nofollow,\s*noarchive/);
   });
 
@@ -37,5 +37,11 @@ describe("anonymous journey privacy surface", () => {
     expect(migration).toContain("delete_expired_anonymous_journeys");
     expect(migration).toContain("cron.schedule");
     expect(migration).toContain("anonymous_owner_expires_at <= now()");
+  });
+
+  it("keeps no-account guest journeys on the quick question set", () => {
+    expect(guestFunctions).toContain("const GUEST_QUESTION_LIMIT = 50");
+    expect(guestFunctions).toContain("question_limit: GUEST_QUESTION_LIMIT");
+    expect(assessmentFunctions).toContain("limit = 50");
   });
 });

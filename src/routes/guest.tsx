@@ -437,6 +437,7 @@ function PartnerLinkView({
             </div>
             <EmailOtpForm
               mode="register"
+              emailAutoComplete="off"
               onAuthenticated={async () => {
                 try {
                   const result = await claimFn({ data: { ownerCode } });

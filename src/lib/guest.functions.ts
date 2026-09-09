@@ -6,6 +6,8 @@ import { ALL_ROLES } from "./roles";
 import { throwPublicDataError } from "./public-data-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const GUEST_QUESTION_LIMIT = 50;
+
 const CreateGuestSchema = z
   .object({
     guestPhone: z.string().trim().max(24).optional().default(""),
@@ -72,6 +74,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
         anonymous_no_contact: data.notificationMode === "owner_code",
         anonymous_owner_code_hash: ownerCodeHash,
         anonymous_owner_expires_at: ownerExpiresAt,
+        question_limit: GUEST_QUESTION_LIMIT,
         status: "pending",
       })
       .select("id, invite_code")

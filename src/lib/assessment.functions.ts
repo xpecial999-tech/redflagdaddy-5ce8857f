@@ -82,7 +82,7 @@ async function loadAssignedQuestions(
     const entitlement = await loadEntitlement(journeySettings.creator_id as string);
     if (!categoryIds) limit = entitlement.questionLimit;
   } else if (limit == null && !categoryIds) {
-    limit = 100;
+    limit = 50;
   }
 
   let query = supabaseAdmin
