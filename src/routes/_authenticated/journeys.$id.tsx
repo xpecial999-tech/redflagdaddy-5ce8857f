@@ -13,6 +13,7 @@ import {
   KeyRound,
   Link2,
   Mail,
+  MessageCircle,
   MessageSquare,
   Share2,
   Loader2,
@@ -103,12 +104,30 @@ function JourneyTracker() {
         >
           <ArrowLeft className="w-4 h-4" /> Dashboard
         </Link>
-        <button
-          onClick={() => refetch()}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} /> Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} /> Refresh
+          </button>
+          <button
+            onClick={() => {
+              if (confirm("Delete this journey and all responses? This cannot be undone.")) {
+                remove.mutate();
+              }
+            }}
+            disabled={remove.isPending}
+            className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
+          >
+            {remove.isPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" />
+            )}
+            Delete
+          </button>
+        </div>
       </div>
 
       <header className="space-y-1">
@@ -173,7 +192,7 @@ function JourneyTracker() {
 
       <SelfAssessmentCard journey={journey} />
 
-      {/* View results / continue actions */}
+      {/* View results */}
       <section className="space-y-2">
         {effectiveStatus === "completed" && (
           <Link
@@ -184,23 +203,6 @@ function JourneyTracker() {
             <Sparkles className="w-4 h-4" /> View results
           </Link>
         )}
-        <button
-          onClick={() => {
-            if (confirm("Delete this journey and all responses? This cannot be undone.")) {
-              remove.mutate();
-            }
-          }}
-          disabled={remove.isPending}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-destructive/30 text-destructive py-3 text-sm font-medium hover:bg-destructive/10 transition disabled:opacity-50"
-        >
-          {remove.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <Trash2 className="w-4 h-4" /> Delete journey
-            </>
-          )}
-        </button>
       </section>
     </div>
   );
@@ -297,6 +299,7 @@ function ShareCard({ url, code }: { url: string; code: string }) {
     "RedFlagDaddy private assessment",
   )}&body=${encodeURIComponent(shareMessage)}`;
   const smsHref = `sms:?&body=${encodeURIComponent(shareMessage)}`;
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
   const copy = () => {
     navigator.clipboard.writeText(url);
@@ -368,25 +371,33 @@ function ShareCard({ url, code }: { url: string; code: string }) {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="flex flex-wrap justify-center gap-2">
         <button
           type="button"
           onClick={() => void nativeShare()}
-          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-input px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-input px-4 text-xs font-medium transition hover:border-primary/50 hover:bg-white/5"
         >
-          <Share2 className="w-3.5 h-3.5" /> Share
+          <Share2 className="w-4 h-4 text-primary" /> Share
         </button>
         <a
           href={emailHref}
-          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-input px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-input px-4 text-xs font-medium transition hover:border-primary/50 hover:bg-white/5"
         >
-          <Mail className="w-3.5 h-3.5" /> Email
+          <Mail className="w-4 h-4 text-primary" /> Email
         </a>
         <a
           href={smsHref}
-          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-input px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-input px-4 text-xs font-medium transition hover:border-primary/50 hover:bg-white/5"
         >
-          <MessageSquare className="w-3.5 h-3.5" /> Message
+          <MessageSquare className="w-4 h-4 text-primary" /> SMS
+        </a>
+        <a
+          href={whatsappHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-input px-4 text-xs font-medium transition hover:border-primary/50 hover:bg-white/5"
+        >
+          <MessageCircle className="w-4 h-4 text-primary" /> WhatsApp
         </a>
       </div>
     </div>
