@@ -10,7 +10,8 @@ import {
   Copy,
   Link2,
   Mail,
-  Send,
+  MessageSquare,
+  Share2,
   Loader2,
   CheckCircle2,
   AlertTriangle,
@@ -19,19 +20,7 @@ import {
   Sparkles,
   PlayCircle,
 } from "lucide-react";
-import { getJourneyStatus, deleteJourney, sendJourneyInvite } from "@/lib/journeys.functions";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
+import { getJourneyStatus, deleteJourney } from "@/lib/journeys.functions";
 
 export const Route = createFileRoute("/_authenticated/journeys/$id")({
   head: () => ({ meta: [{ title: "Journey — RedFlagDaddy" }] }),
@@ -164,7 +153,7 @@ function JourneyTracker() {
       {/* Share & send */}
       <section className="space-y-3">
         <SectionLabel>Send to partner</SectionLabel>
-        <ShareCard journeyId={journey.id} url={url} />
+        <ShareCard url={url} />
       </section>
 
       {/* View results / continue actions */}
@@ -220,7 +209,7 @@ function buildSteps(p: {
     },
     {
       label: "Invite sent",
-      desc: p.sentAt ? "Invite link delivered." : "Share the link or text it below.",
+      desc: p.sentAt ? "Invite link delivered." : "Share the private link below.",
       state: p.sentAt ? "done" : "active",
       at: p.sentAt,
     },
@@ -283,14 +272,14 @@ function TimelineRow({ step, last }: { step: Step; last: boolean }) {
   );
 }
 
-function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
+function ShareCard({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
-  const [modal, setModal] = useState<"sms" | null>(null);
-  const [recipientName, setRecipientName] = useState("");
-  const [contact, setContact] = useState("");
-  const [note, setNote] = useState("");
-  const [sending, setSending] = useState(false);
-  const sendFn = useServerFn(sendJourneyInvite);
+
+  const shareMessage = `Hey — I'd like us to take a private compatibility & consent assessment together on RedFlagDaddy. Open this link to answer your side: ${url}`;
+  const emailHref = `mailto:?subject=${encodeURIComponent(
+    "RedFlagDaddy private assessment",
+  )}&body=${encodeURIComponent(shareMessage)}`;
+  const smsHref = `sms:?&body=${encodeURIComponent(shareMessage)}`;
 
   const copy = () => {
     navigator.clipboard.writeText(url);
@@ -298,33 +287,16 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const openModal = (kind: "sms") => {
-    setContact("");
-    setRecipientName("");
-    setNote("");
-    setModal(kind);
-  };
-
-  const submit = async () => {
-    setSending(true);
+  const nativeShare = async () => {
+    if (typeof navigator === "undefined" || !("share" in navigator)) return;
     try {
-      const res = await sendFn({
-        data: {
-          id: journeyId,
-          channel: "sms" as const,
-          recipientPhone: contact,
-          recipientName: recipientName || undefined,
-          notes: note || undefined,
-        },
+      await navigator.share({
+        title: "RedFlagDaddy private assessment",
+        text: shareMessage,
+        url,
       });
-      if (res.ok) {
-        toast.success("Invite sent by SMS");
-        setModal(null);
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setSending(false);
+    } catch {
+      /* User cancelled or the device blocked sharing. */
     }
   };
 
@@ -360,58 +332,27 @@ function ShareCard({ journeyId, url }: { journeyId: string; url: string }) {
         </div>
       </div>
 
-      {false && (
-        <Dialog open={modal !== null} onOpenChange={(o) => !o && setModal(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Send invite by SMS</DialogTitle>
-              <DialogDescription>
-                Enter your partner's mobile number to text them the invite link.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="rname">Partner name (optional)</Label>
-                <Input
-                  id="rname"
-                  value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
-                  placeholder="e.g. Natasha"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="rcontact">Partner mobile number</Label>
-                <InternationalPhoneInput
-                  id="rcontact"
-                  value={contact}
-                  onValueChange={setContact}
-                  aria-label="Partner mobile number"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="rnote">Personal note (optional)</Label>
-                <Input
-                  id="rnote"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Add a line of context for them"
-                  maxLength={500}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <button
-                onClick={submit}
-                disabled={sending || !contact.trim()}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium disabled:opacity-50"
-              >
-                {sending && <Loader2 className="w-4 h-4 animate-spin" />}
-                {sending ? "Sending…" : "Send SMS"}
-              </button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={() => void nativeShare()}
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-input px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+        >
+          <Share2 className="w-3.5 h-3.5" /> Share
+        </button>
+        <a
+          href={emailHref}
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-input px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+        >
+          <Mail className="w-3.5 h-3.5" /> Email
+        </a>
+        <a
+          href={smsHref}
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-input px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+        >
+          <MessageSquare className="w-3.5 h-3.5" /> Message
+        </a>
+      </div>
     </div>
   );
 }

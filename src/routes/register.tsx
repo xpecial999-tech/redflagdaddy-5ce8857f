@@ -234,8 +234,8 @@ function Register() {
               />
               {!authMethods.phoneSignIn && !authMethods.emailSignIn && (
                 <p role="alert" className="mt-4 text-xs text-destructive">
-                  Account creation is temporarily unavailable. An administrator must finish the
-                  email setup.
+                  Account creation is temporarily unavailable while we finish email setup. Please
+                  come back later and try again.
                 </p>
               )}
               <p className="text-xs text-muted-foreground text-center mt-6">

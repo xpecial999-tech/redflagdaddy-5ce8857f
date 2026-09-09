@@ -181,7 +181,8 @@ export function Login({ adminOnly = false }: { adminOnly?: boolean }) {
               />
               {!authMethods.phoneSignIn && !authMethods.emailSignIn && (
                 <p role="alert" className="text-xs text-destructive">
-                  Sign-in is temporarily unavailable. An administrator must finish the email setup.
+                  Sign-in is temporarily unavailable while we finish email setup. Please come back
+                  later and try again.
                 </p>
               )}
               {!adminOnly && (
