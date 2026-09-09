@@ -439,9 +439,9 @@ function PartnerLinkView({
               mode="register"
               onAuthenticated={async () => {
                 try {
-                  await claimFn({ data: { ownerCode } });
+                  const result = await claimFn({ data: { ownerCode } });
                   setClaimed(true);
-                  navigate({ to: "/dashboard" });
+                  navigate({ to: "/journeys/$id", params: { id: result.journeyId } });
                 } catch (error) {
                   setClaimError(
                     error instanceof Error ? error.message : "We couldn't save this journey.",
