@@ -267,73 +267,77 @@ function PartnerLinkView({
     if (!ownerCode || typeof document === "undefined") return;
 
     const canvas = document.createElement("canvas");
-    canvas.width = 1080;
-    canvas.height = 1080;
+    canvas.width = 720;
+    canvas.height = 720;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const bg = ctx.createLinearGradient(0, 0, 1080, 1080);
+    const bg = ctx.createLinearGradient(0, 0, 720, 720);
     bg.addColorStop(0, "#05020d");
     bg.addColorStop(0.45, "#15082b");
     bg.addColorStop(1, "#06010b");
     ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, 1080, 1080);
+    ctx.fillRect(0, 0, 720, 720);
 
-    const glow = ctx.createRadialGradient(540, 330, 80, 540, 330, 620);
+    const glow = ctx.createRadialGradient(360, 220, 55, 360, 220, 410);
     glow.addColorStop(0, "rgba(236,72,153,0.42)");
     glow.addColorStop(0.5, "rgba(124,58,237,0.18)");
     glow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, 1080, 1080);
+    ctx.fillRect(0, 0, 720, 720);
 
     ctx.strokeStyle = "rgba(236,72,153,0.45)";
-    ctx.lineWidth = 4;
-    roundRect(ctx, 96, 96, 888, 888, 48);
+    ctx.lineWidth = 3;
+    roundRect(ctx, 64, 64, 592, 592, 32);
     ctx.stroke();
 
     ctx.fillStyle = "#f8f5ff";
     ctx.textAlign = "center";
-    ctx.font = "700 72px Georgia, serif";
-    ctx.fillText("RedFlagDaddy", 540, 260);
+    ctx.font = "700 48px Georgia, serif";
+    ctx.fillText("RedFlagDaddy", 360, 168);
 
-    const accent = ctx.createLinearGradient(320, 0, 760, 0);
+    const accent = ctx.createLinearGradient(210, 0, 510, 0);
     accent.addColorStop(0, "#ec4899");
     accent.addColorStop(1, "#7c3aed");
     ctx.strokeStyle = accent;
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(290, 315);
-    ctx.lineTo(790, 315);
+    ctx.moveTo(195, 205);
+    ctx.lineTo(525, 205);
     ctx.stroke();
 
     ctx.fillStyle = "rgba(255,255,255,0.72)";
-    ctx.font = "500 34px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("Private owner code", 540, 430);
+    ctx.font = "500 24px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("Private owner code", 360, 286);
 
     ctx.fillStyle = "rgba(12,8,28,0.78)";
-    roundRect(ctx, 150, 480, 780, 180, 36);
+    roundRect(ctx, 100, 320, 520, 120, 24);
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.16)";
     ctx.lineWidth = 2;
-    roundRect(ctx, 150, 480, 780, 180, 36);
+    roundRect(ctx, 100, 320, 520, 120, 24);
     ctx.stroke();
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "700 42px ui-monospace, SFMono-Regular, Menlo, monospace";
-    wrapText(ctx, ownerCode, 540, 560, 700, 54);
+    ctx.font = "700 28px ui-monospace, SFMono-Regular, Menlo, monospace";
+    wrapText(ctx, ownerCode, 360, 372, 460, 36);
 
     ctx.fillStyle = "rgba(255,255,255,0.62)";
-    ctx.font = "400 28px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("Keep this separate from the partner link.", 540, 760);
-    ctx.fillText("Anyone with this code can view the summary.", 540, 805);
+    ctx.font = "400 20px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("Keep this separate from the partner link.", 360, 510);
+    ctx.fillText("Anyone with this code can view the summary.", 360, 542);
+
+    ctx.fillStyle = "#f8f5ff";
+    ctx.font = "600 22px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("Return at redflagdaddy.com", 360, 600);
 
     ctx.fillStyle = "#ec4899";
-    ctx.font = "700 30px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("Consent. Compatibility. Safety. Red flags.", 540, 910);
+    ctx.font = "700 20px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("Consent. Compatibility. Safety. Red flags.", 360, 632);
 
     const anchor = document.createElement("a");
-    anchor.download = `redflagdaddy-owner-code-${code}.png`;
-    anchor.href = canvas.toDataURL("image/png");
+    anchor.download = `redflagdaddy-owner-code-${code}.jpg`;
+    anchor.href = canvas.toDataURL("image/jpeg", 0.82);
     anchor.click();
   };
 
