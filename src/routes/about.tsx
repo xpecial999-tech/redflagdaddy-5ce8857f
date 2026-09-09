@@ -50,46 +50,46 @@ export const Route = createFileRoute("/about")({
 const flow = [
   {
     icon: ClipboardCheck,
-    title: "Create a journey",
-    body: "A guided wizard: name your assessment, choose your partner's role (Dominant, submissive, switch, Master, brat, little, primal and more), and add optional partner details.",
+    title: "Pick the dynamic",
+    body: "Choose the role or dynamic that best suits your partner — Dominant, submissive, switch, Master, brat, little, primal and more.",
   },
   {
     icon: Users,
-    title: "Invite your partner",
-    body: "Share a private, single-use invite link or code. No account is required to respond, and the invite stops working after completion or expiry.",
+    title: "Send your partner a link",
+    body: "Share a private, single-use link. They can answer their side without creating an account, and the link stops working after completion or expiry.",
   },
   {
     icon: Brain,
-    title: "Role-aware questions",
-    body: "The question set is filtered by the selected role and assessment mode, with optional category-focused journeys.",
+    title: "Complete your matching side",
+    body: "Answer your own side so the summary can compare both perspectives instead of judging one person in isolation.",
   },
   {
     icon: Sparkles,
-    title: "Structured results",
-    body: "Responses are weighted across five dimensions and summarised as conversation prompts—not a diagnosis, safety guarantee or decision about another person.",
+    title: "Receive a structured summary",
+    body: "Responses are weighted across five dimensions and summarised as conversation prompts — not a diagnosis, safety guarantee or decision about another person.",
   },
 ];
 
 const tracking = [
   {
     icon: Activity,
-    title: "Real-time status",
-    body: "Your dashboard shows whether each journey is pending, in progress, completed or expired.",
+    title: "Private progress checks",
+    body: "Guest journeys include a private owner code so you can return to check whether your partner has started, completed or expired.",
   },
   {
     icon: Timer,
-    title: "Step-by-step progress",
-    body: "The journey tracker shows answered-question progress and the available created, started and completed timestamps.",
+    title: "Optional account tracking",
+    body: "After sharing, you can choose to save and track journeys from an account if you want history, multiple journeys and easier follow-up.",
   },
   {
     icon: Monitor,
-    title: "Polls while active",
-    body: "The tracker refreshes periodically while a journey is open, so progress updates without a manual page reload.",
+    title: "Clear journey states",
+    body: "Saved journey tracking shows pending, in progress, completed or expired states so you know what is happening.",
   },
   {
     icon: ShieldCheck,
-    title: "Authenticated results",
-    body: "Account journey results require an owner session. Optional report sharing is a separate, explicit action.",
+    title: "Owner-controlled results",
+    body: "Results stay behind the private owner code or signed-in owner session. Optional report sharing is a separate, explicit action.",
   },
 ];
 
@@ -113,7 +113,7 @@ const privacy = [
   {
     icon: Lock,
     title: "Owner access checks",
-    body: "Account journeys and results are checked against the signed-in owner on the server and at the database layer.",
+    body: "Saved account journeys and results are checked against the signed-in owner on the server and at the database layer.",
   },
   {
     icon: KeyRound,
@@ -135,7 +135,7 @@ const privacy = [
 const security = [
   {
     icon: Mail,
-    title: "Email-link account access",
+    title: "Email-code account access",
     body: "Signed-in accounts use a private email code. It verifies control of an email inbox, not a person's identity or trustworthiness.",
   },
   {
@@ -209,8 +209,8 @@ function About() {
         >
           RedFlagDaddy replaces guesswork with structure. We help Dominants, submissives, switches
           and the full spectrum of BDSM archetypes assess consent, compatibility, safety practices
-          and potential red flags through role-aware questions, weighted scores and journey
-          tracking.
+          and potential red flags through role-aware questions, weighted scores and optional journey
+          tracking after sharing.
         </motion.p>
       </section>
 
@@ -285,7 +285,7 @@ function About() {
         <SectionHeader
           eyebrow="Journey tracking"
           title="See progress as it happens"
-          sub="You don't send a link and hope. You track every stage with clarity."
+          sub="Start privately first. If you want to keep track, your owner code or account can bring you back."
         />
         <div className="grid md:grid-cols-2 gap-4">
           {tracking.map((t, i) => (
@@ -320,7 +320,7 @@ function About() {
               { label: "Journey created", done: true, time: "2 hours ago" },
               { label: "Invite sent", done: true, time: "2 hours ago" },
               { label: "Partner started", done: true, time: "1 hour ago" },
-              { label: "Assessment completed", done: false, time: "Waiting…" },
+              { label: "Both sides completed", done: false, time: "Waiting…" },
             ].map((step, i) => (
               <div key={step.label} className="flex items-center gap-3">
                 <div
@@ -511,16 +511,10 @@ function About() {
         ) : (
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
-              to="/register"
+              to="/guest"
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30"
             >
-              Create an account <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              to="/guest"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl glass px-5 py-3 text-sm font-medium"
-            >
-              Try as guest
+              Get started <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         )}
