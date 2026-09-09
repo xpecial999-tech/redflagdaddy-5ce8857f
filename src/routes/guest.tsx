@@ -404,7 +404,7 @@ function PartnerLinkView({
           </div>
         </section>
 
-        {ownerCode && (
+        {ownerCode && !claimed && (
           <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/25">
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
               <h2 className="font-display text-lg font-semibold tracking-tight">
@@ -412,15 +412,56 @@ function PartnerLinkView({
               </h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-xs leading-relaxed text-muted-foreground">
                 <li>
-                  Wait for your partner to complete the questionnaire and then check using your code
-                  below.
+                  Enter your email address below and we'll let you know when your partner has
+                  completed the questionnaire.
                 </li>
                 <li>
-                  Enter your email address below and receive a notification when they have completed
-                  the questionnaire.
+                  Then complete your own matching assessment so the summary can compare both
+                  perspectives.
                 </li>
               </ul>
             </div>
+
+            <div>
+              <h2 className="font-display text-lg font-semibold tracking-tight">
+                Save and track this journey
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                Optional: create an account after sharing. This journey will appear on your
+                dashboard, where you can track it, create more, and build custom journeys.
+              </p>
+            </div>
+            <EmailOtpForm
+              mode="register"
+              onAuthenticated={async () => {
+                try {
+                  await claimFn({ data: { ownerCode } });
+                  setClaimed(true);
+                  navigate({ to: "/dashboard" });
+                } catch (error) {
+                  setClaimError(
+                    error instanceof Error ? error.message : "We couldn't save this journey.",
+                  );
+                  throw error;
+                }
+              }}
+            />
+            {claimError && (
+              <p role="alert" className="text-xs text-destructive">
+                {claimError}
+              </p>
+            )}
+
+            <p className="rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs leading-relaxed text-muted-foreground">
+              Rather not register? You can wait for your partner to complete the questionnaire, then
+              come back and check using your private owner code below. We only use your email for
+              account access and journey notifications; no personal profile details are required.
+            </p>
+          </section>
+        )}
+
+        {ownerCode && (
+          <section className="glass rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/15">
             <div className="flex items-start gap-3">
               <KeyRound className="w-5 h-5 text-primary mt-0.5" />
               <div>
@@ -460,40 +501,6 @@ function PartnerLinkView({
                 : "30 days after creation"}
               . The journey and report are then deleted.
             </p>
-          </section>
-        )}
-
-        {ownerCode && !claimed && (
-          <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/25">
-            <div>
-              <h2 className="font-display text-lg font-semibold tracking-tight">
-                Save and track this journey
-              </h2>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                Optional: create an account after sharing. This journey will appear on your
-                dashboard, where you can track it, create more, and build custom journeys.
-              </p>
-            </div>
-            <EmailOtpForm
-              mode="register"
-              onAuthenticated={async () => {
-                try {
-                  await claimFn({ data: { ownerCode } });
-                  setClaimed(true);
-                  navigate({ to: "/dashboard" });
-                } catch (error) {
-                  setClaimError(
-                    error instanceof Error ? error.message : "We couldn't save this journey.",
-                  );
-                  throw error;
-                }
-              }}
-            />
-            {claimError && (
-              <p role="alert" className="text-xs text-destructive">
-                {claimError}
-              </p>
-            )}
           </section>
         )}
       </motion.div>
