@@ -427,11 +427,12 @@ function PartnerLinkView({
 
             <div>
               <h2 className="font-display text-lg font-semibold tracking-tight">
-                Save and track this journey
+                Get notified and keep track
               </h2>
               <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                Optional: create an account after sharing. This journey will appear on your
-                dashboard, where you can track it, create more, and build custom journeys.
+                Add your email after sharing so we can tell you when both assessments are ready to
+                compare. We’ll also save this journey to your dashboard so you can come back easily
+                and create more when you’re ready.
               </p>
             </div>
             <EmailOtpForm
