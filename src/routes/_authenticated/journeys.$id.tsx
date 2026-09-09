@@ -29,7 +29,7 @@ import {
 import {
   getJourneyStatus,
   deleteJourney,
-  createJourney,
+  createSelfAssessmentForJourney,
   renameJourney,
 } from "@/lib/journeys.functions";
 import { oppositeRole, type Role } from "@/lib/roles";
@@ -101,6 +101,7 @@ function JourneyTracker() {
   const { journey, invite, progress, isExpired } = data;
   const effectiveStatus = isExpired && journey.status !== "completed" ? "expired" : journey.status;
   const url = journey.invite_url ?? "";
+  const isOwnerSide = journey.pair_side === "owner";
 
   const steps = buildSteps({
     createdAt: journey.created_at,
@@ -183,7 +184,9 @@ function JourneyTracker() {
             "{journey.title}" is live
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Share the link with your partner, then complete your own side while they answer theirs.
+            {isOwnerSide
+              ? "This is your side of a paired assessment. Complete it so it can sit beside your partner journey."
+              : "Share the link with your partner, then complete your own side while they answer theirs."}
           </p>
         </div>
         <div className="flex justify-center">
@@ -192,7 +195,7 @@ function JourneyTracker() {
 
         <div className="space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Partner progress</span>
+            <span>{isOwnerSide ? "Your progress" : "Partner progress"}</span>
             <span>
               {progress.answered} / {progress.total} answered
             </span>
@@ -208,7 +211,7 @@ function JourneyTracker() {
         </div>
       </motion.section>
 
-      <SelfAssessmentCard journey={journey} />
+      {!isOwnerSide && <SelfAssessmentCard journey={journey} />}
 
       {/* Share & send */}
       <section className="space-y-3">
@@ -451,6 +454,7 @@ function SelfAssessmentCard({
   journey,
 }: {
   journey: {
+    id: string;
     title: string;
     invite_code: string;
     participant_type: string;
@@ -459,7 +463,7 @@ function SelfAssessmentCard({
   };
 }) {
   const navigate = useNavigate();
-  const createFn = useServerFn(createJourney);
+  const createFn = useServerFn(createSelfAssessmentForJourney);
   const suggestedSelfRole: Role = oppositeRole(journey.participant_type);
   const [selfType, setSelfType] = useState<Role | "">(suggestedSelfRole);
 
@@ -467,13 +471,8 @@ function SelfAssessmentCard({
     mutationFn: () =>
       createFn({
         data: {
-          title: `My side of ${journey.title}`,
+          partnerJourneyId: journey.id,
           participantType: selfType as Role,
-          recipientName: null,
-          recipientPhone: null,
-          notes: null,
-          categoryIds: journey.category_ids ?? null,
-          questionLimit: journey.question_limit ?? null,
         },
       }),
     onSuccess: (res) => {

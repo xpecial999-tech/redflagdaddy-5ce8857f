@@ -18,7 +18,9 @@ function Dashboard() {
   });
 
   const journeys = data?.journeys ?? [];
-  const active = journeys.filter((j) => j.status === "pending" || j.status === "in_progress").length;
+  const active = journeys.filter(
+    (j) => j.status === "pending" || j.status === "in_progress",
+  ).length;
   const complete = journeys.filter((j) => j.status === "completed").length;
   const completedJourneys = journeys.filter((j) => j.status === "completed");
   const activeJourneys = journeys.filter((j) => j.status !== "completed");
@@ -30,7 +32,10 @@ function Dashboard() {
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Your compass</p>
           <h1 className="text-3xl font-display font-semibold">Journeys</h1>
         </div>
-        <Link to="/create" className="inline-flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground px-3.5 py-2 text-sm font-medium shadow-lg shadow-primary/30">
+        <Link
+          to="/create"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground px-3.5 py-2 text-sm font-medium shadow-lg shadow-primary/30"
+        >
           <Plus className="w-4 h-4" /> New
         </Link>
       </header>
@@ -43,12 +48,18 @@ function Dashboard() {
         ].map((s) => (
           <div key={s.label} className="glass rounded-2xl p-3 text-center">
             <div className="text-2xl font-display font-semibold">{s.value}</div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {s.label}
+            </div>
           </div>
         ))}
       </section>
 
-      {isLoading && <div className="glass rounded-2xl p-6 text-center text-sm text-muted-foreground">Loading…</div>}
+      {isLoading && (
+        <div className="glass rounded-2xl p-6 text-center text-sm text-muted-foreground">
+          Loading…
+        </div>
+      )}
 
       {!isLoading && journeys.length === 0 && (
         <div className="glass-strong rounded-3xl p-8 text-center space-y-3">
@@ -56,8 +67,13 @@ function Dashboard() {
             <Compass className="w-6 h-6 text-primary" />
           </div>
           <h3 className="font-display text-lg">No journeys yet</h3>
-          <p className="text-sm text-muted-foreground">Create your first assessment to invite your partner.</p>
-          <Link to="/create" className="inline-flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium">
+          <p className="text-sm text-muted-foreground">
+            Create your first assessment to invite your partner.
+          </p>
+          <Link
+            to="/create"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium"
+          >
             <Plus className="w-4 h-4" /> Create journey
           </Link>
         </div>
@@ -69,7 +85,12 @@ function Dashboard() {
             <FileText className="w-3.5 h-3.5" /> Reports
           </h2>
           {completedJourneys.map((j, i) => (
-            <motion.div key={j.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <motion.div
+              key={j.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+            >
               <Link
                 to="/results/$id"
                 params={{ id: j.id }}
@@ -77,13 +98,18 @@ function Dashboard() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-medium truncate">{j.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium truncate">{j.title}</h3>
+                      <PairBadge pairSide={j.pair_side} />
+                    </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       View report
                     </p>
                   </div>
-                  <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">{j.participant_type}</span>
+                  <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">
+                    {j.participant_type}
+                  </span>
                 </div>
               </Link>
             </motion.div>
@@ -95,7 +121,12 @@ function Dashboard() {
         <section className="space-y-3">
           <h2 className="text-xs uppercase tracking-wider text-muted-foreground">In progress</h2>
           {activeJourneys.map((j, i) => (
-            <motion.div key={j.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <motion.div
+              key={j.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+            >
               <Link
                 to="/journeys/$id"
                 params={{ id: j.id }}
@@ -103,7 +134,10 @@ function Dashboard() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-medium truncate">{j.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium truncate">{j.title}</h3>
+                      <PairBadge pairSide={j.pair_side} />
+                    </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
                       <StatusIcon status={j.status} />
                       {j.status.replace("_", " ")}
@@ -111,7 +145,9 @@ function Dashboard() {
                       <span className="font-mono">{j.invite_code}</span>
                     </p>
                   </div>
-                  <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-white/5 text-muted-foreground">{j.participant_type}</span>
+                  <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-white/5 text-muted-foreground">
+                    {j.participant_type}
+                  </span>
                 </div>
               </Link>
             </motion.div>
@@ -119,6 +155,15 @@ function Dashboard() {
         </section>
       )}
     </div>
+  );
+}
+
+function PairBadge({ pairSide }: { pairSide?: string | null }) {
+  if (!pairSide) return null;
+  return (
+    <span className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+      {pairSide === "owner" ? "My side" : "Partner"}
+    </span>
   );
 }
 

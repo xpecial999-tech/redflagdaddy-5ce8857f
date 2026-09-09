@@ -5,6 +5,7 @@ import { generateInviteCode } from "./utils.server";
 import { loadEntitlement, DEFAULT_QUESTION_LIMIT } from "./entitlement.functions";
 import { ALL_ROLES } from "./roles";
 import { buildInviteSms } from "./invite-message";
+import { throwPublicDataError } from "./public-data-error";
 
 const CreateJourneySchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -20,6 +21,11 @@ const CreateJourneySchema = z.object({
   notes: z.string().trim().max(2000).optional().nullable(),
   categoryIds: z.array(z.string().uuid()).max(30).optional().nullable(),
   questionLimit: z.number().int().min(10).max(500).optional().nullable(),
+});
+
+const CreateSelfAssessmentSchema = z.object({
+  partnerJourneyId: z.string().uuid(),
+  participantType: z.enum(ALL_ROLES),
 });
 
 export const createJourney = createServerFn({ method: "POST" })
@@ -134,13 +140,116 @@ export const createJourney = createServerFn({ method: "POST" })
     };
   });
 
+export const createSelfAssessmentForJourney = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => CreateSelfAssessmentSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { assertJourneyCreationAllowed } = await import("./construction-mode.server");
+    await assertJourneyCreationAllowed(userId);
+
+    const { data: partnerJourney, error: partnerError } = await supabaseAdmin
+      .from("journeys")
+      .select("id, title, creator_id, category_ids, question_limit, pair_id")
+      .eq("id", data.partnerJourneyId)
+      .maybeSingle();
+    if (partnerError) throwPublicDataError(partnerError, "load partner journey");
+    if (!partnerJourney || partnerJourney.creator_id !== userId) throw new Error("Not authorized");
+    if (partnerJourney.pair_id) {
+      throw new Error("This journey already has a linked self-assessment.");
+    }
+
+    const ent = await loadEntitlement(userId);
+    if (!ent.canCreateJourney) {
+      throw new Error(
+        `Free plan limit reached (${ent.freeJourneyCap} journeys). Upgrade to create more.`,
+      );
+    }
+
+    const categoryIds = (partnerJourney.category_ids as string[] | null) ?? null;
+    const questionLimit = (partnerJourney.question_limit as number | null) ?? ent.questionLimit;
+    const code = generateInviteCode();
+    const { publicInviteUrl } = await import("./site-url.server");
+    const inviteUrl = publicInviteUrl(code);
+
+    const { data: selfJourney, error: selfError } = await supabaseAdmin
+      .from("journeys")
+      .insert({
+        creator_id: userId,
+        title: `My side of ${partnerJourney.title}`,
+        participant_type: data.participantType,
+        invite_code: code,
+        invite_url: inviteUrl,
+        status: "pending",
+        category_ids: categoryIds,
+        question_limit: questionLimit,
+      })
+      .select(
+        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, category_ids, question_limit",
+      )
+      .single();
+    if (selfError) {
+      console.error("[journey-pair] Self journey creation failed", { code: selfError.code });
+      throw new Error("The self-assessment could not be created. Please try again.");
+    }
+
+    const { error: inviteErr } = await supabaseAdmin.from("invites").insert({
+      journey_id: selfJourney.id,
+      code,
+    });
+    if (inviteErr) {
+      await supabaseAdmin.from("journeys").delete().eq("id", selfJourney.id);
+      console.error("[journey-pair] Self invite creation failed", { code: inviteErr.code });
+      throw new Error("The self-assessment could not be created. Please try again.");
+    }
+
+    const { data: pair, error: pairError } = await (supabaseAdmin as any)
+      .from("journey_pairs")
+      .insert({
+        owner_id: userId,
+        owner_journey_id: selfJourney.id,
+        partner_journey_id: partnerJourney.id,
+        label: partnerJourney.title,
+      })
+      .select("id")
+      .single();
+    if (pairError || !pair) {
+      await supabaseAdmin.from("journeys").delete().eq("id", selfJourney.id);
+      console.error("[journey-pair] Pair creation failed", { code: pairError?.code });
+      throw new Error("The self-assessment could not be linked. Please try again.");
+    }
+
+    const [{ error: selfUpdateError }, { error: partnerUpdateError }] = await Promise.all([
+      (supabaseAdmin as any)
+        .from("journeys")
+        .update({ pair_id: pair.id, pair_side: "owner" })
+        .eq("id", selfJourney.id),
+      (supabaseAdmin as any)
+        .from("journeys")
+        .update({ pair_id: pair.id, pair_side: "partner" })
+        .eq("id", partnerJourney.id),
+    ]);
+    if (selfUpdateError || partnerUpdateError) {
+      await (supabaseAdmin as any).from("journey_pairs").delete().eq("id", pair.id);
+      await supabaseAdmin.from("journeys").delete().eq("id", selfJourney.id);
+      console.error("[journey-pair] Journey pair annotation failed", {
+        self: selfUpdateError?.code,
+        partner: partnerUpdateError?.code,
+      });
+      throw new Error("The self-assessment could not be linked. Please try again.");
+    }
+
+    return { journey: { ...selfJourney, pair_id: pair.id, pair_side: "owner" as const } };
+  });
+
 export const listJourneys = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("journeys")
       .select(
-        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at",
+        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, pair_id, pair_side",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -167,7 +276,7 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
     const { data: journey, error } = await supabase
       .from("journeys")
       .select(
-        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, updated_at, creator_id, category_ids, question_limit",
+        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, updated_at, creator_id, category_ids, question_limit, pair_id, pair_side",
       )
       .eq("id", data.id)
       .maybeSingle();

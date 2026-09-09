@@ -19,7 +19,11 @@ import {
   Zap,
   MessageSquare,
 } from "lucide-react";
-import { createJourney, sendJourneyInvite } from "@/lib/journeys.functions";
+import {
+  createJourney,
+  createSelfAssessmentForJourney,
+  sendJourneyInvite,
+} from "@/lib/journeys.functions";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -289,6 +293,7 @@ function Create() {
         {step === 5 && mutation.data && (
           <SuccessScreen
             key="5"
+            journeyId={mutation.data.journey.id}
             url={mutation.data.journey.invite_url ?? ""}
             code={mutation.data.journey.invite_code}
             title={mutation.data.journey.title}
@@ -391,11 +396,13 @@ function Field({
 }
 
 function SuccessScreen({
+  journeyId,
   url,
   code,
   title,
   partnerType,
 }: {
+  journeyId: string;
   url: string;
   code: string;
   title: string;
@@ -403,7 +410,7 @@ function SuccessScreen({
 }) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
   const navigate = useNavigate();
-  const createFn = useServerFn(createJourney);
+  const createFn = useServerFn(createSelfAssessmentForJourney);
   const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
   const [selfType, setSelfType] = useState<Role | "">(opposite);
 
@@ -411,11 +418,8 @@ function SuccessScreen({
     mutationFn: () =>
       createFn({
         data: {
-          title: "My self-assessment",
+          partnerJourneyId: journeyId,
           participantType: selfType as Role,
-          recipientName: null,
-          notes: null,
-          categoryIds: null,
         },
       }),
     onSuccess: (res) => {
