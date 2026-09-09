@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { RoleSelector } from "@/components/RoleSelector";
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,7 +26,13 @@ import {
   PlayCircle,
   UserCircle2,
 } from "lucide-react";
-import { getJourneyStatus, deleteJourney, renameJourney } from "@/lib/journeys.functions";
+import {
+  getJourneyStatus,
+  deleteJourney,
+  createJourney,
+  renameJourney,
+} from "@/lib/journeys.functions";
+import { oppositeRole, type Role } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/journeys/$id")({
   head: () => ({ meta: [{ title: "Journey — RedFlagDaddy" }] }),
@@ -446,9 +453,33 @@ function SelfAssessmentCard({
   journey: {
     title: string;
     invite_code: string;
+    participant_type: string;
+    category_ids: string[] | null;
+    question_limit: number | null;
   };
 }) {
   const navigate = useNavigate();
+  const createFn = useServerFn(createJourney);
+  const suggestedSelfRole: Role = oppositeRole(journey.participant_type);
+  const [selfType, setSelfType] = useState<Role | "">(suggestedSelfRole);
+
+  const selfAssessment = useMutation({
+    mutationFn: () =>
+      createFn({
+        data: {
+          title: `My side of ${journey.title}`,
+          participantType: selfType as Role,
+          recipientName: null,
+          recipientPhone: null,
+          notes: null,
+          categoryIds: journey.category_ids ?? null,
+          questionLimit: journey.question_limit ?? null,
+        },
+      }),
+    onSuccess: (res) => {
+      navigate({ to: "/assessment/$code", params: { code: res.journey.invite_code } });
+    },
+  });
 
   return (
     <section className="glass-strong rounded-3xl p-6 text-center space-y-4">
@@ -456,17 +487,40 @@ function SelfAssessmentCard({
         <UserCircle2 className="h-5 w-5 text-primary-foreground" />
       </div>
       <div>
-        <h2 className="font-display text-lg font-semibold tracking-tight">Start the assessment</h2>
+        <h2 className="font-display text-lg font-semibold tracking-tight">
+          Take your own assessment too
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Answer your side now while your partner has the link. You can come back here to track
-          progress.
+          Add your perspective now — we’ll compare both sides in the final report.
         </p>
       </div>
+      <div className="text-left">
+        <span className="block text-center text-xs uppercase tracking-wider text-muted-foreground">
+          I am a…
+        </span>
+        <div className="mt-2 max-h-56 overflow-y-auto pr-1">
+          <RoleSelector value={selfType} onChange={setSelfType} />
+        </div>
+      </div>
+      {selfAssessment.error && (
+        <p role="alert" className="text-xs text-destructive">
+          {(selfAssessment.error as Error).message}
+        </p>
+      )}
       <button
-        onClick={() => navigate({ to: "/assessment/$code", params: { code: journey.invite_code } })}
+        onClick={() => selfAssessment.mutate()}
+        disabled={!selfType || selfAssessment.isPending}
         className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
       >
-        Start assessment <ArrowRight className="w-4 h-4" />
+        {selfAssessment.isPending ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" /> Preparing…
+          </>
+        ) : (
+          <>
+            Start my assessment <ArrowRight className="w-4 h-4" />
+          </>
+        )}
       </button>
     </section>
   );

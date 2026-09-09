@@ -27,6 +27,7 @@ export const createJourney = createServerFn({ method: "POST" })
   .validator((data: unknown) => CreateJourneySchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { assertJourneyCreationAllowed } = await import("./construction-mode.server");
     await assertJourneyCreationAllowed(userId);
 
@@ -50,7 +51,7 @@ export const createJourney = createServerFn({ method: "POST" })
     const { publicInviteUrl } = await import("./site-url.server");
     const inviteUrl = publicInviteUrl(code);
 
-    const { data: journey, error } = await supabase
+    const { data: journey, error } = await supabaseAdmin
       .from("journeys")
       .insert({
         creator_id: userId,
@@ -72,12 +73,15 @@ export const createJourney = createServerFn({ method: "POST" })
       throw new Error("The journey could not be created. Please try again.");
     }
 
-    const { error: inviteErr } = await supabase.from("invites").insert({
+    const { error: inviteErr } = await supabaseAdmin.from("invites").insert({
       journey_id: journey.id,
       code,
     });
     if (inviteErr) {
-      const { error: cleanupError } = await supabase.from("journeys").delete().eq("id", journey.id);
+      const { error: cleanupError } = await supabaseAdmin
+        .from("journeys")
+        .delete()
+        .eq("id", journey.id);
       if (cleanupError) {
         console.error("[journey] Incomplete journey cleanup failed", {
           code: cleanupError.code,

@@ -1,4 +1,4 @@
-import { type Role } from "@/lib/roles";
+import { oppositeRole, type Role } from "@/lib/roles";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
@@ -292,6 +292,7 @@ function Create() {
             url={mutation.data.journey.invite_url ?? ""}
             code={mutation.data.journey.invite_code}
             title={mutation.data.journey.title}
+            partnerType={mutation.data.journey.participant_type as Role}
           />
         )}
       </AnimatePresence>
@@ -389,9 +390,38 @@ function Field({
   );
 }
 
-function SuccessScreen({ url, code, title }: { url: string; code: string; title: string }) {
+function SuccessScreen({
+  url,
+  code,
+  title,
+  partnerType,
+}: {
+  url: string;
+  code: string;
+  title: string;
+  partnerType: Role;
+}) {
   const [copied, setCopied] = useState<"url" | "code" | null>(null);
   const navigate = useNavigate();
+  const createFn = useServerFn(createJourney);
+  const opposite: Role | "" = partnerType ? oppositeRole(partnerType) : "";
+  const [selfType, setSelfType] = useState<Role | "">(opposite);
+
+  const selfMutation = useMutation({
+    mutationFn: () =>
+      createFn({
+        data: {
+          title: "My self-assessment",
+          participantType: selfType as Role,
+          recipientName: null,
+          notes: null,
+          categoryIds: null,
+        },
+      }),
+    onSuccess: (res) => {
+      navigate({ to: "/assessment/$code", params: { code: res.journey.invite_code } });
+    },
+  });
 
   const copy = (val: string, kind: "url" | "code") => {
     navigator.clipboard.writeText(val);
@@ -467,18 +497,35 @@ function SuccessScreen({ url, code, title }: { url: string; code: string; title:
         </div>
         <div>
           <h3 className="font-display text-lg font-semibold tracking-tight">
-            Start the assessment
+            Take your own assessment too
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Answer your side now while your partner has the link. You can come back to track
-            progress from your dashboard.
+            Add your perspective — we'll compare both sides in the final report.
           </p>
         </div>
+        <div>
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">I am a…</span>
+          <div className="mt-2 max-h-56 overflow-y-auto pr-1 space-y-3">
+            <RoleSelector value={selfType} onChange={setSelfType} />
+          </div>
+        </div>
+        {selfMutation.error && (
+          <p className="text-xs text-destructive">{(selfMutation.error as Error).message}</p>
+        )}
         <button
-          onClick={() => navigate({ to: "/assessment/$code", params: { code } })}
+          onClick={() => selfMutation.mutate()}
+          disabled={!selfType || selfMutation.isPending}
           className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
         >
-          Start assessment <ArrowRight className="w-4 h-4" />
+          {selfMutation.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" /> Preparing…
+            </>
+          ) : (
+            <>
+              Start my assessment <ArrowRight className="w-4 h-4" />
+            </>
+          )}
         </button>
       </div>
     </motion.div>
