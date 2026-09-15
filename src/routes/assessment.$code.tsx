@@ -21,7 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { EmailOtpForm } from "@/components/EmailOtpForm";
-import { claimAnonymousJourney } from "@/lib/guest.functions";
+import { claimCompletedInviteJourney } from "@/lib/guest.functions";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +57,7 @@ function AssessmentPage() {
   const getFn = useServerFn(getAssessment);
   const saveFn = useServerFn(saveResponse);
   const completeFn = useServerFn(completeAssessment);
-  const claimFn = useServerFn(claimAnonymousJourney);
+  const claimFn = useServerFn(claimCompletedInviteJourney);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["assessment", code],
@@ -228,7 +228,7 @@ function AssessmentPage() {
             emailAutoComplete="off"
             onAuthenticated={async () => {
               try {
-                const result = await claimFn({ data: { ownerCode: code } });
+                const result = await claimFn({ data: { code } });
                 navigate({ to: "/journeys/$id", params: { id: result.journeyId } });
               } catch (error) {
                 setClaimError(

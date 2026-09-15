@@ -99,6 +99,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
   });
 
 const OwnerCodeSchema = z.object({ ownerCode: z.string().trim().min(1).max(64) });
+const InviteCodeSchema = z.object({ code: z.string().trim().min(4).max(64) });
 
 export const claimAnonymousJourney = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -118,6 +119,54 @@ export const claimAnonymousJourney = createServerFn({ method: "POST" })
     }
     if (!journeyId) throw new Error("This journey code is invalid, expired, or already claimed.");
     return { journeyId };
+  });
+
+export const claimCompletedInviteJourney = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => InviteCodeSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const code = data.code.trim().toUpperCase();
+
+    const { data: invite, error: inviteError } = await supabaseAdmin
+      .from("invites")
+      .select("id, journey_id, expires_at, completed_at")
+      .eq("code", code)
+      .maybeSingle();
+    if (inviteError) throwPublicDataError(inviteError, "load completed invite");
+    if (!invite?.completed_at) {
+      throw new Error("This assessment has not been completed yet.");
+    }
+    if (invite.expires_at && new Date(invite.expires_at).getTime() < Date.now()) {
+      throw new Error("This journey code has expired.");
+    }
+
+    const { data: journey, error: journeyError } = await supabaseAdmin
+      .from("journeys")
+      .select("id, creator_id, invite_code")
+      .eq("id", invite.journey_id)
+      .eq("invite_code", code)
+      .maybeSingle();
+    if (journeyError) throwPublicDataError(journeyError, "load completed journey");
+    if (!journey) throw new Error("This journey code is invalid.");
+    if (journey.creator_id) {
+      if (journey.creator_id === context.userId) return { journeyId: journey.id };
+      throw new Error("This journey is already saved to another account.");
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("journeys")
+      .update({
+        creator_id: context.userId,
+        anonymous_no_contact: false,
+        anonymous_owner_code_hash: null,
+        anonymous_owner_expires_at: null,
+      })
+      .eq("id", journey.id)
+      .is("creator_id", null);
+    if (updateError) throwPublicDataError(updateError, "claim completed journey");
+
+    return { journeyId: journey.id };
   });
 
 export const lookupAnonymousJourney = createServerFn({ method: "POST" })
