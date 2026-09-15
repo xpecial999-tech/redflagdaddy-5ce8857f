@@ -194,21 +194,21 @@ function DeskModeOverlay({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#f6f8fb] text-slate-900">
-      <div className="flex h-12 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm">
+    <div className="fixed inset-0 z-[100] bg-[#0b1018] text-slate-100">
+      <div className="flex h-12 items-center justify-between border-b border-slate-800 bg-slate-950 px-4 shadow-sm shadow-black/30">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-emerald-600 text-sm font-bold text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded bg-emerald-500 text-sm font-bold text-slate-950">
             X
           </div>
           <div>
             <p className="text-sm font-semibold leading-none">Quarterly planning workbook</p>
-            <p className="mt-1 text-[11px] text-slate-500">Saved to Business Operations</p>
+            <p className="mt-1 text-[11px] text-slate-400">Saved to Business Operations</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 text-sm font-medium text-slate-200 hover:bg-slate-800"
         >
           <span aria-hidden="true">💼</span>
           Return
@@ -216,20 +216,20 @@ function DeskModeOverlay({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="flex h-[calc(100vh-3rem)] flex-col">
-        <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
-          <span className="rounded bg-white px-2 py-1 shadow-sm">File</span>
-          <span className="rounded bg-white px-2 py-1 shadow-sm">Home</span>
-          <span className="rounded bg-white px-2 py-1 shadow-sm">Insert</span>
-          <span className="rounded bg-white px-2 py-1 shadow-sm">Data</span>
-          <span className="ml-auto hidden text-slate-400 sm:inline">100% · Editing</span>
+        <div className="flex items-center gap-2 border-b border-slate-800 bg-slate-900 px-4 py-2 text-xs text-slate-300">
+          <span className="rounded bg-slate-800 px-2 py-1 shadow-sm shadow-black/20">File</span>
+          <span className="rounded bg-slate-800 px-2 py-1 shadow-sm shadow-black/20">Home</span>
+          <span className="rounded bg-slate-800 px-2 py-1 shadow-sm shadow-black/20">Insert</span>
+          <span className="rounded bg-slate-800 px-2 py-1 shadow-sm shadow-black/20">Data</span>
+          <span className="ml-auto hidden text-slate-500 sm:inline">100% · Editing</span>
         </div>
 
         <div className="flex-1 overflow-hidden p-3 sm:p-5">
-          <div className="h-full overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm">
-            <div className="grid grid-cols-[42px_repeat(8,minmax(110px,1fr))] border-b border-slate-200 bg-slate-100 text-center text-xs font-medium text-slate-500">
-              <div className="border-r border-slate-200 py-2" />
+          <div className="h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950 shadow-sm shadow-black/30">
+            <div className="grid grid-cols-[42px_repeat(8,minmax(110px,1fr))] border-b border-slate-800 bg-slate-900 text-center text-xs font-medium text-slate-400">
+              <div className="border-r border-slate-800 py-2" />
               {columns.map((column) => (
-                <div key={column} className="border-r border-slate-200 py-2 last:border-r-0">
+                <div key={column} className="border-r border-slate-800 py-2 last:border-r-0">
                   {column}
                 </div>
               ))}
@@ -237,20 +237,20 @@ function DeskModeOverlay({ onClose }: { onClose: () => void }) {
             <div className="grid grid-cols-[42px_repeat(8,minmax(110px,1fr))] text-xs">
               {rows.map((row, rowIndex) => (
                 <div key={rowIndex} className="contents">
-                  <div className="border-b border-r border-slate-200 bg-slate-50 py-3 text-center text-slate-400">
+                  <div className="border-b border-r border-slate-800 bg-slate-900 py-3 text-center text-slate-500">
                     {rowIndex + 1}
                   </div>
                   {row.map((cell, cellIndex) => (
                     <div
                       key={`${rowIndex}-${cellIndex}`}
-                      className={`truncate border-b border-r border-slate-200 px-3 py-3 last:border-r-0 ${
+                      className={`truncate border-b border-r border-slate-800 px-3 py-3 last:border-r-0 ${
                         rowIndex === 0
-                          ? "bg-emerald-50 font-semibold text-emerald-900"
+                          ? "bg-emerald-500/10 font-semibold text-emerald-300"
                           : cell === "Complete"
-                            ? "text-emerald-700"
+                            ? "text-emerald-300"
                             : cell === "Blocked"
-                              ? "text-amber-700"
-                              : "text-slate-700"
+                              ? "text-amber-300"
+                              : "text-slate-300"
                       }`}
                     >
                       {cell}
@@ -260,13 +260,13 @@ function DeskModeOverlay({ onClose }: { onClose: () => void }) {
               ))}
               {Array.from({ length: 14 }, (_, index) => index + rows.length + 1).map((row) => (
                 <div key={row} className="contents">
-                  <div className="border-b border-r border-slate-200 bg-slate-50 py-3 text-center text-slate-400">
+                  <div className="border-b border-r border-slate-800 bg-slate-900 py-3 text-center text-slate-500">
                     {row}
                   </div>
                   {columns.map((column) => (
                     <div
                       key={`${row}-${column}`}
-                      className="border-b border-r border-slate-200 px-3 py-3 last:border-r-0"
+                      className="border-b border-r border-slate-800 px-3 py-3 last:border-r-0"
                     />
                   ))}
                 </div>
@@ -275,8 +275,8 @@ function DeskModeOverlay({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 border-t border-slate-200 bg-white px-4 py-2 text-xs text-slate-500">
-          <span className="rounded-t-md border border-b-0 border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-800">
+        <div className="flex items-center gap-2 border-t border-slate-800 bg-slate-950 px-4 py-2 text-xs text-slate-400">
+          <span className="rounded-t-md border border-b-0 border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-emerald-300">
             Planning
           </span>
           <span className="px-3 py-1.5">Budget</span>
