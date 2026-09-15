@@ -70,6 +70,7 @@ function AssessmentPage() {
 
   const [submitted, setSubmitted] = useState(false);
   const hydrated = useRef(false);
+  const saveSequence = useRef(0);
 
   // Hydrate answers when data first loads
   useEffect(() => {
@@ -123,17 +124,27 @@ function AssessmentPage() {
 
   function recordAnswer(answer: unknown, options?: { autoAdvance?: boolean }) {
     if (!current) return;
-    setAnswers((prev) => ({ ...prev, [current.id]: answer }));
-    setSavingId(current.id);
-    saveMutation.mutate(
-      { questionId: current.id, answer },
-      { onSettled: () => setSavingId(null) },
-    );
-    if (options?.autoAdvance && cursor < total - 1) {
-      window.setTimeout(() => {
-        setCursor((prev) => Math.min(prev + 1, total - 1));
-      }, 220);
-    }
+    const questionId = current.id;
+    const questionIndex = cursor;
+    const sequence = saveSequence.current + 1;
+    saveSequence.current = sequence;
+
+    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+    setSavingId(questionId);
+
+    saveMutation
+      .mutateAsync({ questionId, answer })
+      .then(() => {
+        if (options?.autoAdvance && sequence === saveSequence.current && questionIndex < total - 1) {
+          setCursor((prev) => (prev === questionIndex ? Math.min(prev + 1, total - 1) : prev));
+        }
+      })
+      .catch(() => {
+        // Keep the user on the current question so they can retry the answer.
+      })
+      .finally(() => {
+        if (sequence === saveSequence.current) setSavingId(null);
+      });
   }
 
   function goNext() {
@@ -145,14 +156,54 @@ function AssessmentPage() {
 
   if (submitted) {
     return (
-      <div className="glass rounded-2xl p-8 max-w-xl mx-auto text-center space-y-3">
-        <h1 className="text-2xl font-display font-semibold">Assessment complete</h1>
-        <p className="text-sm text-muted-foreground">
+      <motion.div
+        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="glass-strong rounded-3xl p-8 sm:p-10 max-w-xl mx-auto text-center space-y-4 overflow-hidden relative"
+      >
+        <motion.div
+          aria-hidden="true"
+          initial={{ scale: 0.2, opacity: 0 }}
+          animate={{ scale: [0.2, 1.12, 1], opacity: 1 }}
+          transition={{ duration: 0.55, ease: "easeOut" }}
+          className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-aurora-1 to-aurora-2 shadow-[0_0_48px_rgba(236,72,153,0.45)]"
+        >
+          <CheckCircle2 className="h-10 w-10 text-primary-foreground" />
+        </motion.div>
+        <motion.div
+          aria-hidden="true"
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1.35, opacity: [0, 0.35, 0] }}
+          transition={{ duration: 1.1, delay: 0.15, ease: "easeOut" }}
+          className="absolute left-1/2 top-10 h-28 w-28 -translate-x-1/2 rounded-full border border-primary/40"
+        />
+        <motion.h1
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.28 }}
+          className="text-3xl sm:text-4xl font-display font-semibold tracking-tight"
+        >
+          Assessment complete
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.38 }}
+          className="text-sm sm:text-base text-muted-foreground leading-relaxed"
+        >
           Thank you. Your answers are saved and the report is being generated — it will be shared with
           the person who invited you.
-        </p>
-        <p className="text-xs text-muted-foreground">You can safely close this page.</p>
-      </div>
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.35, delay: 0.55 }}
+          className="text-xs text-muted-foreground"
+        >
+          You can safely close this page.
+        </motion.p>
+      </motion.div>
     );
   }
 
