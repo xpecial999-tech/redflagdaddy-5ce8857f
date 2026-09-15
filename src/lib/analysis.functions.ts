@@ -595,7 +595,7 @@ export const getSharedReport = createServerFn({ method: "POST" })
 
     const { data: result, error } = await supabaseAdmin
       .from("results")
-      .select("*, journeys!inner(title, participant_type)")
+      .select("*, journeys!inner(title, participant_type, pair_id)")
       .eq("share_token", data.token)
       .eq("share_enabled", true)
       .maybeSingle();
@@ -610,7 +610,18 @@ export const getSharedReport = createServerFn({ method: "POST" })
       try { analysis = parseAnalysisPayload(result.ai_summary); } catch { analysis = null; }
     }
 
-    const j = (result as { journeys: { title: string; participant_type: string } }).journeys;
+    const j = (result as { journeys: { title: string; participant_type: string; pair_id: string | null } }).journeys;
+    let pairAnalysis: PairAnalysisPayload | null = null;
+    if (j.pair_id) {
+      const { data: pair } = await (supabaseAdmin as any)
+        .from("journey_pairs")
+        .select("comparison_summary")
+        .eq("id", j.pair_id)
+        .maybeSingle();
+      if (pair?.comparison_summary) {
+        try { pairAnalysis = parsePairAnalysisPayload(pair.comparison_summary); } catch { pairAnalysis = null; }
+      }
+    }
     return {
       journey: { title: j.title, participant_type: j.participant_type },
       result: {
@@ -621,5 +632,6 @@ export const getSharedReport = createServerFn({ method: "POST" })
         experience_score: result.experience_score,
       },
       analysis,
+      pairAnalysis,
     };
   });

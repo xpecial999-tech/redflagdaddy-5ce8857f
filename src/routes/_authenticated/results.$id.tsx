@@ -97,6 +97,7 @@ function ResultsPage() {
     participantType: journey?.participant_type ?? "",
     scores,
     analysis,
+    pairAnalysis,
   } : null;
 
   const exportMarkdown = (mode: "full" | "topics") => {

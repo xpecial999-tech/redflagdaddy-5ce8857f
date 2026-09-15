@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { getSharedReport } from "@/lib/analysis.functions";
+import { PairComparisonView } from "@/components/PairComparisonView";
 import { ReportView } from "@/components/ReportView";
 
 export const Route = createFileRoute("/report/$token")({
@@ -47,7 +48,7 @@ function SharedReportPage() {
     );
   }
 
-  const { journey, result, analysis } = q.data!;
+  const { journey, result, analysis, pairAnalysis } = q.data!;
   const scores = {
     safety: Number(result.safety_score ?? 0),
     compatibility: Number(result.compatibility_score ?? 0),
@@ -63,6 +64,7 @@ function SharedReportPage() {
           <Download className="h-4 w-4 mr-1.5" /> Download PDF
         </Button>
       </div>
+      {pairAnalysis && <PairComparisonView analysis={pairAnalysis} />}
       <ReportView
         title={journey.title}
         participantType={journey.participant_type}

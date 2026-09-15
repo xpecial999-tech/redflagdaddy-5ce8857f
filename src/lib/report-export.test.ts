@@ -37,6 +37,43 @@ const input = {
   analysis,
 };
 
+const pairAnalysis = {
+  kind: "pair_comparison" as const,
+  owner: {
+    journeyId: "owner",
+    title: "My side",
+    role: "Dominant",
+    scores: { safety: 80, compatibility: 72, red: 15, green: 85, experience: 55 },
+  },
+  partner: {
+    journeyId: "partner",
+    title: "Partner side",
+    role: "submissive",
+    scores: { safety: 48, compatibility: 68, red: 62, green: 74, experience: 30 },
+  },
+  overall: {
+    score: 58,
+    label: "Needs discussion" as const,
+    summary: "Talk before escalating.",
+  },
+  score_deltas: { safety: 32, compatibility: 4, red: 47, green: 11, experience: 25 },
+  shared_strengths: ["Both completed the assessment."],
+  discussion_points: ["Compare safety expectations."],
+  watchouts: ["One side has elevated red flags."],
+  question_insights: [
+    {
+      title: "How do you respond when a safeword is used?",
+      summary: "Meaningful difference on a critical item.",
+      owner: "Stop immediately.",
+      partner: "I worry it may disappoint them.",
+      prompt: "Discuss safeword expectations directly.",
+      severity: "concern" as const,
+    },
+  ],
+  next_steps: ["Confirm hard limits."],
+  generated_at: "2026-09-15T12:00:00.000Z",
+};
+
 describe("privacy-first report exports", () => {
   it("builds a full private report with bounded scores and a safety boundary", () => {
     const markdown = buildFullReportMarkdown(input);
@@ -101,5 +138,23 @@ describe("privacy-first report exports", () => {
     expect(JSON.stringify(report)).not.toContain(analysis.generated_at);
     expect(report.token).toBeUndefined();
     expect(report.shareUrl).toBeUndefined();
+  });
+
+  it("includes matched report summaries in private exports without raw paired answers", () => {
+    const pairedInput = { ...input, pairAnalysis };
+    const markdown = buildFullReportMarkdown(pairedInput);
+    expect(markdown).toContain("## Matched report");
+    expect(markdown).toContain("Needs discussion — 58 / 100 alignment");
+    expect(markdown).toContain("Discuss safeword expectations directly");
+    expect(markdown).not.toContain("Stop immediately.");
+    expect(markdown).not.toContain("I worry it may disappoint them.");
+
+    const report = JSON.parse(buildPrivateReportJson(pairedInput));
+    expect(report.pairComparison.alignmentScore).toBe(58);
+    expect(report.pairComparison.questionInsights[0]).toMatchObject({
+      severity: "concern",
+      prompt: "Discuss safeword expectations directly.",
+    });
+    expect(JSON.stringify(report)).not.toContain("Stop immediately.");
   });
 });

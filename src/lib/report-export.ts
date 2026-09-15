@@ -1,4 +1,5 @@
 import type { AnalysisPayload, AnalysisSection } from "@/lib/analysis.functions";
+import type { PairAnalysisPayload } from "@/lib/pair-analysis";
 
 export type ReportScores = {
   safety: number;
@@ -13,6 +14,7 @@ export type ReportExportInput = {
   participantType: string;
   scores: ReportScores;
   analysis: AnalysisPayload;
+  pairAnalysis?: PairAnalysisPayload | null;
 };
 
 export type PrivateReportJsonV1 = {
@@ -39,6 +41,22 @@ export type PrivateReportJsonV1 = {
     concerns: string[];
   }>;
   overallNote: string;
+  pairComparison?: {
+    alignmentScore: number;
+    label: string;
+    summary: string;
+    scoreDeltas: PairAnalysisPayload["score_deltas"];
+    sharedStrengths: string[];
+    discussionPoints: string[];
+    watchouts: string[];
+    questionInsights: Array<{
+      title: string;
+      summary: string;
+      severity: string;
+      prompt: string;
+    }>;
+    nextSteps: string[];
+  };
   disclaimer: string;
 };
 
@@ -171,6 +189,26 @@ export function buildPrivateReportJson(input: ReportExportInput): string {
     },
     sections,
     overallNote: String(input.analysis.overall_note ?? "").trim(),
+    ...(input.pairAnalysis
+      ? {
+          pairComparison: {
+            alignmentScore: score(input.pairAnalysis.overall.score),
+            label: String(input.pairAnalysis.overall.label ?? "").trim(),
+            summary: String(input.pairAnalysis.overall.summary ?? "").trim(),
+            scoreDeltas: input.pairAnalysis.score_deltas,
+            sharedStrengths: cleanArray(input.pairAnalysis.shared_strengths),
+            discussionPoints: cleanArray(input.pairAnalysis.discussion_points),
+            watchouts: cleanArray(input.pairAnalysis.watchouts),
+            questionInsights: input.pairAnalysis.question_insights.map((item) => ({
+              title: String(item.title ?? "").trim(),
+              summary: String(item.summary ?? "").trim(),
+              severity: String(item.severity ?? "").trim(),
+              prompt: String(item.prompt ?? "").trim(),
+            })),
+            nextSteps: cleanArray(input.pairAnalysis.next_steps),
+          },
+        }
+      : {}),
     disclaimer: DISCLAIMER,
   };
   return `${JSON.stringify(report, null, 2)}\n`;
@@ -205,6 +243,10 @@ export function buildFullReportMarkdown(input: ReportExportInput): string {
     ...bullets("Concerns", input.analysis.dynamic_readiness.concerns ?? []),
   ];
 
+  if (input.pairAnalysis) {
+    lines.push(...pairComparisonMarkdown(input.pairAnalysis));
+  }
+
   for (const [key, title] of SECTION_ORDER) {
     const value = input.analysis[key];
     if (typeof value === "object" && value && "summary" in value) {
@@ -225,6 +267,42 @@ export function buildFullReportMarkdown(input: ReportExportInput): string {
   return lines.join("\n");
 }
 
+function pairComparisonMarkdown(pair: PairAnalysisPayload): string[] {
+  return [
+    "## Matched report",
+    "",
+    `**${inline(pair.overall.label)} — ${score(pair.overall.score)} / 100 alignment**`,
+    "",
+    inline(pair.overall.summary),
+    "",
+    `**Your side:** ${inline(pair.owner.title)} (${inline(pair.owner.role)})`,
+    `**Partner side:** ${inline(pair.partner.title)} (${inline(pair.partner.role)})`,
+    "",
+    "### Score differences",
+    "",
+    `- Safety gap: ${score(pair.score_deltas.safety)} points`,
+    `- Compatibility gap: ${score(pair.score_deltas.compatibility)} points`,
+    `- Green flags gap: ${score(pair.score_deltas.green)} points`,
+    `- Red flags gap: ${score(pair.score_deltas.red)} points`,
+    `- Experience gap: ${score(pair.score_deltas.experience)} points`,
+    "",
+    ...bullets("Shared strengths", pair.shared_strengths),
+    ...bullets("Discussion points", pair.discussion_points),
+    ...bullets("Watchouts", pair.watchouts),
+    ...(pair.question_insights.length
+      ? [
+          "### Question-level comparison highlights",
+          "",
+          ...pair.question_insights.flatMap((item) => [
+            `- **${inline(item.title)}** (${inline(item.severity)}): ${inline(item.summary)} ${inline(item.prompt)}`,
+          ]),
+          "",
+        ]
+      : []),
+    ...bullets("Next steps", pair.next_steps),
+  ];
+}
+
 export function buildConversationTopicsMarkdown(input: ReportExportInput): string {
   const lines = [
     "# Private conversation topics",
@@ -234,6 +312,20 @@ export function buildConversationTopicsMarkdown(input: ReportExportInput): strin
   ];
 
   let topicCount = 0;
+  if (input.pairAnalysis) {
+    const pairTopics = [
+      ...input.pairAnalysis.watchouts,
+      ...input.pairAnalysis.discussion_points,
+      ...input.pairAnalysis.question_insights
+        .filter((item) => item.severity !== "strength")
+        .map((item) => item.prompt),
+    ].filter((item, index, all) => item.trim() && all.indexOf(item) === index);
+    if (pairTopics.length > 0) {
+      topicCount += pairTopics.length;
+      lines.push("## Matched report", "");
+      lines.push(...pairTopics.map((topic) => `- [ ] ${inline(topic)}`), "");
+    }
+  }
   for (const [key, fallbackTitle] of SECTION_ORDER) {
     const value = input.analysis[key];
     if (typeof value !== "object" || !value || !("summary" in value)) continue;
@@ -304,6 +396,26 @@ export function buildConversationPlanMarkdown(input: ReportExportInput): string 
 
   let topicCount = 0;
   const seen = new Set<string>();
+  if (input.pairAnalysis) {
+    const pairTopics = [
+      ...input.pairAnalysis.watchouts,
+      ...input.pairAnalysis.discussion_points,
+      ...input.pairAnalysis.question_insights
+        .filter((item) => item.severity !== "strength")
+        .map((item) => item.prompt),
+    ]
+      .map((item) => item.trim())
+      .filter((item, index, all) => item && all.indexOf(item) === index && !seen.has(item));
+    if (pairTopics.length > 0) {
+      lines.push("### Matched report", "");
+      for (const topic of pairTopics) {
+        seen.add(topic);
+        topicCount += 1;
+        lines.push(`- [ ] ${inline(topic)}`);
+      }
+      lines.push("");
+    }
+  }
   for (const [key, fallbackTitle] of SECTION_ORDER) {
     const value = input.analysis[key];
     if (typeof value !== "object" || !value || !("summary" in value)) continue;
