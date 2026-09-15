@@ -179,14 +179,11 @@ export const lookupAnonymousJourney = createServerFn({ method: "POST" })
     }
     if (!analysis) {
       try {
-        const { isAiAnalysisEnabled } = await import("./ai-analysis-config");
-        if (isAiAnalysisEnabled()) {
-          const { runAnalysisInternal } = await import("./analysis.functions");
-          const generated = await runAnalysisInternal(journey.id);
-          analysis = generated.analysis;
-        }
+        const { buildDeterministicAnalysisInternal } = await import("./analysis.functions");
+        const generated = await buildDeterministicAnalysisInternal(journey.id);
+        analysis = generated.analysis;
       } catch (error) {
-        console.error("[anonymous-lookup] AI analysis generation failed", {
+        console.error("[anonymous-lookup] deterministic analysis generation failed", {
           journeyId: journey.id,
           error,
         });

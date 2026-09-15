@@ -379,6 +379,13 @@ export const completeAssessment = createServerFn({ method: "POST" })
     );
     if (resultError) throwPublicDataError(resultError, "save assessment result");
 
+    try {
+      const { buildDeterministicAnalysisInternal } = await import("./analysis.functions");
+      await buildDeterministicAnalysisInternal(journey.id);
+    } catch (e) {
+      console.error("Deterministic analysis failed:", e);
+    }
+
     const { error: journeyError } = await supabaseAdmin
       .from("journeys")
       .update({ status: "completed" })
@@ -396,8 +403,8 @@ export const completeAssessment = createServerFn({ method: "POST" })
     if (inviteError) throwPublicDataError(inviteError, "complete assessment invite");
     if (!completedInvite) throw new Error("This invite has already been completed.");
 
-    // Best-effort AI analysis. Processing is default-off until the owner has
-    // approved the external processor and explicitly enables it.
+    // Best-effort AI polish. A deterministic structured report is already saved
+    // above, so external processing must never block report availability.
     try {
       await runWhenAiAnalysisEnabled(async () => {
         const { runAnalysisInternal } = await import("./analysis.functions");

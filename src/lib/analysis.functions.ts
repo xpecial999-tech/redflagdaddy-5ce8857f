@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isAiAnalysisEnabled } from "@/lib/ai-analysis-config";
 import { callStructuredAi, type StructuredAiTool } from "@/lib/ai-provider";
+import { buildDeterministicAnalysis } from "@/lib/deterministic-analysis";
 import { z } from "zod";
 
 const IdSchema = z.object({ journeyId: z.string().uuid() });
@@ -101,7 +102,7 @@ type ScoreBundle = {
   experience_score: number;
 };
 
-async function buildAnswerDigest(
+export async function buildAnswerDigest(
   supabaseAdmin: import("@supabase/supabase-js").SupabaseClient,
   journeyId: string,
 ) {
@@ -138,6 +139,41 @@ async function buildAnswerDigest(
     byCat[k].topRisk = byCat[k].topRisk.slice(0, 6);
   }
   return byCat;
+}
+
+async function loadScoreBundle(
+  supabaseAdmin: import("@supabase/supabase-js").SupabaseClient,
+  journeyId: string,
+): Promise<ScoreBundle> {
+  const { data: result, error: rErr } = await supabaseAdmin
+    .from("results")
+    .select("*")
+    .eq("journey_id", journeyId)
+    .maybeSingle();
+  if (rErr) throw new Error(rErr.message);
+  if (!result) throw new Error("No results yet for this journey.");
+
+  return {
+    safety_score: Number(result.safety_score) || 0,
+    compatibility_score: Number(result.compatibility_score) || 0,
+    red_flag_score: Number(result.red_flag_score) || 0,
+    green_flag_score: Number(result.green_flag_score) || 0,
+    experience_score: Number(result.experience_score) || 0,
+  };
+}
+
+export async function buildDeterministicAnalysisInternal(journeyId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const scores = await loadScoreBundle(supabaseAdmin, journeyId);
+  const digest = await buildAnswerDigest(supabaseAdmin, journeyId);
+  const analysis = buildDeterministicAnalysis(scores, digest);
+
+  await supabaseAdmin
+    .from("results")
+    .update({ ai_summary: JSON.stringify(analysis) })
+    .eq("journey_id", journeyId);
+
+  return { ok: true as const, analysis };
 }
 
 async function callGateway(scores: ScoreBundle, digest: unknown): Promise<AnalysisPayload> {
@@ -227,22 +263,7 @@ export async function runAnalysisInternal(journeyId: string) {
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const { data: result, error: rErr } = await supabaseAdmin
-    .from("results")
-    .select("*")
-    .eq("journey_id", journeyId)
-    .maybeSingle();
-  if (rErr) throw new Error(rErr.message);
-  if (!result) throw new Error("No results yet for this journey.");
-
-  const scores: ScoreBundle = {
-    safety_score: Number(result.safety_score) || 0,
-    compatibility_score: Number(result.compatibility_score) || 0,
-    red_flag_score: Number(result.red_flag_score) || 0,
-    green_flag_score: Number(result.green_flag_score) || 0,
-    experience_score: Number(result.experience_score) || 0,
-  };
-
+  const scores = await loadScoreBundle(supabaseAdmin, journeyId);
   const digest = await buildAnswerDigest(supabaseAdmin, journeyId);
   const analysis = await callGateway(scores, digest);
 
