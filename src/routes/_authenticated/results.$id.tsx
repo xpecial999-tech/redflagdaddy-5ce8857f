@@ -1,23 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarInviteDialog } from "@/components/CalendarInviteDialog";
-import { SelectiveReportExportDialog } from "@/components/SelectiveReportExportDialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Loader2, Download, Share2, Link2, Check, Lock, FileText, MessageSquare, FileJson, ChevronDown, ClipboardCheck } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2, Download, Lock } from "lucide-react";
 import {
   getResults,
   runAnalysis,
-  toggleShareReport,
 } from "@/lib/analysis.functions";
 import { getEntitlement } from "@/lib/entitlement.functions";
 import { PairComparisonView } from "@/components/PairComparisonView";
 import { ReportView } from "@/components/ReportView";
-import { buildConversationPlanMarkdown, buildConversationTopicsMarkdown, buildFullReportMarkdown, buildPrivateReportJson, downloadJson, downloadMarkdown, safeExportFilename, safeReportFilename } from "@/lib/report-export";
 
 export const Route = createFileRoute("/_authenticated/results/$id")({
   component: ResultsPage,
@@ -37,10 +30,7 @@ function ResultsPage() {
   const { id } = Route.useParams();
   const fetchResults = useServerFn(getResults);
   const runAi = useServerFn(runAnalysis);
-  const toggleShare = useServerFn(toggleShareReport);
   const entFn = useServerFn(getEntitlement);
-  const [copied, setCopied] = useState(false);
-  const [selectiveExportOpen, setSelectiveExportOpen] = useState(false);
 
   const q = useQuery({
     queryKey: ["results", id],
@@ -50,12 +40,6 @@ function ResultsPage() {
 
   const m = useMutation({
     mutationFn: () => runAi({ data: { journeyId: id } }),
-    onSuccess: () => q.refetch(),
-  });
-
-  const shareMut = useMutation({
-    mutationFn: (enabled: boolean) =>
-      toggleShare({ data: { journeyId: id, enabled } }),
     onSuccess: () => q.refetch(),
   });
 
@@ -70,7 +54,7 @@ function ResultsPage() {
     return <p className="text-destructive">{(q.error as Error).message}</p>;
   }
 
-  const { result, analysis, analysisAvailable, journey, share, pairAnalysis } = q.data!;
+  const { result, analysis, analysisAvailable, journey, pairAnalysis } = q.data!;
   const scores = {
     safety: Number(result?.safety_score ?? 0),
     compatibility: Number(result?.compatibility_score ?? 0),
@@ -79,142 +63,22 @@ function ResultsPage() {
     experience: Number(result?.experience_score ?? 0),
   };
 
-  const shareUrl =
-    share?.enabled && share.token
-      ? `${typeof window !== "undefined" ? window.location.origin : ""}/report/${share.token}`
-      : null;
-
-  const copyShare = async () => {
-    if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    toast.success("Share link copied");
-    setTimeout(() => setCopied(false), 1500);
-  };
-
-  const exportInput = analysis ? {
-    title: journey?.title ?? "Journey",
-    participantType: journey?.participant_type ?? "",
-    scores,
-    analysis,
-    pairAnalysis,
-  } : null;
-
-  const exportMarkdown = (mode: "full" | "topics") => {
-    if (!exportInput) return;
-    const topicsOnly = mode === "topics";
-    downloadMarkdown(
-      topicsOnly
-        ? "conversation-topics.md"
-        : safeReportFilename(exportInput.title, "private-report"),
-      topicsOnly ? buildConversationTopicsMarkdown(exportInput) : buildFullReportMarkdown(exportInput),
-    );
-    toast.success(
-      topicsOnly ? "Conversation topics saved to this device" : "Private report saved to this device",
-      { description: "RedFlagDaddy does not upload or retain this export." },
-    );
-  };
-
-  const exportJson = () => {
-    if (!exportInput) return;
-    downloadJson(
-      safeExportFilename(exportInput.title, "private-report", "json"),
-      buildPrivateReportJson(exportInput),
-    );
-    toast.success("Private JSON report saved to this device", {
-      description: "RedFlagDaddy does not upload or retain this export.",
-    });
-  };
-
   return (
     <div className="space-y-6">
       {/* Action bar */}
       <div className="flex flex-wrap gap-2 justify-end no-print">
         {analysis && ent.data?.canDownloadReport && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-1.5" /> Export
-                <ChevronDown className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Private exports</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => window.print()}>
-                <Download /> Save or print PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => exportMarkdown("full")}>
-                <FileText /> Complete Markdown
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => exportMarkdown("topics")}>
-                <MessageSquare /> Topics-only Markdown
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => {
-                  if (!exportInput) return;
-                  downloadMarkdown(
-                    "conversation-plan.md",
-                    buildConversationPlanMarkdown(exportInput),
-                  );
-                  toast.success("Private conversation plan saved", {
-                    description: "This is a preparation aid, not an agreement or proof of consent.",
-                  });
-                }}
-              >
-                <ClipboardCheck /> Conversation plan
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={exportJson}>
-                <FileJson /> Versioned JSON
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => setSelectiveExportOpen(true)}>
-                <FileText /> Choose dimensions…
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-        {exportInput && (
-          <SelectiveReportExportDialog
-            input={exportInput}
-            open={selectiveExportOpen}
-            onOpenChange={setSelectiveExportOpen}
-          />
-        )}
-        {analysis && ent.data?.canDownloadReport && <CalendarInviteDialog analysis={analysis} />}
-        {analysis && ent.data?.canDownloadReport && (
-          <Button
-            variant={share?.enabled ? "secondary" : "outline"}
-            size="sm"
-            onClick={() => shareMut.mutate(!share?.enabled)}
-            disabled={shareMut.isPending}
-          >
-            <Share2 className="h-4 w-4 mr-1.5" />
-            {share?.enabled ? "Sharing on" : "Enable share link"}
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Download className="h-4 w-4 mr-1.5" />
+            Save / print PDF
           </Button>
         )}
         {analysis && ent.data && !ent.data.canDownloadReport && (
           <Link to="/upgrade" className="inline-flex items-center text-xs rounded-md bg-primary/15 text-primary px-3 py-1.5 font-medium">
-            <Lock className="h-3.5 w-3.5 mr-1.5" /> Upgrade to download / share
+            <Lock className="h-3.5 w-3.5 mr-1.5" /> Upgrade to download PDF
           </Link>
         )}
-        {shareUrl && ent.data?.canDownloadReport && (
-          <Button variant="outline" size="sm" onClick={copyShare}>
-            {copied ? (
-              <Check className="h-4 w-4 mr-1.5" />
-            ) : (
-              <Link2 className="h-4 w-4 mr-1.5" />
-            )}
-            Copy link
-          </Button>
-        )}
       </div>
-
-      {shareUrl && (
-        <div className="glass rounded-xl p-3 text-xs text-muted-foreground break-all no-print">
-          Public link: <span className="font-mono text-foreground">{shareUrl}</span>
-        </div>
-      )}
 
       {!analysis && analysisAvailable && (
         <Card className="no-print">
