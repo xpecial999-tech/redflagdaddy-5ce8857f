@@ -131,6 +131,9 @@ const PairAnalysisSchema = z.object({
       partner: z.string(),
       prompt: z.string(),
       severity: z.enum(["strength", "watch", "concern"]),
+      dimension: z
+        .enum(["safety", "consent", "communication", "compatibility", "green_flags", "red_flags", "experience"])
+        .optional(),
     }),
   ),
   next_steps: z.array(z.string()),

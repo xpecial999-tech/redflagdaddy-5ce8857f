@@ -26,6 +26,7 @@ export type PairInsight = {
   partner: string;
   prompt: string;
   severity: "strength" | "watch" | "concern";
+  dimension?: "safety" | "consent" | "communication" | "compatibility" | "green_flags" | "red_flags" | "experience";
 };
 
 export type PairAnalysisPayload = {
@@ -142,6 +143,7 @@ export function buildPairAnalysis(input: PairInput): PairAnalysisPayload {
         partner: answerText(match.partnerAnswer),
         prompt: copy.prompt,
         severity,
+        dimension: copy.dimension,
         priority: pairInsightPriority({
           category: match.category,
           risk: match.risk,
@@ -166,7 +168,16 @@ export function buildPairAnalysis(input: PairInput): PairAnalysisPayload {
     ...questionInsights.filter((item) => item.severity !== "strength").slice(0, 3).map((item) => item.prompt),
   ];
 
+  const hasBlockingConcern = questionInsights.some(
+    (item) =>
+      item.severity === "concern" &&
+      (item.dimension === "consent" || item.dimension === "safety" || item.dimension === "red_flags"),
+  );
+
   const watchouts = [
+    ...(hasBlockingConcern
+      ? ["Blocking consent, safety or red-flag conflicts should be resolved before any escalation."]
+      : []),
     ...(highestRed >= 60 ? ["One side has serious red-flag signals; slow down until those are resolved."] : []),
     ...(averageSafety < 50 ? ["Average safety score is not strong enough to rely on implied understanding."] : []),
     ...(questionInsights.some((item) => item.severity === "concern") ? ["High-risk question differences should be resolved directly, not softened into general compatibility."] : []),
@@ -201,6 +212,9 @@ export function buildPairAnalysis(input: PairInput): PairAnalysisPayload {
     watchouts: watchouts.length ? watchouts.slice(0, 5) : ["Low red-flag scores are not proof of safety; consent still needs to be current and specific."],
     question_insights: questionInsights,
     next_steps: [
+      ...(hasBlockingConcern
+        ? ["Resolve blocking consent, safety or red-flag items before treating the match as workable."]
+        : []),
       "Discuss any high-risk or high-gap items before escalating the dynamic.",
       "Write down hard limits, soft limits, safewords, check-ins and aftercare expectations.",
       "Treat this as a conversation guide, not proof of consent or a guarantee of safety.",

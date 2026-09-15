@@ -151,6 +151,12 @@ describe("privacy-first report exports", () => {
 
     const report = JSON.parse(buildPrivateReportJson(pairedInput));
     expect(report.pairComparison.alignmentScore).toBe(58);
+    expect(report.pairComparison.alignmentReads).toContainEqual({
+      label: "Safety",
+      alignment: 68,
+      gap: 32,
+      read: "gap",
+    });
     expect(report.pairComparison.questionInsights[0]).toMatchObject({
       severity: "concern",
       prompt: "Discuss safeword expectations directly.",

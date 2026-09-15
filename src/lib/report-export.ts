@@ -46,6 +46,7 @@ export type PrivateReportJsonV1 = {
     label: string;
     summary: string;
     scoreDeltas: PairAnalysisPayload["score_deltas"];
+    alignmentReads: Array<{ label: string; alignment: number; gap: number; read: string }>;
     sharedStrengths: string[];
     discussionPoints: string[];
     watchouts: string[];
@@ -196,6 +197,7 @@ export function buildPrivateReportJson(input: ReportExportInput): string {
             label: String(input.pairAnalysis.overall.label ?? "").trim(),
             summary: String(input.pairAnalysis.overall.summary ?? "").trim(),
             scoreDeltas: input.pairAnalysis.score_deltas,
+            alignmentReads: pairAlignmentReads(input.pairAnalysis),
             sharedStrengths: cleanArray(input.pairAnalysis.shared_strengths),
             discussionPoints: cleanArray(input.pairAnalysis.discussion_points),
             watchouts: cleanArray(input.pairAnalysis.watchouts),
@@ -267,7 +269,26 @@ export function buildFullReportMarkdown(input: ReportExportInput): string {
   return lines.join("\n");
 }
 
+function pairAlignmentReads(pair: PairAnalysisPayload): Array<{ label: string; alignment: number; gap: number; read: string }> {
+  return [
+    ["Safety", pair.score_deltas.safety],
+    ["Compatibility", pair.score_deltas.compatibility],
+    ["Green flags", pair.score_deltas.green],
+    ["Red flags", pair.score_deltas.red],
+    ["Experience", pair.score_deltas.experience],
+  ].map(([label, rawGap]) => {
+    const gap = score(Number(rawGap));
+    return {
+      label: String(label),
+      alignment: Math.max(0, Math.min(100, 100 - gap)),
+      gap,
+      read: gap <= 10 ? "aligned" : gap <= 24 ? "workable" : "gap",
+    };
+  });
+}
+
 function pairComparisonMarkdown(pair: PairAnalysisPayload): string[] {
+  const alignmentRows = pairAlignmentReads(pair);
   return [
     "## Matched report",
     "",
@@ -278,13 +299,11 @@ function pairComparisonMarkdown(pair: PairAnalysisPayload): string[] {
     `**Your side:** ${inline(pair.owner.title)} (${inline(pair.owner.role)})`,
     `**Partner side:** ${inline(pair.partner.title)} (${inline(pair.partner.role)})`,
     "",
-    "### Score differences",
+    "### Alignment dimensions",
     "",
-    `- Safety gap: ${score(pair.score_deltas.safety)} points`,
-    `- Compatibility gap: ${score(pair.score_deltas.compatibility)} points`,
-    `- Green flags gap: ${score(pair.score_deltas.green)} points`,
-    `- Red flags gap: ${score(pair.score_deltas.red)} points`,
-    `- Experience gap: ${score(pair.score_deltas.experience)} points`,
+    ...alignmentRows.map(
+      (row) => `- ${inline(row.label)}: ${row.alignment} / 100 (${inline(row.read)}, ${row.gap} point gap)`,
+    ),
     "",
     ...bullets("Shared strengths", pair.shared_strengths),
     ...bullets("Discussion points", pair.discussion_points),

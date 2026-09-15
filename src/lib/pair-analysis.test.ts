@@ -36,6 +36,10 @@ describe("pair analysis", () => {
     expect(analysis.overall.score).toBeLessThanOrEqual(100);
     expect(analysis.question_insights[0]?.severity).toBe("concern");
     expect(analysis.question_insights[0]?.prompt).toContain("hard limits");
-    expect(analysis.watchouts.length).toBeGreaterThan(0);
+    expect(analysis.question_insights[0]?.dimension).toBe("consent");
+    expect(analysis.watchouts).toContain(
+      "Blocking consent, safety or red-flag conflicts should be resolved before any escalation.",
+    );
+    expect(analysis.next_steps[0]).toContain("Resolve blocking");
   });
 });

@@ -57,14 +57,14 @@ export function PairComparisonView({ analysis }: { analysis: PairAnalysisPayload
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Score differences</CardTitle>
+          <CardTitle className="text-base">Alignment dimensions</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <Delta label="Safety" value={analysis.score_deltas.safety} />
-          <Delta label="Compatibility" value={analysis.score_deltas.compatibility} />
-          <Delta label="Green flags" value={analysis.score_deltas.green} />
-          <Delta label="Red flags" value={analysis.score_deltas.red} />
-          <Delta label="Experience" value={analysis.score_deltas.experience} />
+          <AlignmentDimension label="Safety" gap={analysis.score_deltas.safety} />
+          <AlignmentDimension label="Compatibility" gap={analysis.score_deltas.compatibility} />
+          <AlignmentDimension label="Green flags" gap={analysis.score_deltas.green} />
+          <AlignmentDimension label="Red flags" gap={analysis.score_deltas.red} />
+          <AlignmentDimension label="Experience" gap={analysis.score_deltas.experience} />
         </CardContent>
       </Card>
 
@@ -122,13 +122,21 @@ function ListCard({
   );
 }
 
-function Delta({ label, value }: { label: string; value: number }) {
-  const tone = value >= 30 ? "text-red-500" : value >= 15 ? "text-amber-500" : "text-emerald-500";
+function alignmentRead(gap: number) {
+  if (gap <= 10) return { label: "aligned", tone: "text-emerald-500" };
+  if (gap <= 24) return { label: "workable", tone: "text-amber-500" };
+  return { label: "gap", tone: "text-red-500" };
+}
+
+function AlignmentDimension({ label, gap }: { label: string; gap: number }) {
+  const alignment = Math.max(0, Math.min(100, 100 - Math.round(gap)));
+  const read = alignmentRead(gap);
   return (
     <div className="rounded-xl border border-border bg-input/30 p-4 text-center">
       <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-1 font-display text-3xl font-semibold ${tone}`}>{Math.round(value)}</p>
-      <p className="text-[10px] text-muted-foreground">point gap</p>
+      <p className={`mt-1 font-display text-3xl font-semibold ${read.tone}`}>{alignment}</p>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{read.label}</p>
+      <p className="mt-1 text-[10px] text-muted-foreground">{Math.round(gap)} point gap</p>
     </div>
   );
 }
