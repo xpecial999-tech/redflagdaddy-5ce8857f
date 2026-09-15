@@ -48,6 +48,34 @@ describe("assessment question integrity", () => {
     expect(selectAssessmentQuestions(questions, 5, "journey-1")).toHaveLength(5);
   });
 
+  it("prioritizes the intended spread when a short test has more categories than slots", () => {
+    const categoryNames = [
+      "Financial Responsibility",
+      "Community Involvement",
+      "Consent",
+      "Safety Practices",
+      "Boundaries",
+      "Communication",
+      "Trust",
+      "Aftercare",
+    ];
+    const questions = categoryNames.map((name, index) =>
+      question(String(index + 1), {
+        category_id: `category-${index}`,
+        question_categories: { name },
+      }),
+    );
+
+    const selected = selectAssessmentQuestions(questions, 4, "journey-1");
+
+    expect(selected.map((item) => item.question_categories?.name).sort()).toEqual([
+      "Boundaries",
+      "Communication",
+      "Consent",
+      "Safety Practices",
+    ]);
+  });
+
   it("keeps quick assessments balanced instead of over-picking one high-risk category", () => {
     const categories = [
       "Consent & Boundaries",

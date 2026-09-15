@@ -113,9 +113,19 @@ export function selectAssessmentQuestions<
   }
 
   if (sortedByCategory.size >= limit) {
-    return Array.from(sortedByCategory.values())
+    return Array.from(sortedByCategory.entries())
+      .sort((left, right) => {
+        const leftName = left[1][0]?.question_categories?.name;
+        const rightName = right[1][0]?.question_categories?.name;
+        return (
+          (rightName ? (CATEGORY_BALANCE[rightName] ?? 0) : 0) -
+            (leftName ? (CATEGORY_BALANCE[leftName] ?? 0) : 0) ||
+          left[0].localeCompare(right[0])
+        );
+      })
       .slice(0, limit)
-      .map((categoryQuestions) => categoryQuestions[0]);
+      .map(([, categoryQuestions]) => categoryQuestions[0])
+      .sort(byOrder);
   }
 
   const desiredCategoryShare = (categoryId: string) => {
