@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CalendarInviteDialog } from "@/components/CalendarInviteDialog";
 import { Loader2, Download, Lock } from "lucide-react";
 import {
   getResults,
@@ -123,6 +124,12 @@ function ResultsPage() {
         scores={scores}
         analysis={analysis}
       />
+
+      {pairAnalysis && analysis && ent.data?.canDownloadReport && (
+        <div className="no-print flex justify-center">
+          <CalendarInviteDialog analysis={analysis} />
+        </div>
+      )}
 
       {analysis && analysisAvailable && (
         <div className="text-center no-print">
