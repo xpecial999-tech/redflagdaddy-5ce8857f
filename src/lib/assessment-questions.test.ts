@@ -48,6 +48,42 @@ describe("assessment question integrity", () => {
     expect(selectAssessmentQuestions(questions, 5, "journey-1")).toHaveLength(5);
   });
 
+  it("keeps quick assessments balanced instead of over-picking one high-risk category", () => {
+    const categories = [
+      "Consent & Boundaries",
+      "BDSM Safety",
+      "Communication",
+      "Compatibility",
+      "Red Flags",
+      "Green Flags",
+      "Experience",
+    ];
+    const questions = categories.flatMap((name, categoryIndex) =>
+      Array.from({ length: name === "Red Flags" ? 60 : 20 }, (_, index) =>
+        question(`${categoryIndex + 1}${String(index + 1).padStart(2, "0")}`, {
+          category_id: `category-${categoryIndex}`,
+          question_categories: { name },
+          risk_level: name === "Red Flags" ? "critical" : "low",
+          weight: name === "Red Flags" ? 8 : 1,
+          order_index: categoryIndex * 100 + index,
+        }),
+      ),
+    );
+
+    const selected = selectAssessmentQuestions(questions, 50, "journey-1");
+    const counts = selected.reduce<Record<string, number>>((acc, item) => {
+      const name = item.question_categories?.name ?? "Other";
+      acc[name] = (acc[name] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    expect(selected).toHaveLength(50);
+    expect(counts["Consent & Boundaries"]).toBeGreaterThanOrEqual(8);
+    expect(counts["BDSM Safety"]).toBeGreaterThanOrEqual(8);
+    expect(counts["Red Flags"]).toBeLessThanOrEqual(8);
+    expect(counts["Experience"]).toBeGreaterThanOrEqual(1);
+  });
+
   it("applies branch skips consistently", () => {
     const questions = [
       question("1", {

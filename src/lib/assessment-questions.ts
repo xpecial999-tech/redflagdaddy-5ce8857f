@@ -7,6 +7,7 @@ export type AnswerOption = {
 export type AssessmentQuestion = {
   id: string;
   category_id: string;
+  question_categories?: { name: string } | null;
   question: string;
   question_type: string;
   answer_options: Json;
@@ -24,6 +25,19 @@ const RISK_RANK: Record<string, number> = {
   high: 3,
   medium: 2,
   low: 1,
+};
+
+const CATEGORY_BALANCE: Record<string, number> = {
+  "Consent & Boundaries": 0.22,
+  Consent: 0.22,
+  "BDSM Safety": 0.2,
+  "Safety Practices": 0.2,
+  Communication: 0.16,
+  "Consent & Communication": 0.16,
+  Compatibility: 0.16,
+  "Red Flags": 0.14,
+  "Green Flags": 0.08,
+  Experience: 0.04,
 };
 
 function mulberry32(seed: number) {
@@ -47,7 +61,8 @@ function seedFromString(value: string) {
 }
 
 export function selectAssessmentQuestions<
-  T extends Pick<AssessmentQuestion, "id" | "category_id" | "weight" | "risk_level">,
+  T extends Pick<AssessmentQuestion, "id" | "category_id" | "weight" | "risk_level"> &
+    Partial<Pick<AssessmentQuestion, "question_categories" | "order_index">>,
 >(questions: T[], limit: number, seedKey: string): T[] {
   if (questions.length <= limit) return questions;
 
@@ -79,24 +94,43 @@ export function selectAssessmentQuestions<
       .map((categoryQuestions) => categoryQuestions[0]);
   }
 
+  const desiredCategoryShare = (categoryId: string) => {
+    const categoryName = sortedByCategory.get(categoryId)?.[0]?.question_categories?.name;
+    return categoryName ? (CATEGORY_BALANCE[categoryName] ?? 0) : 0;
+  };
+
   const allocations = new Map<string, number>();
   let allocated = 0;
   for (const [categoryId, categoryQuestions] of sortedByCategory) {
-    const count = Math.max(1, Math.floor((categoryQuestions.length / questions.length) * limit));
+    const desiredShare = desiredCategoryShare(categoryId);
+    const count = Math.max(
+      1,
+      Math.floor((desiredShare || categoryQuestions.length / questions.length) * limit),
+    );
     allocations.set(categoryId, Math.min(count, categoryQuestions.length));
     allocated += allocations.get(categoryId) ?? 0;
   }
 
-  const categoryIds = Array.from(sortedByCategory.keys());
+  const categoryIds = Array.from(sortedByCategory.keys()).sort((left, right) => {
+    const balance = desiredCategoryShare(right) - desiredCategoryShare(left);
+    const size =
+      (sortedByCategory.get(right)?.length ?? 0) - (sortedByCategory.get(left)?.length ?? 0);
+    return balance || size || left.localeCompare(right);
+  });
   while (allocated > limit) {
-    const categoryId = categoryIds[Math.floor(random() * categoryIds.length)];
+    const categoryId = [...categoryIds].reverse().find((id) => (allocations.get(id) ?? 0) > 1);
+    if (!categoryId) break;
     if ((allocations.get(categoryId) ?? 0) > 1) {
       allocations.set(categoryId, (allocations.get(categoryId) ?? 0) - 1);
       allocated--;
     }
   }
   while (allocated < limit) {
-    const categoryId = categoryIds[Math.floor(random() * categoryIds.length)];
+    const categoryId = categoryIds.find((id) => {
+      const current = allocations.get(id) ?? 0;
+      return current < (sortedByCategory.get(id)?.length ?? 0);
+    });
+    if (!categoryId) break;
     const current = allocations.get(categoryId) ?? 0;
     if (current < (sortedByCategory.get(categoryId)?.length ?? 0)) {
       allocations.set(categoryId, current + 1);
@@ -108,7 +142,11 @@ export function selectAssessmentQuestions<
   for (const [categoryId, count] of allocations) {
     selected.push(...(sortedByCategory.get(categoryId) ?? []).slice(0, count));
   }
-  return selected;
+  return selected.sort(
+    (left, right) =>
+      (Number(left.order_index) || 0) - (Number(right.order_index) || 0) ||
+      left.id.localeCompare(right.id),
+  );
 }
 
 function branchRules(branchLogic: unknown): BranchRule[] {

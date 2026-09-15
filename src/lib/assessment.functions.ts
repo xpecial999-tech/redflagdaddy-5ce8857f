@@ -108,7 +108,7 @@ async function loadAssignedQuestions(
   let query = supabaseAdmin
     .from("questions")
     .select(
-      "id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic, applies_to",
+      "id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic, applies_to, question_categories(name)",
     )
     .eq("active", true);
 
@@ -160,6 +160,67 @@ function computeScore(
     default:
       // open text: simple presence score (engagement)
       return typeof answer === "string" && answer.trim().length > 0 ? 1 * w : 0;
+  }
+}
+
+function optionScores(options: AnswerOption[]): number[] {
+  return options.map((option) => Number(option.score)).filter(Number.isFinite);
+}
+
+function maxPositiveScore(question: AssessmentQuestion): number {
+  const weight = Number(question.weight) || 1;
+  const options = (question.answer_options as AnswerOption[]) ?? [];
+  switch (question.question_type) {
+    case "single_choice":
+    case "boolean":
+    case "scenario":
+      return Math.max(0, ...optionScores(options)) * weight;
+    case "multi_choice":
+      return (
+        options.reduce((sum, option) => sum + Math.max(0, Number(option.score) || 0), 0) * weight
+      );
+    case "scale":
+      return 10 * weight;
+    case "slider": {
+      const rawCfg = Array.isArray(question.answer_options)
+        ? (question.answer_options[0] as { max?: unknown } | undefined)
+        : (question.answer_options as unknown as { max?: unknown } | undefined);
+      const max = Number(rawCfg?.max);
+      return (Number.isFinite(max) ? Math.max(0, max) : 100) * weight;
+    }
+    case "text":
+      return 1 * weight;
+    default:
+      return 0;
+  }
+}
+
+function scoreDimension(value: number, max: number): number {
+  if (max <= 0) return 0;
+  return Math.max(0, Math.min(100, (value / max) * 100));
+}
+
+function scoreCategory(
+  name: string,
+): "safety" | "compatibility" | "red" | "green" | "experience" | null {
+  switch (name) {
+    case "BDSM Safety":
+    case "Safety Practices":
+      return "safety";
+    case "Consent":
+    case "Consent & Boundaries":
+    case "Communication":
+    case "Consent & Communication":
+    case "Compatibility":
+      return "compatibility";
+    case "Red Flags":
+      return "red";
+    case "Green Flags":
+      return "green";
+    case "Experience":
+      return "experience";
+    default:
+      return null;
   }
 }
 
@@ -303,39 +364,28 @@ export const completeAssessment = createServerFn({ method: "POST" })
     const visibleIdSet = new Set(visibleIds);
     const rows = assignedResponses.filter((row) => visibleIdSet.has(row.question_id));
 
-    // Calculate maxima from this assessment's visible question set rather than
-    // the global question bank.
-    // Each "perfect" answer = 10, weighted. Red Flags weight encodes severity (low=1, med=2, high=4, crit=8).
-    const RELEVANT = ["Green Flags", "BDSM Safety", "Red Flags"];
-    const { data: maxRows, error: maxErr } = await supabaseAdmin
-      .from("questions")
-      .select("weight, question_categories!inner(name)")
-      .in("id", visibleIds)
-      .in("question_categories.name", RELEVANT);
-    if (maxErr) throwPublicDataError(maxErr, "calculate assessment score bounds");
-
-    const maxes: Record<string, number> = { "Green Flags": 0, "BDSM Safety": 0, "Red Flags": 0 };
-    for (const q of (maxRows ?? []) as Array<{
-      weight: number | string;
-      question_categories: { name: string } | null;
-    }>) {
-      const name = q.question_categories?.name;
-      if (!name || !(name in maxes)) continue;
-      maxes[name] += (Number(q.weight) || 1) * 10;
-    }
-    const greenMax = maxes["Green Flags"];
-    const safetyMax = maxes["BDSM Safety"];
-    const redMax = maxes["Red Flags"];
-
-    let safetyRaw = 0,
-      compat = 0,
-      redRaw = 0,
-      redLegacy = 0,
-      greenRaw = 0,
-      exp = 0;
+    const maxes: Record<"safety" | "compatibility" | "red" | "green" | "experience", number> = {
+      safety: 0,
+      compatibility: 0,
+      red: 0,
+      green: 0,
+      experience: 0,
+    };
     const visibleQuestionById = new Map(
       visibleQuestions.map((question) => [question.id, question]),
     );
+    for (const question of visibleQuestions) {
+      const cat = scoreCategory(question.question_categories?.name ?? "");
+      if (!cat) continue;
+      maxes[cat] += maxPositiveScore(question);
+    }
+
+    let safetyRaw = 0,
+      compatibilityRaw = 0,
+      redRaw = 0,
+      redLegacy = 0,
+      greenRaw = 0,
+      experienceRaw = 0;
     for (const row of rows) {
       const question = visibleQuestionById.get(row.question_id);
       if (!question) continue;
@@ -350,29 +400,40 @@ export const completeAssessment = createServerFn({ method: "POST" })
           ),
         ) || 0;
       const cat = row.questions?.question_categories?.name ?? "";
-      if (cat === "BDSM Safety" || cat === "Safety Practices") safetyRaw += s;
-      if (cat === "Compatibility") compat += s;
-      if (cat === "Experience") exp += s;
-      if (cat === "Green Flags") greenRaw += s;
-      if (cat === "Red Flags") {
-        if (s > 0) redRaw += s;
-        else if (s < 0) redLegacy += Math.abs(s);
+      switch (scoreCategory(cat)) {
+        case "safety":
+          safetyRaw += Math.max(0, s);
+          break;
+        case "compatibility":
+          compatibilityRaw += Math.max(0, s);
+          break;
+        case "experience":
+          experienceRaw += Math.max(0, s);
+          break;
+        case "green":
+          greenRaw += Math.max(0, s);
+          break;
+        case "red":
+          if (s > 0) redRaw += s;
+          else if (s < 0) redLegacy += Math.abs(s);
+          break;
       }
     }
 
-    const green = greenMax > 0 ? Math.max(0, Math.min(100, (greenRaw / greenMax) * 100)) : 0;
-    const safety = safetyMax > 0 ? Math.max(0, Math.min(100, (safetyRaw / safetyMax) * 100)) : 0;
-    const red =
-      redMax > 0 ? Math.max(0, Math.min(100, (redRaw / redMax) * 100)) : Math.min(100, redLegacy);
+    const green = scoreDimension(greenRaw, maxes.green);
+    const safety = scoreDimension(safetyRaw, maxes.safety);
+    const compatibility = scoreDimension(compatibilityRaw, maxes.compatibility);
+    const experience = scoreDimension(experienceRaw, maxes.experience);
+    const red = maxes.red > 0 ? scoreDimension(redRaw, maxes.red) : Math.min(100, redLegacy);
 
     const { error: resultError } = await supabaseAdmin.from("results").upsert(
       {
         journey_id: journey.id,
         safety_score: Math.round(safety),
-        compatibility_score: Math.round(compat),
+        compatibility_score: Math.round(compatibility),
         red_flag_score: Math.round(red),
         green_flag_score: Math.round(green),
-        experience_score: Math.round(exp),
+        experience_score: Math.round(experience),
         ai_summary: null,
       },
       { onConflict: "journey_id" },
