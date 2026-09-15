@@ -121,7 +121,7 @@ function AssessmentPage() {
   });
 
 
-  function recordAnswer(answer: unknown) {
+  function recordAnswer(answer: unknown, options?: { autoAdvance?: boolean }) {
     if (!current) return;
     setAnswers((prev) => ({ ...prev, [current.id]: answer }));
     setSavingId(current.id);
@@ -129,6 +129,11 @@ function AssessmentPage() {
       { questionId: current.id, answer },
       { onSettled: () => setSavingId(null) },
     );
+    if (options?.autoAdvance && cursor < total - 1) {
+      window.setTimeout(() => {
+        setCursor((prev) => Math.min(prev + 1, total - 1));
+      }, 220);
+    }
   }
 
   function goNext() {
@@ -260,9 +265,9 @@ function AssessmentPage() {
           ) : (
             <Button
               onClick={goNext}
-              disabled={!hasAnswer || saveMutation.isPending}
+              disabled={saveMutation.isPending}
             >
-              {saveMutation.isPending ? "Saving…" : "Next"}{" "}
+              {saveMutation.isPending ? "Saving…" : "Skip"}{" "}
               <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           )}
@@ -309,7 +314,7 @@ function QuestionInput({
 }: {
   question: Question;
   value: unknown;
-  onChange: (v: unknown) => void;
+  onChange: (v: unknown, options?: { autoAdvance?: boolean }) => void;
 }) {
   const type = question.question_type;
   const opts = (question.answer_options ?? []) as Option[];
@@ -318,7 +323,7 @@ function QuestionInput({
     return (
       <RadioGroup
         value={typeof value === "string" ? value : ""}
-        onValueChange={(v) => onChange(v)}
+        onValueChange={(v) => onChange(v, { autoAdvance: true })}
         className="space-y-2"
       >
         {opts.map((o, i) => (

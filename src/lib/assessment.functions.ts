@@ -294,11 +294,6 @@ export const completeAssessment = createServerFn({ method: "POST" })
       assignedResponses.map((row) => [row.question_id, row.answer]),
     );
     const visibleQuestions = visibleAssessmentQuestions(assignedQuestions, answers);
-    const missingAnswers = visibleQuestions.filter(({ id }) => !hasAssessmentAnswer(answers[id]));
-    if (missingAnswers.length > 0) {
-      throw new Error("Answer every visible question and wait for it to save before submitting.");
-    }
-
     const visibleIds = visibleQuestions.map(({ id }) => id);
     const visibleIdSet = new Set(visibleIds);
     const rows = assignedResponses.filter((row) => visibleIdSet.has(row.question_id));
