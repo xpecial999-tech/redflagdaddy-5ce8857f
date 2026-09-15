@@ -195,6 +195,25 @@ function maxPositiveScore(question: AssessmentQuestion): number {
   }
 }
 
+function maxRedFlagScore(question: AssessmentQuestion): number {
+  const weight = Number(question.weight) || 1;
+  const options = (question.answer_options as AnswerOption[]) ?? [];
+  const scores = optionScores(options);
+  switch (question.question_type) {
+    case "single_choice":
+    case "boolean":
+    case "scenario":
+      return Math.max(0, ...scores.map((score) => Math.abs(Math.min(0, score)))) * weight;
+    case "multi_choice":
+      return (
+        options.reduce((sum, option) => sum + Math.abs(Math.min(0, Number(option.score) || 0)), 0) *
+        weight
+      );
+    default:
+      return 0;
+  }
+}
+
 function scoreDimension(value: number, max: number): number {
   if (max <= 0) return 0;
   return Math.max(0, Math.min(100, (value / max) * 100));
@@ -206,18 +225,32 @@ function scoreCategory(
   switch (name) {
     case "BDSM Safety":
     case "Safety Practices":
-      return "safety";
     case "Consent":
-    case "Consent & Boundaries":
+    case "Boundaries":
     case "Communication":
+    case "Aftercare":
+    case "Consent & Boundaries":
     case "Consent & Communication":
+      return "safety";
     case "Compatibility":
+    case "Accountability":
+    case "Attachment Style":
+    case "Conflict Resolution":
+    case "Emotional Intelligence":
+    case "Financial Responsibility":
+    case "Power Exchange":
+    case "Relationship Goals":
+    case "Trust":
       return "compatibility";
     case "Red Flags":
       return "red";
     case "Green Flags":
       return "green";
     case "Experience":
+    case "BDSM Experience":
+    case "Community Involvement":
+    case "Dominant Skills":
+    case "Submissive Skills":
       return "experience";
     default:
       return null;
@@ -378,6 +411,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
       const cat = scoreCategory(question.question_categories?.name ?? "");
       if (!cat) continue;
       maxes[cat] += maxPositiveScore(question);
+      maxes.red += maxRedFlagScore(question);
     }
 
     let safetyRaw = 0,
@@ -403,15 +437,19 @@ export const completeAssessment = createServerFn({ method: "POST" })
       switch (scoreCategory(cat)) {
         case "safety":
           safetyRaw += Math.max(0, s);
+          if (s < 0) redRaw += Math.abs(s);
           break;
         case "compatibility":
           compatibilityRaw += Math.max(0, s);
+          if (s < 0) redRaw += Math.abs(s);
           break;
         case "experience":
           experienceRaw += Math.max(0, s);
+          if (s < 0) redRaw += Math.abs(s);
           break;
         case "green":
           greenRaw += Math.max(0, s);
+          if (s < 0) redRaw += Math.abs(s);
           break;
         case "red":
           if (s > 0) redRaw += s;

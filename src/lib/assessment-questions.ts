@@ -28,15 +28,29 @@ const RISK_RANK: Record<string, number> = {
 };
 
 const CATEGORY_BALANCE: Record<string, number> = {
-  "Consent & Boundaries": 0.22,
-  Consent: 0.22,
-  "BDSM Safety": 0.2,
-  "Safety Practices": 0.2,
-  Communication: 0.16,
-  "Consent & Communication": 0.16,
-  Compatibility: 0.16,
-  "Red Flags": 0.14,
-  "Green Flags": 0.08,
+  Consent: 0.08,
+  Boundaries: 0.075,
+  Communication: 0.075,
+  "Safety Practices": 0.075,
+  "Red Flags": 0.055,
+  Aftercare: 0.06,
+  Trust: 0.06,
+  "Relationship Goals": 0.06,
+  "Power Exchange": 0.05,
+  Accountability: 0.05,
+  "Conflict Resolution": 0.05,
+  "Emotional Intelligence": 0.05,
+  "Green Flags": 0.05,
+  "BDSM Experience": 0.04,
+  "Dominant Skills": 0.04,
+  "Submissive Skills": 0.04,
+  "Financial Responsibility": 0.03,
+  "Attachment Style": 0.03,
+  "Community Involvement": 0.03,
+  "BDSM Safety": 0.08,
+  "Consent & Boundaries": 0.09,
+  "Consent & Communication": 0.08,
+  Compatibility: 0.06,
   Experience: 0.04,
 };
 
@@ -64,7 +78,11 @@ export function selectAssessmentQuestions<
   T extends Pick<AssessmentQuestion, "id" | "category_id" | "weight" | "risk_level"> &
     Partial<Pick<AssessmentQuestion, "question_categories" | "order_index">>,
 >(questions: T[], limit: number, seedKey: string): T[] {
-  if (questions.length <= limit) return questions;
+  const byOrder = (left: T, right: T) =>
+    (Number(left.order_index) || 0) - (Number(right.order_index) || 0) ||
+    left.id.localeCompare(right.id);
+
+  if (questions.length <= limit) return [...questions].sort(byOrder);
 
   const byCategory = new Map<string, T[]>();
   for (const question of questions) {
@@ -99,17 +117,22 @@ export function selectAssessmentQuestions<
     return categoryName ? (CATEGORY_BALANCE[categoryName] ?? 0) : 0;
   };
 
-  const allocations = new Map<string, number>();
-  let allocated = 0;
-  for (const [categoryId, categoryQuestions] of sortedByCategory) {
+  const planned = Array.from(sortedByCategory, ([categoryId, categoryQuestions]) => {
     const desiredShare = desiredCategoryShare(categoryId);
-    const count = Math.max(
-      1,
-      Math.floor((desiredShare || categoryQuestions.length / questions.length) * limit),
-    );
-    allocations.set(categoryId, Math.min(count, categoryQuestions.length));
-    allocated += allocations.get(categoryId) ?? 0;
-  }
+    const priority = desiredShare || categoryQuestions.length / questions.length;
+    const exact = priority * limit;
+    const count = Math.max(1, Math.floor(exact));
+    return {
+      categoryId,
+      capacity: categoryQuestions.length,
+      count: Math.min(count, categoryQuestions.length),
+      exact,
+      priority,
+      remainder: exact - Math.floor(exact),
+    };
+  });
+  const allocations = new Map(planned.map(({ categoryId, count }) => [categoryId, count]));
+  let allocated = planned.reduce((sum, { count }) => sum + count, 0);
 
   const categoryIds = Array.from(sortedByCategory.keys()).sort((left, right) => {
     const balance = desiredCategoryShare(right) - desiredCategoryShare(left);
@@ -118,35 +141,41 @@ export function selectAssessmentQuestions<
     return balance || size || left.localeCompare(right);
   });
   while (allocated > limit) {
-    const categoryId = [...categoryIds].reverse().find((id) => (allocations.get(id) ?? 0) > 1);
+    const categoryId = planned
+      .filter(({ categoryId }) => (allocations.get(categoryId) ?? 0) > 1)
+      .sort(
+        (left, right) =>
+          left.remainder - right.remainder ||
+          left.priority - right.priority ||
+          left.categoryId.localeCompare(right.categoryId),
+      )[0]?.categoryId;
     if (!categoryId) break;
-    if ((allocations.get(categoryId) ?? 0) > 1) {
-      allocations.set(categoryId, (allocations.get(categoryId) ?? 0) - 1);
-      allocated--;
-    }
+    allocations.set(categoryId, (allocations.get(categoryId) ?? 0) - 1);
+    allocated--;
   }
   while (allocated < limit) {
-    const categoryId = categoryIds.find((id) => {
-      const current = allocations.get(id) ?? 0;
-      return current < (sortedByCategory.get(id)?.length ?? 0);
-    });
+    const categoryId = planned
+      .filter(({ categoryId, capacity }) => (allocations.get(categoryId) ?? 0) < capacity)
+      .sort((left, right) => {
+        const leftDeficit = left.exact - (allocations.get(left.categoryId) ?? 0);
+        const rightDeficit = right.exact - (allocations.get(right.categoryId) ?? 0);
+        return (
+          rightDeficit - leftDeficit ||
+          right.remainder - left.remainder ||
+          right.priority - left.priority ||
+          categoryIds.indexOf(left.categoryId) - categoryIds.indexOf(right.categoryId)
+        );
+      })[0]?.categoryId;
     if (!categoryId) break;
-    const current = allocations.get(categoryId) ?? 0;
-    if (current < (sortedByCategory.get(categoryId)?.length ?? 0)) {
-      allocations.set(categoryId, current + 1);
-      allocated++;
-    }
+    allocations.set(categoryId, (allocations.get(categoryId) ?? 0) + 1);
+    allocated++;
   }
 
   const selected: T[] = [];
   for (const [categoryId, count] of allocations) {
     selected.push(...(sortedByCategory.get(categoryId) ?? []).slice(0, count));
   }
-  return selected.sort(
-    (left, right) =>
-      (Number(left.order_index) || 0) - (Number(right.order_index) || 0) ||
-      left.id.localeCompare(right.id),
-  );
+  return selected.sort(byOrder);
 }
 
 function branchRules(branchLogic: unknown): BranchRule[] {

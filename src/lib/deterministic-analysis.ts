@@ -45,7 +45,10 @@ function readinessLabel(value: number): AnalysisPayload["dynamic_readiness"]["la
 function cleanText(value: unknown, fallback = "the selected answer"): string {
   if (typeof value === "string") return value.trim().slice(0, 160) || fallback;
   if (Array.isArray(value)) {
-    const text = value.map((item) => cleanText(item, "")).filter(Boolean).join(", ");
+    const text = value
+      .map((item) => cleanText(item, ""))
+      .filter(Boolean)
+      .join(", ");
     return text.slice(0, 160) || fallback;
   }
   if (value && typeof value === "object") {
@@ -95,12 +98,33 @@ export function buildDeterministicAnalysis(
   const experience = score(rawScores.experience_score);
   const redBand = redFlagBand(red);
 
-  const safetyItems = categoryItems(digest, ["BDSM Safety", "Safety Practices"]);
+  const safetyItems = categoryItems(digest, [
+    "Safety Practices",
+    "BDSM Safety",
+    "BDSM Experience",
+    "Aftercare",
+  ]);
   const redItems = categoryItems(digest, ["Red Flags"]);
   const greenItems = categoryItems(digest, ["Green Flags"]);
-  const compatibilityItems = categoryItems(digest, ["Compatibility"]);
-  const communicationItems = categoryItems(digest, ["Communication", "Consent & Communication"]);
-  const consentItems = categoryItems(digest, ["Consent", "Consent & Boundaries"]);
+  const compatibilityItems = categoryItems(digest, [
+    "Compatibility",
+    "Relationship Goals",
+    "Power Exchange",
+    "Trust",
+    "Attachment Style",
+    "Emotional Intelligence",
+    "Conflict Resolution",
+    "Accountability",
+    "Financial Responsibility",
+  ]);
+  const communicationItems = categoryItems(digest, [
+    "Communication",
+    "Consent & Communication",
+    "Conflict Resolution",
+    "Emotional Intelligence",
+    "Accountability",
+  ]);
+  const consentItems = categoryItems(digest, ["Consent", "Consent & Boundaries", "Boundaries"]);
 
   const readiness = score(
     safety * 0.28 +
@@ -139,7 +163,10 @@ export function buildDeterministicAnalysis(
         ...(safety >= 70 ? ["Safety score is in the stronger range."] : []),
         ...notable(safetyItems, 2),
       ],
-      risks: safety < 60 ? ["Safety score is not yet strong enough to treat assumptions as shared."] : [],
+      risks:
+        safety < 60
+          ? ["Safety score is not yet strong enough to treat assumptions as shared."]
+          : [],
       missing: [
         "Confirm safewords, non-verbal stop signals, health considerations and aftercare expectations explicitly.",
       ],
@@ -157,7 +184,9 @@ export function buildDeterministicAnalysis(
       strengths: notable(consentItems, 2),
       risks:
         red >= 30
-          ? ["Red-flag score suggests at least one consent or boundary topic may need direct discussion."]
+          ? [
+              "Red-flag score suggests at least one consent or boundary topic may need direct discussion.",
+            ]
           : [],
       missing: ["Record hard limits and any flexible areas in plain language before proceeding."],
       concerns:
@@ -169,10 +198,7 @@ export function buildDeterministicAnalysis(
       title: "Red Flags",
       summary: elevatedRedCopy,
       strengths: red < 30 ? ["No elevated red-flag score from the completed answers."] : [],
-      risks: [
-        ...(red >= 30 ? [`Red flag score is ${red}/100.`] : []),
-        ...notable(redItems, 3),
-      ],
+      risks: [...(red >= 30 ? [`Red flag score is ${red}/100.`] : []), ...notable(redItems, 3)],
       missing: redItems.length === 0 ? ["No detailed red-flag answer digest was available."] : [],
       concerns:
         red >= 60
@@ -205,7 +231,9 @@ export function buildDeterministicAnalysis(
       strengths: notable(communicationItems, 2),
       risks:
         red >= 30
-          ? ["Where red flags are present, assume silence or vagueness is a risk signal to clarify."]
+          ? [
+              "Where red flags are present, assume silence or vagueness is a risk signal to clarify.",
+            ]
           : [],
       missing: ["Agree how concerns will be raised during and after a scene."],
     }),
@@ -220,7 +248,9 @@ export function buildDeterministicAnalysis(
         compatibility < 50
           ? ["Shared preferences may not be clear enough yet to rely on the score alone."]
           : [],
-      missing: ["Compare pacing, relationship structure, hard limits and aftercare expectations side by side."],
+      missing: [
+        "Compare pacing, relationship structure, hard limits and aftercare expectations side by side.",
+      ],
     }),
     dynamic_readiness: {
       score: readiness,
@@ -242,10 +272,7 @@ export function buildDeterministicAnalysis(
       missing_information: [
         "This deterministic report does not verify identity, intent or real-world behaviour.",
       ],
-      concerns:
-        red >= 60
-          ? ["Resolve serious red-flag items before escalation."]
-          : [],
+      concerns: red >= 60 ? ["Resolve serious red-flag items before escalation."] : [],
     },
     overall_note:
       "This report is generated from the structured scoring matrix and highlighted answer patterns. Use it as a conversation agenda: confirm limits, clarify risk items, agree safety protocols and proceed gradually. It is not proof of consent, identity verification, a diagnosis or a guarantee of safety.",
