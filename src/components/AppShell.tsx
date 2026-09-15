@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       {!hideHeader && (
-        <header className="sticky top-0 z-40 bg-background border-b border-white/5">
+        <header data-app-header className="sticky top-0 z-40 bg-background border-b border-white/5">
           <div
             className={`px-4 py-3 flex items-center justify-between mx-auto ${adminWorkspace ? "max-w-7xl" : "max-w-3xl"}`}
           >
@@ -88,7 +88,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {deskMode && <DeskModeOverlay onClose={() => setDeskMode(false)} />}
 
       <main
-        className={`flex-1 px-4 pt-6 mx-auto w-full ${adminWorkspace ? "max-w-7xl pb-10" : "max-w-3xl pb-28"}`}
+        className={`flex-1 px-4 pt-6 mx-auto w-full ${adminWorkspace ? "max-w-7xl pb-10" : "max-w-3xl pb-[calc(7rem+env(safe-area-inset-bottom))]"}`}
       >
         <motion.div
           key={pathname}
@@ -121,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       {!hideNav && (
-        <nav className="fixed bottom-4 left-4 right-4 z-40 max-w-3xl mx-auto">
+        <nav className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-40 max-w-3xl mx-auto">
           <div className="glass-strong rounded-2xl px-2 py-2 flex justify-around">
             {navItems.map((item) => {
               const active = pathname.startsWith(item.to);
@@ -131,7 +131,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={item.to}
                   to={item.to}
                   aria-current={active ? "page" : undefined}
-                  className="relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-xs"
+                  className="relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-2 py-2 text-xs"
                 >
                   {active && (
                     <motion.div
@@ -225,8 +225,8 @@ function DeskModeOverlay({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex-1 overflow-hidden p-3 sm:p-5">
-          <div className="h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950 shadow-sm shadow-black/30">
-            <div className="grid grid-cols-[42px_repeat(8,minmax(110px,1fr))] border-b border-slate-800 bg-slate-900 text-center text-xs font-medium text-slate-400">
+          <div className="h-full overflow-auto rounded-lg border border-slate-700 bg-slate-950 shadow-sm shadow-black/30">
+            <div className="grid min-w-[760px] grid-cols-[42px_repeat(8,minmax(80px,1fr))] border-b border-slate-800 bg-slate-900 text-center text-xs font-medium text-slate-400">
               <div className="border-r border-slate-800 py-2" />
               {columns.map((column) => (
                 <div key={column} className="border-r border-slate-800 py-2 last:border-r-0">
@@ -234,7 +234,7 @@ function DeskModeOverlay({ onClose }: { onClose: () => void }) {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-[42px_repeat(8,minmax(110px,1fr))] text-xs">
+            <div className="grid min-w-[760px] grid-cols-[42px_repeat(8,minmax(80px,1fr))] text-xs">
               {rows.map((row, rowIndex) => (
                 <div key={rowIndex} className="contents">
                   <div className="border-b border-r border-slate-800 bg-slate-900 py-3 text-center text-slate-500">

@@ -72,9 +72,12 @@
 @layer base {
   html, body {
     color-scheme: dark;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   * {
     border-color: var(--color-border);
+    min-width: 0;
   }
   body {
     background-color: var(--color-background);
@@ -85,6 +88,45 @@
       radial-gradient(ellipse 80% 50% at 20% 0%, color-mix(in oklab, var(--aurora-2) 26%, transparent), transparent 65%),
       radial-gradient(ellipse 70% 50% at 100% 30%, color-mix(in oklab, var(--aurora-1) 22%, transparent), transparent 65%);
     background-attachment: fixed;
+  }
+  #root {
+    min-height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  main,
+  section,
+  article,
+  header,
+  footer,
+  nav,
+  aside,
+  div,
+  form,
+  fieldset {
+    min-width: 0;
+  }
+  p,
+  li,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  span,
+  a,
+  button,
+  input,
+  textarea,
+  select {
+    overflow-wrap: anywhere;
+  }
+  input,
+  textarea,
+  select,
+  button {
+    max-width: 100%;
   }
   h1, h2, h3 {
     font-family: var(--font-display);

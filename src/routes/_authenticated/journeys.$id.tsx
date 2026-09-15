@@ -116,14 +116,14 @@ function JourneyTracker() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           to="/dashboard"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition"
         >
           <ArrowLeft className="w-4 h-4" /> Dashboard
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             onClick={() => refetch()}
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition"
@@ -333,7 +333,7 @@ function TimelineRow({ step, last }: { step: Step; last: boolean }) {
         {!last && <div className="w-px flex-1 bg-white/10 mt-1" />}
       </div>
       <div className="flex-1 min-w-0 -mt-0.5">
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="font-medium text-sm">{step.label}</div>
           {step.at && (
             <div className="text-[10px] text-muted-foreground shrink-0">{formatDate(step.at)}</div>
@@ -389,15 +389,15 @@ function ShareCard({ url, code }: { url: string; code: string }) {
         <p className="text-xs text-muted-foreground/80 mb-1.5">
           This link is unique to this journey — simply share it directly with your partner.
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
             readOnly
             value={url}
-            className="flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-xs font-mono truncate"
+            className="min-w-0 flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-xs font-mono truncate"
           />
           <button
             onClick={copy}
-            className="rounded-xl bg-primary/15 text-primary px-3 text-xs font-medium inline-flex items-center gap-1.5 min-w-[88px] justify-center"
+            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-primary/15 px-3 text-xs font-medium text-primary sm:min-w-[88px]"
           >
             {copied === "url" ? (
               <>

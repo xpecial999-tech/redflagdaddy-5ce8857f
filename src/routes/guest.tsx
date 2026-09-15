@@ -513,7 +513,7 @@ function PartnerLinkView({
             <div className="rounded-xl border border-border bg-input p-4 text-center font-mono text-base sm:text-lg tracking-wider break-all">
               {journeyCode}
             </div>
-            <div className="grid grid-cols-2 gap-2 no-print">
+            <div className="grid gap-2 no-print sm:grid-cols-2">
               <button
                 type="button"
                 onClick={copyJourneyCode}

@@ -119,7 +119,7 @@ export function EmailOtpForm({
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
           {loading ? "Checking code…" : "Continue"}
         </button>
-        <div className="flex items-center justify-between text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
           <button
             type="button"
             className="text-muted-foreground hover:text-foreground"

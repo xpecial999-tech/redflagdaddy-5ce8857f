@@ -280,7 +280,7 @@ function Register() {
                   {loading ? "Verifying…" : "Verify & continue"}
                 </button>
               </form>
-              <div className="flex items-center justify-between mt-6 text-xs text-muted-foreground">
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
                 <button
                   type="button"
                   onClick={() => {

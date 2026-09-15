@@ -27,7 +27,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-end justify-between">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Your compass</p>
           <h1 className="text-3xl font-display font-semibold">Journeys</h1>
@@ -96,9 +96,9 @@ function Dashboard() {
                 params={{ id: j.id }}
                 className="block glass-strong rounded-2xl p-4 hover:bg-white/5 transition border border-emerald-500/20"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
                       <h3 className="font-medium truncate">{j.title}</h3>
                       <PairBadge pairSide={j.pair_side} />
                     </div>
@@ -107,7 +107,7 @@ function Dashboard() {
                       View report
                     </p>
                   </div>
-                  <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">
+                  <span className="shrink-0 text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">
                     {j.participant_type}
                   </span>
                 </div>
@@ -132,9 +132,9 @@ function Dashboard() {
                 params={{ id: j.id }}
                 className="block glass rounded-2xl p-4 hover:bg-white/5 transition"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
                       <h3 className="font-medium truncate">{j.title}</h3>
                       <PairBadge pairSide={j.pair_side} />
                     </div>
@@ -145,7 +145,7 @@ function Dashboard() {
                       <span className="font-mono">{j.invite_code}</span>
                     </p>
                   </div>
-                  <span className="text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-white/5 text-muted-foreground">
+                  <span className="shrink-0 text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-white/5 text-muted-foreground">
                     {j.participant_type}
                   </span>
                 </div>

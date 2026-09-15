@@ -329,7 +329,7 @@ function AssessmentPage() {
         </AnimatePresence>
 
         {/* Nav */}
-        <div className="flex items-center justify-between gap-3 mt-6">
+        <div className="mt-6 grid grid-cols-2 items-center gap-3 sm:grid-cols-3">
           <Button variant="ghost" onClick={goPrev} disabled={cursor === 0}>
             <ArrowLeft className="w-4 h-4 mr-1" /> Back
           </Button>
@@ -337,7 +337,7 @@ function AssessmentPage() {
           <Link
             to="/journey/$code"
             params={{ code }}
-            className="text-xs text-muted-foreground hover:text-foreground transition"
+            className="order-3 col-span-2 text-center text-xs text-muted-foreground transition hover:text-foreground sm:order-none sm:col-span-1"
           >
             Save & exit
           </Link>
@@ -350,6 +350,7 @@ function AssessmentPage() {
                 saveMutation.isPending ||
                 completeMutation.isPending
               }
+              className="justify-self-end"
             >
               {saveMutation.isPending
                 ? "Saving…"
@@ -362,6 +363,7 @@ function AssessmentPage() {
             <Button
               onClick={goNext}
               disabled={!hasAnswer || saveMutation.isPending}
+              className="justify-self-end"
             >
               {saveMutation.isPending ? "Saving…" : "Next"}{" "}
               <ArrowRight className="w-4 h-4 ml-1" />

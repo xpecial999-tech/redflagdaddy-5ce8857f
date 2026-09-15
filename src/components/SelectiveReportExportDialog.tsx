@@ -49,7 +49,7 @@ export function SelectiveReportExportDialog({ input, open, onOpenChange }: Props
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[calc(100dvh-1.5rem)] max-w-md overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <DialogHeader>
           <DialogTitle>Choose report dimensions</DialogTitle>
           <DialogDescription>

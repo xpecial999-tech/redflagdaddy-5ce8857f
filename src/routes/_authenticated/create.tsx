@@ -113,7 +113,7 @@ function Create() {
           {step < 5 ? "Create journey" : "Journey ready"}
         </h1>
         {ent.data?.paidModeEnabled && !ent.data.isPaid && (
-          <div className="mt-3 glass rounded-xl p-3 text-xs flex items-center justify-between gap-2">
+          <div className="mt-3 glass rounded-xl p-3 text-xs flex flex-wrap items-center justify-between gap-2">
             <span className="text-muted-foreground">
               Free plan · {qLimit} questions · {ent.data.activeJourneys}/{ent.data.freeJourneyCap}{" "}
               journeys used
@@ -235,7 +235,7 @@ function Create() {
             {mode === "deep" && canDeepDive && (
               <div className="mt-4">
                 <p className="text-xs text-muted-foreground mb-2">Choose at least one category</p>
-                <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+                <div className="grid max-h-72 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
                   {(cats.data?.categories ?? []).map((c) => {
                     const on = categoryIds.includes(c.id);
                     return (
@@ -461,15 +461,15 @@ function SuccessScreen({
           <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
             <Link2 className="w-3.5 h-3.5" /> Invite URL
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input
               readOnly
               value={url}
-              className="flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-xs font-mono truncate"
+              className="min-w-0 flex-1 rounded-xl bg-input border border-border px-3 py-2.5 text-xs font-mono truncate"
             />
             <button
               onClick={() => copy(url, "url")}
-              className="rounded-xl bg-primary/15 text-primary px-3 text-xs font-medium inline-flex items-center gap-1.5 min-w-[88px] justify-center"
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-primary/15 px-3 text-xs font-medium text-primary sm:min-w-[88px]"
             >
               {copied === "url" ? (
                 <>

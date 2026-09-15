@@ -200,7 +200,7 @@ function BasicScoreBreakdown({ scores }: { scores: Scores }) {
         <div className="grid md:grid-cols-2 gap-3">
           {rows.map((row) => (
             <div key={row.title} className="rounded-xl border border-border bg-input/40 p-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="font-medium">{row.title}</h3>
                 <span className="font-display text-2xl font-semibold">{Math.round(row.value)}</span>
               </div>
