@@ -1,9 +1,18 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Plus, User, Shield, LogIn } from "lucide-react";
+import { LayoutDashboard, Plus, User, Shield, LogIn, Menu } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, type ReactNode } from "react";
 import { useMe } from "@/hooks/use-me";
 import { useConstructionMode } from "@/hooks/use-construction-mode";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const baseNavItems = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -80,6 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <LogIn className="w-4 h-4" /> Sign in
                 </Link>
               )}
+              {!hideNav && <AppMenu navItems={navItems} pathname={pathname} />}
             </div>
           </div>
         </header>
@@ -88,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {deskMode && <DeskModeOverlay onClose={() => setDeskMode(false)} />}
 
       <main
-        className={`flex-1 px-4 pt-6 mx-auto w-full ${adminWorkspace ? "max-w-7xl pb-10" : "max-w-3xl pb-[calc(7rem+env(safe-area-inset-bottom))]"}`}
+        className={`flex-1 px-4 pt-6 mx-auto w-full ${adminWorkspace ? "max-w-7xl pb-10" : "max-w-3xl pb-10"}`}
       >
         <motion.div
           key={pathname}
@@ -120,41 +130,56 @@ export function AppShell({ children }: { children: ReactNode }) {
         </footer>
       )}
 
-      {!hideNav && (
-        <nav className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-40 max-w-3xl mx-auto">
-          <div className="glass-strong rounded-2xl px-2 py-2 flex justify-around">
-            {navItems.map((item) => {
-              const active = pathname.startsWith(item.to);
-              const Icon = item.icon;
-              return (
+    </div>
+  );
+}
+
+type NavItem = (typeof baseNavItems)[number] | { to: "/admin"; label: string; icon: typeof Shield };
+
+function AppMenu({ navItems, pathname }: { navItems: NavItem[]; pathname: string }) {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <button
+          type="button"
+          aria-label="Open menu"
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-lg px-3 py-1.5 hover:bg-white/5 transition"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      </SheetTrigger>
+      <SheetContent
+        side="right"
+        className="w-[min(88vw,22rem)] overflow-y-auto border-white/10 bg-background/95 pb-[calc(1.5rem+env(safe-area-inset-bottom))] backdrop-blur"
+      >
+        <SheetHeader className="pr-8 text-left">
+          <SheetTitle>Menu</SheetTitle>
+          <SheetDescription>Move around RedFlagDaddy without blocking the page.</SheetDescription>
+        </SheetHeader>
+        <nav className="mt-6 space-y-2" aria-label="Main navigation">
+          {navItems.map((item) => {
+            const active = pathname.startsWith(item.to);
+            const Icon = item.icon;
+            return (
+              <SheetClose asChild key={item.to}>
                 <Link
-                  key={item.to}
                   to={item.to}
                   aria-current={active ? "page" : undefined}
-                  className="relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-2 py-2 text-xs"
+                  className={`flex min-h-14 items-center gap-3 rounded-2xl border px-4 text-sm transition ${
+                    active
+                      ? "border-primary/40 bg-primary/15 text-foreground"
+                      : "border-border bg-input/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  }`}
                 >
-                  {active && (
-                    <motion.div
-                      layoutId="nav-active"
-                      className="absolute inset-0 bg-gradient-to-br from-aurora-1/30 to-aurora-2/30 rounded-xl border border-white/10"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <Icon
-                    className={`w-5 h-5 relative ${active ? "text-primary" : "text-muted-foreground"}`}
-                  />
-                  <span
-                    className={`relative ${active ? "text-foreground font-medium" : "text-muted-foreground"}`}
-                  >
-                    {item.label}
-                  </span>
+                  <Icon className={`h-5 w-5 shrink-0 ${active ? "text-primary" : ""}`} />
+                  <span className="font-medium">{item.label}</span>
                 </Link>
-              );
-            })}
-          </div>
+              </SheetClose>
+            );
+          })}
         </nav>
-      )}
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
