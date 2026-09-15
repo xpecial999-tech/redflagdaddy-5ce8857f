@@ -1,21 +1,36 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { throwPublicDataError } from "./public-data-error";
+import { RateLimitError } from "./rate-limit.server";
 
 const CodeSchema = z.object({
   code: z.string().trim().min(4).max(64),
 });
 
 function normalizeCode(raw: string) {
-  return raw.trim();
+  return raw.trim().toUpperCase();
+}
+
+async function consumeInviteRateLimits(
+  rules: Parameters<(typeof import("./rate-limit.server"))["consumeRateLimits"]>[0],
+) {
+  const { consumeRateLimits } = await import("./rate-limit.server");
+  try {
+    await consumeRateLimits(rules);
+  } catch (error) {
+    if (error instanceof RateLimitError) throw error;
+    console.error("[invite] Rate-limit infrastructure failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 export const validateInvite = createServerFn({ method: "POST" })
   .validator((data: unknown) => CodeSchema.parse(data))
   .handler(async ({ data }) => {
     const code = normalizeCode(data.code);
-    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
-    await consumeRateLimits([
+    const { callerIp } = await import("./rate-limit.server");
+    await consumeInviteRateLimits([
       {
         action: "invite_validate_ip",
         value: callerIp(),
@@ -83,8 +98,8 @@ export const startInvite = createServerFn({ method: "POST" })
   .validator((data: unknown) => CodeSchema.parse(data))
   .handler(async ({ data }) => {
     const code = normalizeCode(data.code);
-    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
-    await consumeRateLimits([
+    const { callerIp } = await import("./rate-limit.server");
+    await consumeInviteRateLimits([
       {
         action: "invite_start_ip",
         value: callerIp(),
