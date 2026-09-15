@@ -41,8 +41,8 @@ describe("anonymous journey privacy surface", () => {
   });
 
   it("keeps no-account guest journeys on the quick question set", () => {
-    expect(guestFunctions).toContain("const GUEST_QUESTION_LIMIT = 50");
+    expect(guestFunctions).toContain("const GUEST_QUESTION_LIMIT = 15");
     expect(guestFunctions).toContain("question_limit: GUEST_QUESTION_LIMIT");
-    expect(assessmentFunctions).toContain("limit = 50");
+    expect(assessmentFunctions).toContain("limit = 15");
   });
 });

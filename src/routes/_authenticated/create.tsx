@@ -75,7 +75,7 @@ function Create() {
           recipientPhone: null,
           notes: notes.trim() || null,
           categoryIds: mode === "deep" && categoryIds.length > 0 ? categoryIds : null,
-          questionLimit: mode === "quick" ? 50 : null,
+          questionLimit: mode === "quick" ? 15 : null,
         },
       }),
     onSuccess: () => {
@@ -200,7 +200,7 @@ function Create() {
                       <Zap className="w-4 h-4 text-aurora-1" /> Quick assessment
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
-                      ≈{Math.min(50, qLimit)} questions — a fair spread across all categories.
+                      ≈{Math.min(15, qLimit)} questions — a fast test spread across all categories.
                     </div>
                   </div>
                   {mode === "quick" && <Check className="w-4 h-4 text-primary" />}

@@ -6,7 +6,7 @@ import { ALL_ROLES } from "./roles";
 import { throwPublicDataError } from "./public-data-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const GUEST_QUESTION_LIMIT = 50;
+const GUEST_QUESTION_LIMIT = 15;
 
 const CreateGuestSchema = z
   .object({
