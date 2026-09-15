@@ -10,7 +10,7 @@ import {
   type AnswerOption,
   type AssessmentQuestion,
 } from "@/lib/assessment-questions";
-import { expandRoleForFiltering } from "./roles";
+import { expandRoleForFiltering, getBroadFamily } from "./roles";
 import { throwPublicDataError } from "./public-data-error";
 import { RateLimitError } from "./rate-limit.server";
 
@@ -123,7 +123,13 @@ async function loadAssignedQuestions(
   });
   if (error) throwPublicDataError(error, "load assessment questions");
 
-  const available = (questions ?? []) as unknown as AssessmentQuestion[];
+  const broadFamily = getBroadFamily(journey.participant_type);
+  const available = ((questions ?? []) as unknown as AssessmentQuestion[]).filter((question) => {
+    const categoryName = question.question_categories?.name;
+    if (broadFamily === "submissive" && categoryName === "Dominant Skills") return false;
+    if (broadFamily === "Dominant" && categoryName === "Submissive Skills") return false;
+    return true;
+  });
   return limit != null && !categoryIds
     ? selectAssessmentQuestions(available, limit, journey.id)
     : available;

@@ -36,6 +36,8 @@ describe("journey pair surface", () => {
 
   it("does not invite repeated self-assessment creation on the owner side", () => {
     expect(journeyRoute).toContain('journey.pair_side === "owner"');
-    expect(journeyRoute).toContain("!isOwnerSide && <SelfAssessmentCard");
+    expect(journeyRoute).toContain("const shouldShowSelfAssessment");
+    expect(journeyRoute).toContain('effectiveStatus !== "completed"');
+    expect(journeyRoute).toContain("shouldShowSelfAssessment && <SelfAssessmentCard");
   });
 });

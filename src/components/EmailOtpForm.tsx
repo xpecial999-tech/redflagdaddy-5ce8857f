@@ -27,6 +27,8 @@ export function EmailOtpForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submittedToken = useRef<string | null>(null);
+  const canRequestCode =
+    email.trim().includes("@") && !(mode === "register" && !registrationAcknowledged);
 
   const requestCode = async (event?: React.FormEvent) => {
     event?.preventDefault();
@@ -158,8 +160,8 @@ export function EmailOtpForm({
         </p>
       )}
       <button
-        disabled={loading || !email.trim() || (mode === "register" && !registrationAcknowledged)}
-        className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium disabled:opacity-60"
+        disabled={loading || !canRequestCode}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed enabled:border-primary/40 enabled:bg-primary enabled:text-primary-foreground enabled:shadow-lg enabled:shadow-primary/25 disabled:border-border disabled:bg-input"
       >
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
         {loading ? "Sending code…" : "Email me a sign-in code"}

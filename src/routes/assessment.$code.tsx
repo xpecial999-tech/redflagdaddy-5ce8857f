@@ -472,86 +472,11 @@ function QuestionInput({
   }
 
   if (type === "scale") {
-    const v = typeof value === "number" && Number.isFinite(value) ? value : 5;
-    return (
-      <div>
-        <div className="flex justify-between text-xs text-muted-foreground mb-3">
-          <span>Not important</span>
-          <motion.span
-            key={v}
-            initial={{ scale: 0.85, opacity: 0.6 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="text-foreground font-medium text-base"
-          >
-            {v}
-          </motion.span>
-          <span>Critical</span>
-        </div>
-        <Slider
-          min={1}
-          max={10}
-          step={1}
-          value={[v]}
-          onValueChange={(arr) => {
-            const n = Number(arr[0]);
-            if (Number.isFinite(n)) onChange(n);
-          }}
-        />
-        <div className="flex justify-between text-[10px] text-muted-foreground mt-2 px-1">
-          {Array.from({ length: 10 }, (_, i) => (
-            <span key={i}>{i + 1}</span>
-          ))}
-        </div>
-      </div>
-    );
+    return <ScaleInput value={value} questionId={question.id} onChange={onChange} />;
   }
 
   if (type === "slider") {
-    const rawCfg = Array.isArray(question.answer_options)
-      ? (question.answer_options[0] as { min?: unknown; max?: unknown; step?: unknown } | undefined)
-      : (question.answer_options as unknown as { min?: unknown; max?: unknown; step?: unknown } | undefined);
-    const toNum = (x: unknown, fallback: number) => {
-      const n = typeof x === "number" ? x : typeof x === "string" ? parseFloat(x) : NaN;
-      return Number.isFinite(n) ? n : fallback;
-    };
-    const min = toNum(rawCfg?.min, 0);
-    const max = toNum(rawCfg?.max, 100);
-    const step = toNum(rawCfg?.step, 1);
-    const mid = Math.round((min + max) / 2);
-    const v =
-      typeof value === "number" && Number.isFinite(value)
-        ? value
-        : typeof value === "string" && Number.isFinite(parseFloat(value))
-          ? parseFloat(value)
-          : mid;
-    return (
-      <div>
-        <motion.div
-          key={v}
-          initial={{ scale: 0.9, opacity: 0.5 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-          className="text-center text-2xl font-display font-semibold mb-4"
-        >
-          {v}
-        </motion.div>
-        <Slider
-          min={min}
-          max={max}
-          step={step}
-          value={[v]}
-          onValueChange={(arr) => {
-            const n = Number(arr[0]);
-            if (Number.isFinite(n)) onChange(n);
-          }}
-        />
-        <div className="flex justify-between text-xs text-muted-foreground mt-2">
-          <span>{min}</span>
-          <span>{max}</span>
-        </div>
-      </div>
-    );
+    return <RangeInput question={question} value={value} onChange={onChange} />;
   }
 
   // text / open
@@ -567,6 +492,125 @@ function QuestionInput({
       <Label className="text-xs text-muted-foreground mt-2 block">
         Be as honest and specific as you're comfortable with.
       </Label>
+    </div>
+  );
+}
+
+function ScaleInput({
+  value,
+  questionId,
+  onChange,
+}: {
+  value: unknown;
+  questionId: string;
+  onChange: (v: unknown) => void;
+}) {
+  const committed = typeof value === "number" && Number.isFinite(value) ? value : 5;
+  const [draft, setDraft] = useState(committed);
+
+  useEffect(() => {
+    setDraft(committed);
+  }, [committed, questionId]);
+
+  return (
+    <div>
+      <div className="flex justify-between text-xs text-muted-foreground mb-3">
+        <span>Not important</span>
+        <motion.span
+          key={draft}
+          initial={{ scale: 0.85, opacity: 0.6 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+          className="text-foreground font-medium text-base"
+        >
+          {draft}
+        </motion.span>
+        <span>Critical</span>
+      </div>
+      <Slider
+        min={1}
+        max={10}
+        step={1}
+        value={[draft]}
+        onValueChange={(arr) => {
+          const n = Number(arr[0]);
+          if (Number.isFinite(n)) setDraft(n);
+        }}
+        onValueCommit={(arr) => {
+          const n = Number(arr[0]);
+          if (Number.isFinite(n)) onChange(n);
+        }}
+      />
+      <div className="flex justify-between text-[10px] text-muted-foreground mt-2 px-1">
+        {Array.from({ length: 10 }, (_, i) => (
+          <span key={i}>{i + 1}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RangeInput({
+  question,
+  value,
+  onChange,
+}: {
+  question: Question;
+  value: unknown;
+  onChange: (v: unknown) => void;
+}) {
+  const rawCfg = Array.isArray(question.answer_options)
+    ? (question.answer_options[0] as { min?: unknown; max?: unknown; step?: unknown } | undefined)
+    : (question.answer_options as unknown as { min?: unknown; max?: unknown; step?: unknown } | undefined);
+  const toNum = (x: unknown, fallback: number) => {
+    const n = typeof x === "number" ? x : typeof x === "string" ? parseFloat(x) : NaN;
+    return Number.isFinite(n) ? n : fallback;
+  };
+  const min = toNum(rawCfg?.min, 0);
+  const max = toNum(rawCfg?.max, 100);
+  const step = toNum(rawCfg?.step, 1);
+  const mid = Math.round((min + max) / 2);
+  const committed =
+    typeof value === "number" && Number.isFinite(value)
+      ? value
+      : typeof value === "string" && Number.isFinite(parseFloat(value))
+        ? parseFloat(value)
+        : mid;
+  const [draft, setDraft] = useState(committed);
+
+  useEffect(() => {
+    setDraft(committed);
+  }, [committed, question.id]);
+
+  return (
+    <div>
+      <motion.div
+        key={draft}
+        initial={{ scale: 0.9, opacity: 0.5 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        className="text-center text-2xl font-display font-semibold mb-4"
+      >
+        {draft}
+      </motion.div>
+      <Slider
+        min={min}
+        max={max}
+        step={step}
+        value={[draft]}
+        onValueChange={(arr) => {
+          const n = Number(arr[0]);
+          if (Number.isFinite(n)) setDraft(n);
+        }}
+        onValueCommit={(arr) => {
+          const n = Number(arr[0]);
+          if (Number.isFinite(n)) onChange(n);
+        }}
+      />
+      <div className="flex justify-between text-xs text-muted-foreground mt-2">
+        <span>{min}</span>
+        <span>{max}</span>
+      </div>
     </div>
   );
 }

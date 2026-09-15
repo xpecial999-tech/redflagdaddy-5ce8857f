@@ -102,6 +102,7 @@ function JourneyTracker() {
   const effectiveStatus = isExpired && journey.status !== "completed" ? "expired" : journey.status;
   const url = journey.invite_url ?? "";
   const isOwnerSide = journey.pair_side === "owner";
+  const shouldShowSelfAssessment = !isOwnerSide && effectiveStatus !== "completed";
 
   const steps = buildSteps({
     createdAt: journey.created_at,
@@ -186,7 +187,9 @@ function JourneyTracker() {
           <p className="mt-1 text-sm text-muted-foreground">
             {isOwnerSide
               ? "This is your side of a paired assessment. Complete it so it can sit beside your partner journey."
-              : "Share the link with your partner, then complete your own side while they answer theirs."}
+              : effectiveStatus === "completed"
+                ? "Your assessment is complete. The report will be ready when both sides are finished."
+                : "Share the link with your partner, then complete your own side while they answer theirs."}
           </p>
         </div>
         <div className="flex justify-center">
@@ -211,7 +214,7 @@ function JourneyTracker() {
         </div>
       </motion.section>
 
-      {!isOwnerSide && <SelfAssessmentCard journey={journey} />}
+      {shouldShowSelfAssessment && <SelfAssessmentCard journey={journey} />}
 
       {/* Share & send */}
       <section className="space-y-3">

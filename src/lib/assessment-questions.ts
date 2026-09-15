@@ -96,7 +96,13 @@ export function selectAssessmentQuestions<
   for (const [categoryId, categoryQuestions] of byCategory) {
     const ranked = categoryQuestions.map((question) => ({
       question,
-      score: (Number(question.weight) || 1) * 10 + (RISK_RANK[question.risk_level] ?? 1),
+      // Keep quick packs broad and human-feeling. Weight/risk still nudges the
+      // sample, but it must not dominate it; otherwise each category becomes a
+      // wall of near-duplicate critical consent/safety questions.
+      score:
+        random() +
+        Math.min(Number(question.weight) || 1, 5) * 0.025 +
+        (RISK_RANK[question.risk_level] ?? 1) * 0.02,
       random: random(),
     }));
     ranked.sort((left, right) => right.score - left.score || left.random - right.random);
