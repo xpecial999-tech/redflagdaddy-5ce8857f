@@ -265,9 +265,9 @@ function AssessmentPage() {
           ) : (
             <Button
               onClick={goNext}
-              disabled={saveMutation.isPending}
+              disabled={!hasAnswer || saveMutation.isPending}
             >
-              {saveMutation.isPending ? "Saving…" : "Skip"}{" "}
+              {saveMutation.isPending ? "Saving…" : "Next"}{" "}
               <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           )}
