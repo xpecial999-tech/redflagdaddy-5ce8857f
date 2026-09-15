@@ -16,6 +16,8 @@
       "name": "redflagdaddy-staging",
       "vars": {
         "CONSTRUCTION_MODE": "disabled",
+        "AI_ANALYSIS_MODE": "enabled",
+        "OPENROUTER_MODEL": "nex-agi/nex-n2.5-pro:free",
         "RATE_LIMIT_MULTIPLIER": "20",
         "TURNSTILE_EXPECTED_HOSTNAME": "staging.redflagdaddy.com",
         "VITE_TURNSTILE_SITE_KEY": "0x4AAAAAAErlu0pxQpbQkeVD",

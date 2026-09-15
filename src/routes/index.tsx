@@ -128,16 +128,19 @@ function JourneyLookup() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 2.8 }}
-      className="glass mx-auto max-w-lg rounded-2xl p-4 sm:p-5 space-y-3"
+      className={`glass mx-auto rounded-2xl p-4 sm:p-5 space-y-3 ${
+        result?.status === "completed" ? "max-w-6xl" : "max-w-lg"
+      }`}
     >
       <div className="flex items-start gap-2.5">
         <Search className="mt-0.5 h-4 w-4 text-primary/80" />
         <div>
           <h2 className="font-display text-base font-semibold tracking-tight">
-            Returning to a journey?
+            Check a journey
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Enter your journey code to check progress or view your summary.
+            If you created a partner link, enter its journey code to check progress or view the
+            results.
           </p>
         </div>
       </div>
@@ -167,7 +170,7 @@ function JourneyLookup() {
           disabled={lookup.isPending || !journeyCode.trim()}
           className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary/90 px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
         >
-          <Search className="h-3.5 w-3.5" /> {lookup.isPending ? "Checking…" : "Check code"}
+          <Search className="h-3.5 w-3.5" /> {lookup.isPending ? "Checking…" : "View status"}
         </button>
       </form>
 
@@ -191,7 +194,7 @@ function JourneyLookup() {
         </p>
       )}
       {result?.status === "completed" && (
-        <div className="space-y-4 pt-2">
+        <div className="space-y-5 pt-4">
           <div className="flex justify-end no-print">
             <button
               type="button"

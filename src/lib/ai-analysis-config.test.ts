@@ -4,12 +4,12 @@ import { isAiAnalysisEnabled, runWhenAiAnalysisEnabled } from "./ai-analysis-con
 describe("AI analysis processing gate", () => {
   it("is disabled unless both explicit approval and a provider key are present", () => {
     expect(isAiAnalysisEnabled({})).toBe(false);
-    expect(isAiAnalysisEnabled({ LOVABLE_API_KEY: "secret" })).toBe(false);
+    expect(isAiAnalysisEnabled({ OPENROUTER_API_KEY: "secret" })).toBe(false);
     expect(isAiAnalysisEnabled({ AI_ANALYSIS_MODE: "enabled" })).toBe(false);
     expect(
       isAiAnalysisEnabled({
         AI_ANALYSIS_MODE: " ENABLED ",
-        LOVABLE_API_KEY: " secret ",
+        OPENROUTER_API_KEY: " secret ",
       }),
     ).toBe(true);
   });
@@ -18,7 +18,7 @@ describe("AI analysis processing gate", () => {
     const operation = vi.fn(async () => "processed");
 
     await expect(
-      runWhenAiAnalysisEnabled(operation, { LOVABLE_API_KEY: "secret" }),
+      runWhenAiAnalysisEnabled(operation, { OPENROUTER_API_KEY: "secret" }),
     ).resolves.toBeNull();
     expect(operation).not.toHaveBeenCalled();
   });
@@ -29,7 +29,7 @@ describe("AI analysis processing gate", () => {
     await expect(
       runWhenAiAnalysisEnabled(operation, {
         AI_ANALYSIS_MODE: "enabled",
-        LOVABLE_API_KEY: "secret",
+        OPENROUTER_API_KEY: "secret",
       }),
     ).resolves.toBe("processed");
     expect(operation).toHaveBeenCalledOnce();

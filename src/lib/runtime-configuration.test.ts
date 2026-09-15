@@ -53,6 +53,7 @@ describe("runtime configuration inventory", () => {
       "CLICKATELL_CALLBACK_PASSWORD",
       "TURNSTILE_SECRET_KEY",
       "LOVABLE_API_KEY",
+      "OPENROUTER_API_KEY",
       "PEACH_ACCESS_TOKEN",
       "PEACH_WEBHOOK_SECRET",
     ]) {

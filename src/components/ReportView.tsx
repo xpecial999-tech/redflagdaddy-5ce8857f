@@ -41,7 +41,7 @@ export function ReportView({
   analysis: AnalysisPayload | null;
 }) {
   return (
-    <div className="report-printable max-w-5xl mx-auto space-y-6">
+    <div className="report-printable w-full max-w-5xl mx-auto space-y-6">
       <header className="text-center space-y-2">
         <h1 className="font-display text-3xl font-semibold tracking-tight">
           Assessment Report
@@ -52,7 +52,7 @@ export function ReportView({
         </p>
       </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <ScoreTile label="Safety" value={scores.safety} positive />
         <ScoreTile label="Compatibility" value={scores.compatibility} positive />
         <ScoreTile label="Green Flags" value={scores.green} positive />
@@ -85,12 +85,7 @@ export function ReportView({
           </Card>
         </>
       ) : (
-        <Card>
-          <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            Detailed analysis is not available for this report. The score
-            summary above remains available.
-          </CardContent>
-        </Card>
+        <BasicScoreBreakdown scores={scores} />
       )}
     </div>
   );
@@ -117,9 +112,9 @@ function ScoreTile({
         ? "text-amber-500"
         : "text-emerald-500";
   return (
-    <Card>
-      <CardContent className="p-4 text-center">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">
+    <Card className="min-w-0">
+      <CardContent className="p-4 text-center min-w-0">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground break-words">
           {label}
         </p>
         <p className={`text-3xl font-display font-semibold mt-1 ${tone}`}>
@@ -129,6 +124,92 @@ function ScoreTile({
       </CardContent>
     </Card>
   );
+}
+
+function BasicScoreBreakdown({ scores }: { scores: Scores }) {
+  const rows = [
+    {
+      title: "Safety",
+      value: scores.safety,
+      body: describePositiveScore(
+        scores.safety,
+        "Safety responses show stronger care around consent, limits and risk management.",
+        "Safety responses suggest this area needs a direct conversation before relying on the result.",
+      ),
+    },
+    {
+      title: "Compatibility",
+      value: scores.compatibility,
+      body: describePositiveScore(
+        scores.compatibility,
+        "Compatibility signals suggest useful overlap in preferences and expectations.",
+        "Compatibility signals are limited or mixed, so compare expectations carefully.",
+      ),
+    },
+    {
+      title: "Green flags",
+      value: scores.green,
+      body: describePositiveScore(
+        scores.green,
+        "Green-flag responses show constructive habits worth discussing and preserving.",
+        "Green-flag signals are not very strong yet, so look for concrete examples in conversation.",
+      ),
+    },
+    {
+      title: "Red flags",
+      value: scores.red,
+      body:
+        scores.red >= 60
+          ? "Red-flag signals are elevated. Treat this as a prompt to slow down, ask direct questions and set clear boundaries."
+          : scores.red >= 30
+            ? "Some red-flag signals are present. Talk through them before making assumptions."
+            : "Red-flag signals are low from the available answers, but this is not a guarantee of safety.",
+    },
+    {
+      title: "Experience",
+      value: scores.experience,
+      body: describePositiveScore(
+        scores.experience,
+        "Experience signals suggest the respondent may have enough context to discuss this dynamic clearly.",
+        "Experience signals are limited, so keep expectations explicit and avoid assuming shared vocabulary.",
+      ),
+    },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Score breakdown</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          The detailed narrative analysis has not been generated for this report yet. The score
+          breakdown below is available immediately and can still guide the follow-up conversation.
+        </p>
+        <div className="grid md:grid-cols-2 gap-3">
+          {rows.map((row) => (
+            <div key={row.title} className="rounded-xl border border-border bg-input/40 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="font-medium">{row.title}</h3>
+                <span className="font-display text-2xl font-semibold">{Math.round(row.value)}</span>
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{row.body}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs italic text-muted-foreground">
+          RedFlagDaddy is a structured conversation aid, not identity verification, proof of
+          consent, a diagnosis or a guarantee of safety.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function describePositiveScore(value: number, strong: string, weak: string) {
+  if (value >= 70) return strong;
+  if (value >= 40) return "This area is mixed. Use it as a prompt for a specific conversation.";
+  return weak;
 }
 
 function ReadinessCard({ r }: { r: AnalysisPayload["dynamic_readiness"] }) {

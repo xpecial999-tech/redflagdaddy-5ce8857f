@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { callStructuredAi, type StructuredAiTool } from "@/lib/ai-provider";
 import { z } from "zod";
 import { ALL_ROLES, type Role } from "./roles";
 
@@ -148,11 +149,8 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
       current: (r.applies_to ?? []) as string[],
     }));
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("LOVABLE_API_KEY not configured");
-
     const roleEnum = ALL_ROLES as unknown as string[];
-    const tool = {
+    const tool: StructuredAiTool = {
       type: "function",
       function: {
         name: "submit_tags",
@@ -189,31 +187,17 @@ export const aiSuggestAndApplyAppliesTo = createServerFn({ method: "POST" })
 
     const suggestions = new Map<string, Role[]>();
     for (const chunk of chunks) {
-      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: AI_SYSTEM_PROMPT },
-            { role: "user", content: JSON.stringify({ questions: chunk }) },
-          ],
-          tools: [tool],
-          tool_choice: { type: "function", function: { name: "submit_tags" } },
-        }),
-      });
-      if (!resp.ok) {
-        const t = await resp.text();
-        if (resp.status === 429) throw new Error("Rate limits exceeded, try again shortly.");
-        if (resp.status === 402) throw new Error("AI credits exhausted. Add credits in your workspace.");
-        throw new Error(`AI gateway error (${resp.status}): ${t.slice(0, 200)}`);
-      }
-      const json = await resp.json();
-      const call = json?.choices?.[0]?.message?.tool_calls?.[0];
-      if (!call?.function?.arguments) throw new Error("AI did not return structured tags.");
-      const parsed = JSON.parse(call.function.arguments) as {
+      const parsed = await callStructuredAi<{
         results: { id: string; applies_to: string[] }[];
-      };
+      }>({
+        messages: [
+          { role: "system", content: AI_SYSTEM_PROMPT },
+          { role: "user", content: JSON.stringify({ questions: chunk }) },
+        ],
+        tools: [tool],
+        toolName: "submit_tags",
+        maxTokens: 2500,
+      });
       for (const r of parsed.results ?? []) {
         const roles = Array.from(new Set(r.applies_to)).filter((x): x is Role =>
           (ALL_ROLES as readonly string[]).includes(x),

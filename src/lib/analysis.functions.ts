@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isAiAnalysisEnabled } from "@/lib/ai-analysis-config";
+import { callStructuredAi, type StructuredAiTool } from "@/lib/ai-provider";
 import { z } from "zod";
 
 const IdSchema = z.object({ journeyId: z.string().uuid() });
@@ -105,9 +106,6 @@ async function buildAnswerDigest(
 }
 
 async function callGateway(scores: ScoreBundle, digest: unknown): Promise<AnalysisPayload> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("LOVABLE_API_KEY not configured");
-
   const sectionSchema = {
     type: "object",
     properties: {
@@ -122,7 +120,7 @@ async function callGateway(scores: ScoreBundle, digest: unknown): Promise<Analys
     additionalProperties: false,
   };
 
-  const tool = {
+  const tool: StructuredAiTool = {
     type: "function",
     function: {
       name: "submit_analysis",
@@ -168,34 +166,15 @@ async function callGateway(scores: ScoreBundle, digest: unknown): Promise<Analys
     answer_digest: digest,
   };
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: JSON.stringify(userPayload) },
-      ],
-      tools: [tool],
-      tool_choice: { type: "function", function: { name: "submit_analysis" } },
-    }),
+  const parsed = await callStructuredAi<Omit<AnalysisPayload, "generated_at">>({
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: JSON.stringify(userPayload) },
+    ],
+    tools: [tool],
+    toolName: "submit_analysis",
+    maxTokens: 3500,
   });
-
-  if (!resp.ok) {
-    const text = await resp.text();
-    if (resp.status === 429) throw new Error("Rate limits exceeded, please try again later.");
-    if (resp.status === 402) throw new Error("AI credits exhausted. Please add credits in your workspace.");
-    throw new Error(`AI gateway error (${resp.status}): ${text.slice(0, 200)}`);
-  }
-
-  const json = await resp.json();
-  const call = json?.choices?.[0]?.message?.tool_calls?.[0];
-  if (!call?.function?.arguments) throw new Error("AI did not return a structured analysis.");
-  const parsed = JSON.parse(call.function.arguments);
   return { ...parsed, generated_at: new Date().toISOString() };
 }
 

@@ -27,6 +27,7 @@ control rather than a plaintext variable or repository file.
 | `SUPABASE_PUBLISHABLE_KEY`      | Plain server value | Auth middleware's restricted Supabase key          | Must be the publishable/anon key                         |
 | `SUPABASE_SERVICE_ROLE_KEY`     | Encrypted secret   | Trusted server-only database operations            | Never expose to browser code or logs                     |
 | `OTP_SECRET`                    | Encrypted secret   | OTP hashing and hashed abuse/rate-limit keys       | Unique, long and different per environment               |
+| `RATE_LIMIT_MULTIPLIER`         | Plain server value | Raises or lowers rate-limit thresholds per environment | Use only for controlled staging load testing          |
 | `PUBLIC_SITE_URL`               | Plain server value | Origin used in copied/email invitation links       | Exact HTTPS origin only; staging must not use production |
 | `VITE_CONSTRUCTION_MODE`        | Public build value | Client-visible construction display flag           | Disabled on staging; production locked at Worker level   |
 
@@ -87,7 +88,7 @@ separate credentials/configuration surfaces.
 | ------------------------ | ---------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
 | `RESEND_API_KEY`         | Encrypted secret | Sends queued support-form transactional mail          | Required in the Worker; never use a `VITE_` name                |
 | `QUEUE_PROCESSOR_SECRET` | Encrypted secret | Authorizes Supabase cron/manual queue processor calls | Store the same generated value in the Worker and Supabase Vault |
-| `LOVABLE_API_KEY`        | Encrypted secret | Legacy Lovable-only webhook/AI admin paths            | Leave absent unless those legacy paths are used                 |
+| `LOVABLE_API_KEY`        | Encrypted secret | Legacy Lovable-only webhook paths                      | Leave absent unless those legacy paths are used                 |
 
 Resend SMTP credentials for Supabase Auth belong in Supabase Auth/provider
 configuration. The Worker queue processor needs its own encrypted
@@ -105,9 +106,11 @@ staging deployment.
 
 ## External AI — disabled for initial launch
 
-| Name               | Required launch state                    |
-| ------------------ | ---------------------------------------- |
-| `AI_ANALYSIS_MODE` | Absent or any value other than `enabled` |
+| Name                 | Handling         | Required launch state                                      |
+| -------------------- | ---------------- | ---------------------------------------------------------- |
+| `AI_ANALYSIS_MODE`   | Plain server value | Absent or any value other than `enabled` until approved   |
+| `OPENROUTER_API_KEY` | Encrypted secret | Required only when AI analysis is enabled                  |
+| `OPENROUTER_MODEL`   | Plain server value | Optional; defaults to `nex-agi/nex-n2.5-pro:free`         |
 
 The application requires both `AI_ANALYSIS_MODE=enabled` and a provider key
 before assessment analysis can run. Do not set the enable flag for the dry run
