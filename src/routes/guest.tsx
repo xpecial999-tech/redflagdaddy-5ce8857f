@@ -70,6 +70,10 @@ function GuestPage() {
   const [notificationMode] = useState<"owner_code">("owner_code");
   const [partnerType, setPartnerType] = useState<Role | "">("");
   const [consentAcknowledged, setConsentAcknowledged] = useState(false);
+  const [formAttempted, setFormAttempted] = useState(false);
+
+  const roleMissing = formAttempted && !partnerType;
+  const consentMissing = formAttempted && !consentAcknowledged;
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -145,8 +149,19 @@ function GuestPage() {
                 This shapes the questions they'll answer first.
               </p>
               <div className="mt-3 space-y-3">
-                <RoleSelector value={partnerType} onChange={setPartnerType} />
+                <RoleSelector
+                  value={partnerType}
+                  onChange={(role) => {
+                    setPartnerType(role);
+                    if (role && consentAcknowledged) setFormAttempted(false);
+                  }}
+                />
               </div>
+              {roleMissing && (
+                <p role="alert" className="mt-3 text-xs text-destructive">
+                  Choose the role that best suits your partner before generating the link.
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -156,19 +171,31 @@ function GuestPage() {
             className="space-y-5"
             onSubmit={(e) => {
               e.preventDefault();
+              setFormAttempted(true);
+              if (!partnerType || !consentAcknowledged) return;
               mutation.mutate();
             }}
           >
             <label className="flex items-start gap-2 text-xs text-muted-foreground pt-1">
               <input
                 type="checkbox"
-                required
                 checked={consentAcknowledged}
-                onChange={(event) => setConsentAcknowledged(event.target.checked)}
+                aria-invalid={consentMissing}
+                onChange={(event) => {
+                  setConsentAcknowledged(event.target.checked);
+                  if (event.target.checked && partnerType) setFormAttempted(false);
+                }}
                 className="mt-0.5 accent-primary"
               />
               I confirm I am 18+ and agree to the consent &amp; safety guidelines.
             </label>
+
+            {consentMissing && (
+              <p role="alert" className="text-xs text-destructive">
+                Confirm you are 18+ and agree to the consent &amp; safety guidelines before
+                continuing.
+              </p>
+            )}
 
             {mutation.error && (
               <p role="alert" className="text-xs text-destructive">
@@ -177,7 +204,7 @@ function GuestPage() {
             )}
 
             <button
-              disabled={mutation.isPending || !partnerType || !consentAcknowledged}
+              disabled={mutation.isPending}
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-60"
             >
               {mutation.isPending ? "Creating…" : "Generate partner link"}
