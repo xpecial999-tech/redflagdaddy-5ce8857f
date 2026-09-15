@@ -40,6 +40,17 @@ export function ReportView({
   scores: Scores;
   analysis: AnalysisPayload | null;
 }) {
+  const completeAnalysis =
+    analysis?.dynamic_readiness &&
+    analysis.safety &&
+    analysis.consent &&
+    analysis.red_flags &&
+    analysis.green_flags &&
+    analysis.communication &&
+    analysis.compatibility
+      ? analysis
+      : null;
+
   return (
     <div className="report-printable w-full max-w-5xl mx-auto space-y-6">
       <header className="text-center space-y-2">
@@ -60,23 +71,23 @@ export function ReportView({
         <ScoreTile label="Experience" value={scores.experience} positive />
       </div>
 
-      {analysis ? (
+      {completeAnalysis ? (
         <>
-          <ReadinessCard r={analysis.dynamic_readiness} />
+          <ReadinessCard r={completeAnalysis.dynamic_readiness} />
           <div className="grid md:grid-cols-2 gap-4">
-            <SectionCard kind="safety" section={analysis.safety} />
-            <SectionCard kind="consent" section={analysis.consent} />
-            <SectionCard kind="red_flags" section={analysis.red_flags} />
-            <SectionCard kind="green_flags" section={analysis.green_flags} />
-            <SectionCard kind="communication" section={analysis.communication} />
-            <SectionCard kind="compatibility" section={analysis.compatibility} />
+            <SectionCard kind="safety" section={completeAnalysis.safety} />
+            <SectionCard kind="consent" section={completeAnalysis.consent} />
+            <SectionCard kind="red_flags" section={completeAnalysis.red_flags} />
+            <SectionCard kind="green_flags" section={completeAnalysis.green_flags} />
+            <SectionCard kind="communication" section={completeAnalysis.communication} />
+            <SectionCard kind="compatibility" section={completeAnalysis.compatibility} />
           </div>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Overall note</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground leading-relaxed">
-              {analysis.overall_note}
+              {completeAnalysis.overall_note}
               <p className="mt-4 text-xs italic">
                 This analysis is an assessment summary, not a clinical or
                 medical evaluation. No diagnosis is made or implied.

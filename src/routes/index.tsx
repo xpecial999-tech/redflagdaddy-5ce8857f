@@ -201,7 +201,7 @@ function JourneyLookup() {
               onClick={() => window.print()}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input px-4 py-2.5 text-sm font-medium"
             >
-              <Download className="h-4 w-4" /> Save / print report
+              <Download className="h-4 w-4" /> Save / print PDF
             </button>
           </div>
           <ReportView

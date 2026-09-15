@@ -45,6 +45,41 @@ export type AnalysisPayload = {
   generated_at: string;
 };
 
+const AnalysisSectionSchema = z.object({
+  title: z.string(),
+  summary: z.string(),
+  strengths: z.array(z.string()),
+  risks: z.array(z.string()),
+  missing_information: z.array(z.string()),
+  concerns: z.array(z.string()),
+});
+
+const AnalysisPayloadSchema = z.object({
+  safety: AnalysisSectionSchema,
+  compatibility: AnalysisSectionSchema,
+  red_flags: AnalysisSectionSchema,
+  green_flags: AnalysisSectionSchema,
+  communication: AnalysisSectionSchema,
+  consent: AnalysisSectionSchema,
+  dynamic_readiness: z.object({
+    score: z.number(),
+    label: z.enum(["Not ready", "Early stage", "Developing", "Ready", "Strongly ready"]),
+    rationale: z.string(),
+    strengths: z.array(z.string()),
+    risks: z.array(z.string()),
+    missing_information: z.array(z.string()),
+    concerns: z.array(z.string()),
+  }),
+  overall_note: z.string(),
+  generated_at: z.string(),
+});
+
+export function parseAnalysisPayload(value: unknown): AnalysisPayload | null {
+  const raw = typeof value === "string" ? JSON.parse(value) : value;
+  const parsed = AnalysisPayloadSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}
+
 const SYSTEM_PROMPT = `You are a professional assessment analyst writing summaries of a structured BDSM and relationship compatibility questionnaire. Your audience is the assessment creator and their prospective partner.
 
 Rules:
@@ -175,7 +210,10 @@ async function callGateway(scores: ScoreBundle, digest: unknown): Promise<Analys
     toolName: "submit_analysis",
     maxTokens: 3500,
   });
-  return { ...parsed, generated_at: new Date().toISOString() };
+  const analysis = { ...parsed, generated_at: new Date().toISOString() };
+  const valid = parseAnalysisPayload(analysis);
+  if (!valid) throw new Error("AI returned an incomplete analysis.");
+  return valid;
 }
 
 /**
@@ -260,7 +298,7 @@ export const getResults = createServerFn({ method: "POST" })
 
     let analysis: AnalysisPayload | null = null;
     if (result?.ai_summary) {
-      try { analysis = JSON.parse(result.ai_summary as string); } catch { analysis = null; }
+      try { analysis = parseAnalysisPayload(result.ai_summary); } catch { analysis = null; }
     }
     return {
       journey: {
@@ -348,7 +386,7 @@ export const getSharedReport = createServerFn({ method: "POST" })
 
     let analysis: AnalysisPayload | null = null;
     if (result.ai_summary) {
-      try { analysis = JSON.parse(result.ai_summary as string); } catch { analysis = null; }
+      try { analysis = parseAnalysisPayload(result.ai_summary); } catch { analysis = null; }
     }
 
     const j = (result as { journeys: { title: string; participant_type: string } }).journeys;

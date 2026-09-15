@@ -1,5 +1,5 @@
 const OPENROUTER_CHAT_COMPLETIONS_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_OPENROUTER_MODEL = "nex-agi/nex-n2.5-pro:free";
+const DEFAULT_OPENROUTER_MODEL = "google/gemma-4-31b-it:free";
 
 type OpenRouterMessage = {
   role: "system" | "user" | "assistant";
@@ -68,24 +68,37 @@ export async function callStructuredAi<T>({
 }: StructuredAiRequest): Promise<T> {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key?.trim()) throw new Error("OPENROUTER_API_KEY not configured");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25_000);
 
-  const resp = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": getAppOrigin(),
-      "X-OpenRouter-Title": "RedFlagDaddy",
-    },
-    body: JSON.stringify({
-      model: getOpenRouterModel(),
-      messages,
-      tools,
-      tool_choice: { type: "function", function: { name: toolName } },
-      max_tokens: maxTokens,
-      temperature,
-    }),
-  });
+  let resp: Response;
+  try {
+    resp = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": getAppOrigin(),
+        "X-OpenRouter-Title": "RedFlagDaddy",
+      },
+      body: JSON.stringify({
+        model: getOpenRouterModel(),
+        messages,
+        tools,
+        tool_choice: { type: "function", function: { name: toolName } },
+        max_tokens: maxTokens,
+        temperature,
+      }),
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("AI generation timed out. Please try again shortly.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!resp.ok) {
     const text = await resp.text();

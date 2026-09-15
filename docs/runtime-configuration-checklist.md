@@ -110,7 +110,7 @@ staging deployment.
 | -------------------- | ---------------- | ---------------------------------------------------------- |
 | `AI_ANALYSIS_MODE`   | Plain server value | Absent or any value other than `enabled` until approved   |
 | `OPENROUTER_API_KEY` | Encrypted secret | Required only when AI analysis is enabled                  |
-| `OPENROUTER_MODEL`   | Plain server value | Optional; defaults to `nex-agi/nex-n2.5-pro:free`         |
+| `OPENROUTER_MODEL`   | Plain server value | Optional; defaults to `google/gemma-4-31b-it:free`        |
 
 The application requires both `AI_ANALYSIS_MODE=enabled` and a provider key
 before assessment analysis can run. Do not set the enable flag for the dry run

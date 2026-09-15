@@ -171,11 +171,25 @@ export const lookupAnonymousJourney = createServerFn({ method: "POST" })
     let analysis: import("./analysis.functions").AnalysisPayload | null = null;
     if (result.ai_summary) {
       try {
-        analysis = JSON.parse(
-          result.ai_summary as string,
-        ) as import("./analysis.functions").AnalysisPayload;
+        const { parseAnalysisPayload } = await import("./analysis.functions");
+        analysis = parseAnalysisPayload(result.ai_summary);
       } catch {
         analysis = null;
+      }
+    }
+    if (!analysis) {
+      try {
+        const { isAiAnalysisEnabled } = await import("./ai-analysis-config");
+        if (isAiAnalysisEnabled()) {
+          const { runAnalysisInternal } = await import("./analysis.functions");
+          const generated = await runAnalysisInternal(journey.id);
+          analysis = generated.analysis;
+        }
+      } catch (error) {
+        console.error("[anonymous-lookup] AI analysis generation failed", {
+          journeyId: journey.id,
+          error,
+        });
       }
     }
 
