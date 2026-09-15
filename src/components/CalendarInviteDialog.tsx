@@ -71,7 +71,7 @@ export function CalendarInviteDialog({ analysis }: { analysis: AnalysisPayload }
           <CalendarDays className="h-4 w-4 mr-1.5" /> Schedule conversation
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[calc(100dvh-1.5rem)] max-w-md overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <DialogHeader>
           <DialogTitle>Private calendar invite</DialogTitle>
           <DialogDescription>
