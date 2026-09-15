@@ -17,7 +17,7 @@ function Dashboard() {
     queryFn: () => fetchJourneys(),
   });
 
-  const journeys = data?.journeys ?? [];
+  const journeys = (data?.journeys ?? []).filter((journey) => journey.pair_side !== "owner");
   const active = journeys.filter(
     (j) => j.status === "pending" || j.status === "in_progress",
   ).length;

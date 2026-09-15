@@ -323,6 +323,29 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
 
     const expiresAt = invite?.expires_at ?? null;
     const isExpired = expiresAt ? new Date(expiresAt).getTime() < Date.now() : false;
+    let linkedOwnerJourney: {
+      id: string;
+      title: string;
+      status: string;
+      participant_type: string;
+      invite_code: string;
+    } | null = null;
+
+    if (journey.pair_id && journey.pair_side === "partner") {
+      const { data: pair } = await (supabase as any)
+        .from("journey_pairs")
+        .select("owner_journey_id")
+        .eq("id", journey.pair_id)
+        .maybeSingle();
+      if (pair?.owner_journey_id) {
+        const { data: ownerJourney } = await supabase
+          .from("journeys")
+          .select("id, title, status, participant_type, invite_code")
+          .eq("id", pair.owner_journey_id)
+          .maybeSingle();
+        linkedOwnerJourney = ownerJourney ?? null;
+      }
+    }
 
     const { publicInviteUrl } = await import("./site-url.server");
     return {
@@ -330,6 +353,7 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
       invite: invite ?? null,
       progress: { answered, total, percent: progress },
       isExpired,
+      linkedOwnerJourney,
     };
   });
 

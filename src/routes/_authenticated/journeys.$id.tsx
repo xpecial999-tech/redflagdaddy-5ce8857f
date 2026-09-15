@@ -25,6 +25,7 @@ import {
   Sparkles,
   PlayCircle,
   UserCircle2,
+  FileText,
 } from "lucide-react";
 import {
   getJourneyStatus,
@@ -98,11 +99,12 @@ function JourneyTracker() {
     );
   }
 
-  const { journey, invite, progress, isExpired } = data;
+  const { journey, invite, progress, isExpired, linkedOwnerJourney } = data;
   const effectiveStatus = isExpired && journey.status !== "completed" ? "expired" : journey.status;
   const url = journey.invite_url ?? "";
   const isOwnerSide = journey.pair_side === "owner";
-  const shouldShowSelfAssessment = !isOwnerSide && effectiveStatus !== "completed";
+  const shouldShowSelfAssessment =
+    !isOwnerSide && !linkedOwnerJourney && effectiveStatus !== "completed";
 
   const steps = buildSteps({
     createdAt: journey.created_at,
@@ -214,6 +216,9 @@ function JourneyTracker() {
         </div>
       </motion.section>
 
+      {!isOwnerSide && linkedOwnerJourney && (
+        <LinkedOwnerAssessmentCard journey={linkedOwnerJourney} />
+      )}
       {shouldShowSelfAssessment && <SelfAssessmentCard journey={journey} />}
 
       {/* Share & send */}
@@ -524,6 +529,57 @@ function SelfAssessmentCard({
           </>
         )}
       </button>
+    </section>
+  );
+}
+
+function LinkedOwnerAssessmentCard({
+  journey,
+}: {
+  journey: {
+    id: string;
+    title: string;
+    status: string;
+    participant_type: string;
+    invite_code: string;
+  };
+}) {
+  const completed = journey.status === "completed";
+
+  return (
+    <section className="glass-strong rounded-3xl p-6 text-center space-y-4">
+      <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-aurora-1 to-aurora-2">
+        {completed ? (
+          <FileText className="h-5 w-5 text-primary-foreground" />
+        ) : (
+          <UserCircle2 className="h-5 w-5 text-primary-foreground" />
+        )}
+      </div>
+      <div>
+        <h2 className="font-display text-lg font-semibold tracking-tight">
+          {completed ? "Your side is complete" : "Your matching assessment is ready"}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {completed
+            ? "We’ll use your completed side inside the combined report for this journey."
+            : "Finish your side here — it belongs to this same journey and will be compared with your partner’s answers."}
+        </p>
+      </div>
+      <Link
+        to={completed ? "/results/$id" : "/assessment/$code"}
+        params={completed ? { id: journey.id } : { code: journey.invite_code }}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium shadow-lg shadow-primary/30"
+      >
+        {completed ? (
+          <>
+            View your side <Sparkles className="w-4 h-4" />
+          </>
+        ) : (
+          <>
+            Continue my assessment <ArrowRight className="w-4 h-4" />
+          </>
+        )}
+      </Link>
     </section>
   );
 }
