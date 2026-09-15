@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isAiAnalysisEnabled } from "@/lib/ai-analysis-config";
 import { callStructuredAi, type StructuredAiTool } from "@/lib/ai-provider";
 import { buildDeterministicAnalysis } from "@/lib/deterministic-analysis";
+import { buildPairAnalysis, type PairAnalysisPayload, type PairSideSummary } from "@/lib/pair-analysis";
 import { z } from "zod";
 
 const IdSchema = z.object({ journeyId: z.string().uuid() });
@@ -78,6 +79,67 @@ const AnalysisPayloadSchema = z.object({
 export function parseAnalysisPayload(value: unknown): AnalysisPayload | null {
   const raw = typeof value === "string" ? JSON.parse(value) : value;
   const parsed = AnalysisPayloadSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}
+
+const PairAnalysisSchema = z.object({
+  kind: z.literal("pair_comparison"),
+  owner: z.object({
+    journeyId: z.string(),
+    title: z.string(),
+    role: z.string(),
+    scores: z.object({
+      safety: z.number(),
+      compatibility: z.number(),
+      red: z.number(),
+      green: z.number(),
+      experience: z.number(),
+    }),
+  }),
+  partner: z.object({
+    journeyId: z.string(),
+    title: z.string(),
+    role: z.string(),
+    scores: z.object({
+      safety: z.number(),
+      compatibility: z.number(),
+      red: z.number(),
+      green: z.number(),
+      experience: z.number(),
+    }),
+  }),
+  overall: z.object({
+    score: z.number(),
+    label: z.enum(["Strong alignment", "Workable alignment", "Needs discussion", "Slow down"]),
+    summary: z.string(),
+  }),
+  score_deltas: z.object({
+    safety: z.number(),
+    compatibility: z.number(),
+    red: z.number(),
+    green: z.number(),
+    experience: z.number(),
+  }),
+  shared_strengths: z.array(z.string()),
+  discussion_points: z.array(z.string()),
+  watchouts: z.array(z.string()),
+  question_insights: z.array(
+    z.object({
+      title: z.string(),
+      summary: z.string(),
+      owner: z.string(),
+      partner: z.string(),
+      prompt: z.string(),
+      severity: z.enum(["strength", "watch", "concern"]),
+    }),
+  ),
+  next_steps: z.array(z.string()),
+  generated_at: z.string(),
+});
+
+export function parsePairAnalysisPayload(value: unknown): PairAnalysisPayload | null {
+  const raw = typeof value === "string" ? JSON.parse(value) : value;
+  const parsed = PairAnalysisSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
 }
 
@@ -172,6 +234,118 @@ export async function buildDeterministicAnalysisInternal(journeyId: string) {
     .from("results")
     .update({ ai_summary: JSON.stringify(analysis) })
     .eq("journey_id", journeyId);
+
+  return { ok: true as const, analysis };
+}
+
+async function loadPairSide(
+  supabaseAdmin: import("@supabase/supabase-js").SupabaseClient,
+  journeyId: string,
+): Promise<PairSideSummary | null> {
+  const { data: journey, error: journeyError } = await supabaseAdmin
+    .from("journeys")
+    .select("id, title, participant_type")
+    .eq("id", journeyId)
+    .maybeSingle();
+  if (journeyError) throw new Error(journeyError.message);
+  if (!journey) return null;
+
+  const scores = await loadScoreBundle(supabaseAdmin, journeyId);
+  return {
+    journeyId: journey.id,
+    title: journey.title,
+    role: journey.participant_type,
+    scores: {
+      safety: scores.safety_score,
+      compatibility: scores.compatibility_score,
+      red: scores.red_flag_score,
+      green: scores.green_flag_score,
+      experience: scores.experience_score,
+    },
+  };
+}
+
+export async function buildPairAnalysisInternal(pairId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: pair, error: pairError } = await (supabaseAdmin as any)
+    .from("journey_pairs")
+    .select("id, owner_journey_id, partner_journey_id")
+    .eq("id", pairId)
+    .maybeSingle();
+  if (pairError) throw new Error(pairError.message);
+  if (!pair) throw new Error("Pair not found.");
+
+  const [owner, partner] = await Promise.all([
+    loadPairSide(supabaseAdmin, pair.owner_journey_id),
+    loadPairSide(supabaseAdmin, pair.partner_journey_id),
+  ]);
+  if (!owner || !partner) throw new Error("Pair journeys are incomplete.");
+
+  const { data: responseRows, error: responseError } = await supabaseAdmin
+    .from("responses")
+    .select("journey_id, question_id, answer, score, questions!inner(question, risk_level, question_categories!inner(name))")
+    .in("journey_id", [owner.journeyId, partner.journeyId]);
+  if (responseError) throw new Error(responseError.message);
+
+  const byQuestion = new Map<
+    string,
+    {
+      question: string;
+      category: string;
+      risk: string;
+      ownerAnswer?: unknown;
+      partnerAnswer?: unknown;
+      ownerScore?: number;
+      partnerScore?: number;
+    }
+  >();
+
+  for (const row of (responseRows ?? []) as Array<{
+    journey_id: string;
+    question_id: string;
+    answer: unknown;
+    score: number | null;
+    questions: {
+      question: string;
+      risk_level: string;
+      question_categories: { name: string } | null;
+    } | null;
+  }>) {
+    const existing = byQuestion.get(row.question_id) ?? {
+      question: row.questions?.question ?? "Assessment question",
+      category: row.questions?.question_categories?.name ?? "Other",
+      risk: row.questions?.risk_level ?? "low",
+    };
+    if (row.journey_id === owner.journeyId) {
+      existing.ownerAnswer = row.answer;
+      existing.ownerScore = Number(row.score) || 0;
+    } else if (row.journey_id === partner.journeyId) {
+      existing.partnerAnswer = row.answer;
+      existing.partnerScore = Number(row.score) || 0;
+    }
+    byQuestion.set(row.question_id, existing);
+  }
+
+  const matches = Array.from(byQuestion.values())
+    .filter((item) => item.ownerAnswer !== undefined && item.partnerAnswer !== undefined)
+    .map((item) => ({
+      question: item.question,
+      category: item.category,
+      risk: item.risk,
+      ownerAnswer: item.ownerAnswer,
+      partnerAnswer: item.partnerAnswer,
+      ownerScore: item.ownerScore ?? 0,
+      partnerScore: item.partnerScore ?? 0,
+    }));
+
+  const analysis = buildPairAnalysis({ owner, partner, matches });
+  await (supabaseAdmin as any)
+    .from("journey_pairs")
+    .update({
+      comparison_summary: analysis,
+      both_completed_at: new Date().toISOString(),
+    })
+    .eq("id", pair.id);
 
   return { ok: true as const, analysis };
 }
@@ -279,7 +453,7 @@ async function assertJourneyOwner(userId: string, journeyId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: journey, error } = await supabaseAdmin
     .from("journeys")
-    .select("id, title, participant_type, status, creator_id")
+    .select("id, title, participant_type, status, creator_id, pair_id, pair_side")
     .eq("id", journeyId)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -321,12 +495,37 @@ export const getResults = createServerFn({ method: "POST" })
     if (result?.ai_summary) {
       try { analysis = parseAnalysisPayload(result.ai_summary); } catch { analysis = null; }
     }
+    let pairAnalysis: PairAnalysisPayload | null = null;
+    if (journey.pair_id) {
+      const { data: pair } = await (supabaseAdmin as any)
+        .from("journey_pairs")
+        .select("id, comparison_summary")
+        .eq("id", journey.pair_id)
+        .maybeSingle();
+      if (pair?.comparison_summary) {
+        try { pairAnalysis = parsePairAnalysisPayload(pair.comparison_summary); } catch { pairAnalysis = null; }
+      }
+      if (!pairAnalysis) {
+        try {
+          const generated = await buildPairAnalysisInternal(journey.pair_id);
+          pairAnalysis = generated.analysis;
+        } catch (error) {
+          console.error("[pair-analysis] generation skipped", {
+            journeyId: data.journeyId,
+            pairId: journey.pair_id,
+            error,
+          });
+        }
+      }
+    }
     return {
       journey: {
         id: journey.id,
         title: journey.title,
         participant_type: journey.participant_type,
         status: journey.status,
+        pair_id: journey.pair_id,
+        pair_side: journey.pair_side,
       },
       result: result ?? null,
       analysis,
@@ -335,6 +534,7 @@ export const getResults = createServerFn({ method: "POST" })
         enabled: Boolean(result?.share_enabled),
         token: (result?.share_token as string | null) ?? null,
       },
+      pairAnalysis,
     };
   });
 

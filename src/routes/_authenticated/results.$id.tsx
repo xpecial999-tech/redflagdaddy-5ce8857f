@@ -15,6 +15,7 @@ import {
   toggleShareReport,
 } from "@/lib/analysis.functions";
 import { getEntitlement } from "@/lib/entitlement.functions";
+import { PairComparisonView } from "@/components/PairComparisonView";
 import { ReportView } from "@/components/ReportView";
 import { buildConversationPlanMarkdown, buildConversationTopicsMarkdown, buildFullReportMarkdown, buildPrivateReportJson, downloadJson, downloadMarkdown, safeExportFilename, safeReportFilename } from "@/lib/report-export";
 
@@ -69,7 +70,7 @@ function ResultsPage() {
     return <p className="text-destructive">{(q.error as Error).message}</p>;
   }
 
-  const { result, analysis, analysisAvailable, journey, share } = q.data!;
+  const { result, analysis, analysisAvailable, journey, share, pairAnalysis } = q.data!;
   const scores = {
     safety: Number(result?.safety_score ?? 0),
     compatibility: Number(result?.compatibility_score ?? 0),
@@ -248,6 +249,8 @@ function ResultsPage() {
           </CardContent>
         </Card>
       )}
+
+      {pairAnalysis && <PairComparisonView analysis={pairAnalysis} />}
 
       <ReportView
         title={journey?.title ?? "Journey"}

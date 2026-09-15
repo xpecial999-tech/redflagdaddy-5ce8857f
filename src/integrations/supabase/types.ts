@@ -293,6 +293,7 @@ export type Database = {
       journey_pairs: {
         Row: {
           both_completed_at: string | null;
+          comparison_summary: Json | null;
           created_at: string;
           id: string;
           label: string | null;
@@ -303,6 +304,7 @@ export type Database = {
         };
         Insert: {
           both_completed_at?: string | null;
+          comparison_summary?: Json | null;
           created_at?: string;
           id?: string;
           label?: string | null;
@@ -313,6 +315,7 @@ export type Database = {
         };
         Update: {
           both_completed_at?: string | null;
+          comparison_summary?: Json | null;
           created_at?: string;
           id?: string;
           label?: string | null;

@@ -386,6 +386,20 @@ export const completeAssessment = createServerFn({ method: "POST" })
       console.error("Deterministic analysis failed:", e);
     }
 
+    try {
+      const { data: pair } = await (supabaseAdmin as any)
+        .from("journey_pairs")
+        .select("id")
+        .or(`owner_journey_id.eq.${journey.id},partner_journey_id.eq.${journey.id}`)
+        .maybeSingle();
+      if (pair?.id) {
+        const { buildPairAnalysisInternal } = await import("./analysis.functions");
+        await buildPairAnalysisInternal(pair.id);
+      }
+    } catch (e) {
+      console.error("Pair comparison failed:", e);
+    }
+
     const { error: journeyError } = await supabaseAdmin
       .from("journeys")
       .update({ status: "completed" })
