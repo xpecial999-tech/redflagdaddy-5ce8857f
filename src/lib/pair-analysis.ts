@@ -1,3 +1,9 @@
+import {
+  pairInsightCopy,
+  pairInsightPriority,
+  pairInsightSeverity,
+} from "@/lib/pair-comparison-rules";
+
 export type PairScores = {
   safety: number;
   compatibility: number;
@@ -121,30 +127,36 @@ export function buildPairAnalysis(input: PairInput): PairAnalysisPayload {
   );
 
   const questionInsights = input.matches
-    .map((match): PairInsight => {
+    .map((match): PairInsight & { priority: number } => {
       const gap = Math.abs(match.ownerScore - match.partnerScore);
-      const riskConcern = match.risk === "critical" || match.risk === "high";
-      const severity: PairInsight["severity"] =
-        riskConcern && gap >= 3 ? "concern" : gap >= 3 ? "watch" : "strength";
+      const severity = pairInsightSeverity({
+        category: match.category,
+        risk: match.risk,
+        scoreGap: gap,
+      });
+      const copy = pairInsightCopy({ category: match.category, severity });
       return {
         title: match.question,
-        summary:
-          severity === "strength"
-            ? "Both answers appear broadly aligned on this prompt."
-            : severity === "concern"
-              ? "This prompt combines a higher-risk topic with a meaningful difference in answers."
-              : "The answers differ enough to make this worth discussing explicitly.",
+        summary: copy.summary,
         owner: answerText(match.ownerAnswer),
         partner: answerText(match.partnerAnswer),
-        prompt: `Compare what each person meant by their answer before treating "${match.category}" as agreed.`,
+        prompt: copy.prompt,
         severity,
+        priority: pairInsightPriority({
+          category: match.category,
+          risk: match.risk,
+          scoreGap: gap,
+          severity,
+        }),
       };
     })
     .sort((a, b) => {
       const rank = { concern: 2, watch: 1, strength: 0 };
-      return rank[b.severity] - rank[a.severity];
+      const severitySort = rank[b.severity] - rank[a.severity];
+      return severitySort || b.priority - a.priority;
     })
-    .slice(0, 8);
+    .slice(0, 8)
+    .map(({ priority: _priority, ...insight }) => insight);
 
   const discussionPoints = [
     ...(deltas.safety >= 25 ? ["Safety expectations differ enough to confirm safewords, stop signals and aftercare in detail."] : []),

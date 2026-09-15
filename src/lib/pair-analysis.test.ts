@@ -20,7 +20,7 @@ describe("pair analysis", () => {
       matches: [
         {
           question: "How do you respond when a safeword is used?",
-          category: "Consent",
+          category: "Consent & Boundaries",
           risk: "critical",
           ownerAnswer: "Stop immediately and check in.",
           partnerAnswer: "I worry it may disappoint them.",
@@ -35,6 +35,7 @@ describe("pair analysis", () => {
     expect(analysis.overall.score).toBeGreaterThanOrEqual(0);
     expect(analysis.overall.score).toBeLessThanOrEqual(100);
     expect(analysis.question_insights[0]?.severity).toBe("concern");
+    expect(analysis.question_insights[0]?.prompt).toContain("hard limits");
     expect(analysis.watchouts.length).toBeGreaterThan(0);
   });
 });
