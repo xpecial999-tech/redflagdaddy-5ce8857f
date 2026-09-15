@@ -12,8 +12,27 @@ import {
 } from "@/lib/assessment-questions";
 import { expandRoleForFiltering } from "./roles";
 import { throwPublicDataError } from "./public-data-error";
+import { RateLimitError } from "./rate-limit.server";
 
 const CodeSchema = z.object({ code: z.string().trim().min(4).max(64) });
+
+function normalizeCode(raw: string) {
+  return raw.trim().toUpperCase();
+}
+
+async function consumeAssessmentRateLimits(
+  rules: Parameters<(typeof import("./rate-limit.server"))["consumeRateLimits"]>[0],
+) {
+  const { consumeRateLimits } = await import("./rate-limit.server");
+  try {
+    await consumeRateLimits(rules);
+  } catch (error) {
+    if (error instanceof RateLimitError) throw error;
+    console.error("[assessment] Rate-limit infrastructure failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
 
 // Bounded answer shapes: text capped at 4000 chars; arrays/objects capped to
 // prevent storage abuse and inflated AI token costs.
@@ -34,7 +53,8 @@ const SaveSchema = z.object({
 
 const CompleteSchema = z.object({ code: z.string().trim().min(4).max(64) });
 
-async function loadInviteContext(code: string) {
+async function loadInviteContext(rawCode: string) {
+  const code = normalizeCode(rawCode);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: journey, error: jErr } = await supabaseAdmin
@@ -146,8 +166,8 @@ function computeScore(
 export const getAssessment = createServerFn({ method: "POST" })
   .validator((d: unknown) => CodeSchema.parse(d))
   .handler(async ({ data }) => {
-    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
-    await consumeRateLimits([
+    const { callerIp } = await import("./rate-limit.server");
+    await consumeAssessmentRateLimits([
       {
         action: "assessment_load_ip",
         value: callerIp(),
@@ -236,8 +256,8 @@ export const saveResponse = createServerFn({ method: "POST" })
 export const completeAssessment = createServerFn({ method: "POST" })
   .validator((d: unknown) => CompleteSchema.parse(d))
   .handler(async ({ data }) => {
-    const { callerIp, consumeRateLimits } = await import("./rate-limit.server");
-    await consumeRateLimits([
+    const { callerIp } = await import("./rate-limit.server");
+    await consumeAssessmentRateLimits([
       {
         action: "assessment_complete_ip",
         value: callerIp(),
