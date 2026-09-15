@@ -1,5 +1,6 @@
 const OWNER_CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const OWNER_CODE_LENGTH = 16;
+const JOURNEY_CODE_LENGTH = 8;
 
 export function normalizeOwnerCode(value: string): string {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -8,7 +9,7 @@ export function normalizeOwnerCode(value: string): string {
 export function isValidOwnerCode(value: string): boolean {
   const normalized = normalizeOwnerCode(value);
   return (
-    normalized.length === OWNER_CODE_LENGTH &&
+    (normalized.length === OWNER_CODE_LENGTH || normalized.length === JOURNEY_CODE_LENGTH) &&
     [...normalized].every((character) => OWNER_CODE_ALPHABET.includes(character))
   );
 }

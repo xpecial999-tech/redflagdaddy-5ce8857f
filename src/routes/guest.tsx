@@ -59,7 +59,7 @@ const steps = [
   {
     icon: FileCheck2,
     title: "Receive a summary once both are done",
-    body: "Come back with your private code to view the result when both sides are complete.",
+    body: "Come back with your journey code to check progress and view the result when both sides are complete.",
   },
 ];
 
@@ -91,8 +91,8 @@ function GuestPage() {
     return (
       <PartnerLinkView
         code={mutation.data.code}
-        ownerCode={mutation.data.ownerCode}
-        ownerExpiresAt={mutation.data.ownerExpiresAt}
+        journeyCode={mutation.data.journeyCode}
+        journeyExpiresAt={mutation.data.journeyExpiresAt}
         partnerType={partnerType}
       />
     );
@@ -223,18 +223,18 @@ function GuestPage() {
 
 function PartnerLinkView({
   code,
-  ownerCode,
-  ownerExpiresAt,
+  journeyCode,
+  journeyExpiresAt,
   partnerType,
 }: {
   code: string;
-  ownerCode: string | null;
-  ownerExpiresAt: string | null;
+  journeyCode: string | null;
+  journeyExpiresAt: string | null;
   partnerType: Role | "";
 }) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
-  const [ownerCodeCopied, setOwnerCodeCopied] = useState(false);
+  const [journeyCodeCopied, setJourneyCodeCopied] = useState(false);
   const claimFn = useServerFn(claimAnonymousJourney);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [claimed, setClaimed] = useState(false);
@@ -266,12 +266,12 @@ function PartnerLinkView({
     }
   };
 
-  const copyOwnerCode = async () => {
-    if (!ownerCode) return;
+  const copyJourneyCode = async () => {
+    if (!journeyCode) return;
     try {
-      await navigator.clipboard.writeText(ownerCode);
-      setOwnerCodeCopied(true);
-      setTimeout(() => setOwnerCodeCopied(false), 2000);
+      await navigator.clipboard.writeText(journeyCode);
+      setJourneyCodeCopied(true);
+      setTimeout(() => setJourneyCodeCopied(false), 2000);
     } catch {
       /* noop */
     }
@@ -290,8 +290,8 @@ function PartnerLinkView({
     }
   };
 
-  const saveOwnerCodeImage = () => {
-    if (!ownerCode || typeof document === "undefined") return;
+  const saveJourneyCodeImage = () => {
+    if (!journeyCode || typeof document === "undefined") return;
 
     const canvas = document.createElement("canvas");
     canvas.width = 720;
@@ -335,7 +335,7 @@ function PartnerLinkView({
 
     ctx.fillStyle = "rgba(255,255,255,0.72)";
     ctx.font = "500 24px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("🔑 Secret code", 360, 286);
+    ctx.fillText("🔑 Journey code", 360, 286);
 
     ctx.fillStyle = "rgba(12,8,28,0.78)";
     roundRect(ctx, 100, 320, 520, 120, 24);
@@ -348,13 +348,13 @@ function PartnerLinkView({
     ctx.fillStyle = "#ffffff";
     ctx.font = "700 28px ui-monospace, SFMono-Regular, Menlo, monospace";
     ctx.textBaseline = "middle";
-    ctx.fillText(ownerCode, 360, 382);
+    ctx.fillText(journeyCode, 360, 382);
     ctx.textBaseline = "alphabetic";
 
     ctx.fillStyle = "rgba(255,255,255,0.62)";
     ctx.font = "400 20px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("Save this secret code.", 360, 510);
-    ctx.fillText("You'll need it to return to your results.", 360, 542);
+    ctx.fillText("Save this journey code.", 360, 510);
+    ctx.fillText("Use it to check progress and view results.", 360, 542);
 
     ctx.fillStyle = "#f8f5ff";
     ctx.font = "600 22px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
@@ -365,7 +365,7 @@ function PartnerLinkView({
     ctx.fillText("Consent. Compatibility. Safety. Red flags.", 360, 632);
 
     const anchor = document.createElement("a");
-    anchor.download = `redflagdaddy-owner-code-${code}.jpg`;
+    anchor.download = `redflagdaddy-journey-code-${code}.jpg`;
     anchor.href = canvas.toDataURL("image/jpeg", 0.82);
     anchor.click();
   };
@@ -392,7 +392,7 @@ function PartnerLinkView({
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Send this link to your partner so they can take the {partnerType} assessment. They'll
-            answer privately. Return with your secret code to check the report.
+            answer privately. Return with the same journey code to check progress and view the report.
           </p>
         </div>
 
@@ -437,7 +437,7 @@ function PartnerLinkView({
           </div>
         </section>
 
-        {ownerCode && !claimed && (
+        {journeyCode && !claimed && (
           <section className="glass-strong rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/25">
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
               <h2 className="font-display text-lg font-semibold tracking-tight">
@@ -467,7 +467,7 @@ function PartnerLinkView({
               emailAutoComplete="off"
               onAuthenticated={async () => {
                 try {
-                  const result = await claimFn({ data: { ownerCode } });
+                  const result = await claimFn({ data: { ownerCode: journeyCode } });
                   setClaimed(true);
                   navigate({ to: "/journeys/$id", params: { id: result.journeyId } });
                 } catch (error) {
@@ -491,42 +491,40 @@ function PartnerLinkView({
           </section>
         )}
 
-        {ownerCode && (
+        {journeyCode && (
           <section className="glass rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/15">
             {!claimed && (
               <p className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
                 <span className="font-semibold text-foreground">Rather not register?</span> You can
-                wait for your partner to complete the questionnaire, then come back and check using
-                your secret code below.
+                wait for your partner to complete the questionnaire, then come back and check using the same journey code below.
               </p>
             )}
             <div className="flex items-start gap-3">
               <KeyRound className="w-5 h-5 text-primary mt-0.5" />
               <div>
                 <h2 className="font-display text-lg font-semibold tracking-tight">
-                  Save your secret code
+                  Save your journey code
                 </h2>
                 <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                  This is shown once and cannot be recovered. Keep it separate from the partner
-                  link. You’ll need it to view your results until the journey expires.
+                  This is shown once and cannot be recovered. Anyone with this code can check progress and view the results once they are ready. It expires with this journey.
                 </p>
               </div>
             </div>
             <div className="rounded-xl border border-border bg-input p-4 text-center font-mono text-base sm:text-lg tracking-wider break-all">
-              {ownerCode}
+              {journeyCode}
             </div>
             <div className="grid grid-cols-2 gap-2 no-print">
               <button
                 type="button"
-                onClick={copyOwnerCode}
+                onClick={copyJourneyCode}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium"
               >
-                {ownerCodeCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {ownerCodeCopied ? "Copied" : "Copy code"}
+                {journeyCodeCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {journeyCodeCopied ? "Copied" : "Copy code"}
               </button>
               <button
                 type="button"
-                onClick={saveOwnerCodeImage}
+                onClick={saveJourneyCodeImage}
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-input py-3 text-sm font-medium"
               >
                 <Download className="w-4 h-4" /> Save code image
@@ -534,8 +532,8 @@ function PartnerLinkView({
             </div>
             <p className="text-xs text-muted-foreground text-center">
               Expires{" "}
-              {ownerExpiresAt
-                ? new Date(ownerExpiresAt).toLocaleDateString()
+              {journeyExpiresAt
+                ? new Date(journeyExpiresAt).toLocaleDateString()
                 : "30 days after creation"}
               . The journey and report are then deleted.
             </p>

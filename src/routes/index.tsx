@@ -116,9 +116,9 @@ function Landing() {
 
 function JourneyLookup() {
   const lookupFn = useServerFn(lookupAnonymousJourney);
-  const [ownerCode, setOwnerCode] = useState("");
+  const [journeyCode, setJourneyCode] = useState("");
   const lookup = useMutation({
-    mutationFn: () => lookupFn({ data: { ownerCode } }),
+    mutationFn: () => lookupFn({ data: { ownerCode: journeyCode } }),
   });
 
   const result = lookup.data;
@@ -137,7 +137,7 @@ function JourneyLookup() {
             Returning to a journey?
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Enter your secret code to check progress or view your summary.
+            Enter your journey code to check progress or view your summary.
           </p>
         </div>
       </div>
@@ -150,21 +150,21 @@ function JourneyLookup() {
         }}
       >
         <Input
-          value={ownerCode}
+          value={journeyCode}
           onChange={(event) => {
-            setOwnerCode(event.target.value.toUpperCase());
+            setJourneyCode(event.target.value.toUpperCase());
             if (lookup.data) lookup.reset();
           }}
-          aria-label="Secret code"
+          aria-label="Journey code"
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
           maxLength={32}
-          placeholder="XXXXXXXX-XXXXXXXX"
+          placeholder="XXXXXXXX"
           className="min-h-10 font-mono text-xs tracking-wide"
         />
         <button
-          disabled={lookup.isPending || !ownerCode.trim()}
+          disabled={lookup.isPending || !journeyCode.trim()}
           className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary/90 px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
         >
           <Search className="h-3.5 w-3.5" /> {lookup.isPending ? "Checking…" : "Check code"}
@@ -178,8 +178,7 @@ function JourneyLookup() {
       )}
       {result?.status === "unavailable" && (
         <p className="rounded-xl border border-border bg-input p-4 text-xs text-muted-foreground">
-          This code is invalid, expired, or no longer available. For privacy, we cannot recover
-          anonymous codes.
+          This code is invalid, expired, or no longer available. For privacy, we cannot recover journey codes.
         </p>
       )}
       {(result?.status === "waiting" || result?.status === "in_progress") && (

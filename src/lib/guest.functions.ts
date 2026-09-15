@@ -52,10 +52,9 @@ export const createGuestJourney = createServerFn({ method: "POST" })
           ],
     );
     const code = generateInviteCode();
-    const ownerCode =
-      data.notificationMode === "owner_code"
-        ? (await import("./anonymous-owner-code.server")).generateOwnerCode()
-        : null;
+    // Guest journeys use one visible journey code for both sharing and return checks.
+    // The database still stores only a hash for the return lookup.
+    const ownerCode = data.notificationMode === "owner_code" ? code : null;
     const ownerCodeHash = ownerCode
       ? await (await import("./anonymous-owner-code.server")).hashOwnerCode(ownerCode)
       : null;
@@ -96,7 +95,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
       throwPublicDataError(iErr, "create guest invite");
     }
 
-    return { code, ownerCode, ownerExpiresAt };
+    return { code, journeyCode: ownerCode, journeyExpiresAt: ownerExpiresAt };
   });
 
 const OwnerCodeSchema = z.object({ ownerCode: z.string().trim().min(1).max(64) });
@@ -106,7 +105,7 @@ export const claimAnonymousJourney = createServerFn({ method: "POST" })
   .validator((d: unknown) => OwnerCodeSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { isValidOwnerCode, hashOwnerCode } = await import("./anonymous-owner-code.server");
-    if (!isValidOwnerCode(data.ownerCode)) throw new Error("That secret code is invalid.");
+    if (!isValidOwnerCode(data.ownerCode)) throw new Error("That journey code is invalid.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: journeyId, error } = await (supabaseAdmin as any).rpc("claim_anonymous_journey", {
@@ -117,7 +116,7 @@ export const claimAnonymousJourney = createServerFn({ method: "POST" })
       console.error("[guest-journey] Claim failed", { code: error.code });
       throw new Error("We couldn't save this journey to your account. Please try again.");
     }
-    if (!journeyId) throw new Error("This secret code is invalid, expired, or already claimed.");
+    if (!journeyId) throw new Error("This journey code is invalid, expired, or already claimed.");
     return { journeyId };
   });
 

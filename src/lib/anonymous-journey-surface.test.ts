@@ -22,11 +22,12 @@ describe("anonymous journey privacy surface", () => {
     expect(guestRoute).toMatch(/noindex,\s*nofollow,\s*noarchive/);
   });
 
-  it("stores only a hash and uses a distinct partner invite code", () => {
+  it("stores only a hash and reuses the journey code for return checks", () => {
     expect(guestFunctions).toContain("anonymous_owner_code_hash: ownerCodeHash");
     expect(guestFunctions).not.toContain("anonymous_owner_code: ownerCode");
     expect(guestFunctions).toContain("const code = generateInviteCode()");
-    expect(guestFunctions).toContain("generateOwnerCode()");
+    expect(guestFunctions).toContain('const ownerCode = data.notificationMode === "owner_code" ? code : null');
+    expect(guestFunctions).toContain("return { code, journeyCode: ownerCode");
   });
 
   it("does not mint a share link or SMS the no-contact owner", () => {
