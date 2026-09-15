@@ -20,6 +20,8 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { EmailOtpForm } from "@/components/EmailOtpForm";
+import { claimAnonymousJourney } from "@/lib/guest.functions";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +57,7 @@ function AssessmentPage() {
   const getFn = useServerFn(getAssessment);
   const saveFn = useServerFn(saveResponse);
   const completeFn = useServerFn(completeAssessment);
+  const claimFn = useServerFn(claimAnonymousJourney);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["assessment", code],
@@ -69,6 +72,7 @@ function AssessmentPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
 
   const [submitted, setSubmitted] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
   const hydrated = useRef(false);
   const saveSequence = useRef(0);
 
@@ -203,6 +207,47 @@ function AssessmentPage() {
         >
           You can safely close this page.
         </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.68 }}
+          className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-left space-y-4"
+        >
+          <div className="space-y-1">
+            <h2 className="font-display text-xl font-semibold tracking-tight text-center sm:text-left">
+              Save this journey
+            </h2>
+            <p className="text-xs leading-relaxed text-muted-foreground text-center sm:text-left">
+              Create a profile to keep this report in your dashboard, see the journey you were
+              invited to, and create your own journeys later.
+            </p>
+          </div>
+          <EmailOtpForm
+            mode="register"
+            emailAutoComplete="off"
+            onAuthenticated={async () => {
+              try {
+                const result = await claimFn({ data: { ownerCode: code } });
+                navigate({ to: "/journeys/$id", params: { id: result.journeyId } });
+              } catch (error) {
+                setClaimError(
+                  error instanceof Error ? error.message : "We couldn't save this journey.",
+                );
+                throw error;
+              }
+            }}
+          />
+          {claimError && (
+            <p role="alert" className="text-xs text-destructive">
+              {claimError}
+            </p>
+          )}
+          <p className="text-[11px] leading-relaxed text-muted-foreground/80">
+            We only use your email for account access and journey notifications; no personal profile
+            details are required.
+          </p>
+        </motion.div>
       </motion.div>
     );
   }
