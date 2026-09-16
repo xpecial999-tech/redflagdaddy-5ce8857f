@@ -14,6 +14,8 @@
   "env": {
     "staging": {
       "name": "redflagdaddy-staging",
+      "workers_dev": true,
+      "preview_urls": false,
       "vars": {
         "CONSTRUCTION_MODE": "disabled",
         "AI_ANALYSIS_MODE": "enabled",
@@ -22,12 +24,9 @@
         "TURNSTILE_EXPECTED_HOSTNAME": "staging.redflagdaddy.com",
         "VITE_TURNSTILE_SITE_KEY": "0x4AAAAAAErlu0pxQpbQkeVD",
       },
-      "routes": [
-        {
-          "pattern": "staging.redflagdaddy.com",
-          "custom_domain": true,
-        },
-      ],
+      // Custom domains are managed in the Cloudflare dashboard.
+      // Keeping routes out of deploys lets limited API tokens update the Worker
+      // without needing Zone > Workers Routes permissions.
     },
     "production": {
       "name": "redflagdaddy-production",
@@ -35,12 +34,9 @@
         "CONSTRUCTION_MODE": "enabled",
       },
       "workers_dev": true,
-      "routes": [
-        {
-          "pattern": "redflagdaddy.com",
-          "custom_domain": true,
-        },
-      ],
+      // Custom domains are managed in the Cloudflare dashboard.
+      // Keeping routes out of deploys lets limited API tokens update the Worker
+      // without needing Zone > Workers Routes permissions.
     },
   },
 }
