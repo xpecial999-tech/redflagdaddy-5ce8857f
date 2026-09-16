@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import {
   requireAssignedAssessmentQuestion,
   selectAssessmentQuestions,
@@ -6,6 +7,36 @@ import {
   visibleAssessmentQuestions,
   type AssessmentQuestion,
 } from "./assessment-questions";
+
+const ASSESSMENT_FUNCTIONS_SOURCE = readFileSync(
+  new URL("./assessment.functions.ts", import.meta.url),
+  "utf8",
+);
+
+function curatedQuestions(): AssessmentQuestion[] {
+  const migration = readFileSync(
+    new URL("../../supabase/migrations/20260915203000_curated_assessment_bank.sql", import.meta.url),
+    "utf8",
+  );
+  const rowPattern =
+    /\('([^']+)', '((?:[^']|'')*)', '([^']+)'::public\.question_type, '(.*?)'::jsonb, (\d+), '([^']+)'::public\.risk_level, (\d+), '\{\}'::jsonb, ARRAY\[(.*?)\]::text\[\]\)/g;
+  return Array.from(migration.matchAll(rowPattern), (match) => {
+    const [, category, text, questionType, options, weight, risk, orderIndex, roleList] = match;
+    return {
+      id: orderIndex,
+      category_id: category,
+      question_categories: { name: category },
+      question: text.replaceAll("''", "'"),
+      question_type: questionType,
+      answer_options: JSON.parse(options.replaceAll("''", "'")),
+      weight: Number(weight),
+      risk_level: risk,
+      order_index: Number(orderIndex),
+      branch_logic: {},
+      applies_to: roleList.split(",").map((role) => role.trim().replaceAll("'", "")),
+    };
+  });
+}
 
 function question(id: string, overrides: Partial<AssessmentQuestion> = {}): AssessmentQuestion {
   return {
@@ -110,6 +141,116 @@ describe("assessment question integrity", () => {
     expect(counts["BDSM Safety"]).toBeGreaterThanOrEqual(8);
     expect(counts["Red Flags"]).toBeLessThanOrEqual(8);
     expect(counts["Experience"]).toBeGreaterThanOrEqual(1);
+  });
+
+  it("keeps the curated migration at exactly 100 active, tagged questions", () => {
+    const questions = curatedQuestions();
+    const categoryCounts = questions.reduce<Record<string, number>>((acc, item) => {
+      const name = item.question_categories?.name ?? "Other";
+      acc[name] = (acc[name] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    expect(questions).toHaveLength(100);
+    expect(Object.keys(categoryCounts)).toHaveLength(20);
+    expect(new Set(Object.values(categoryCounts))).toEqual(new Set([5]));
+    expect(questions.every((item) => (item.applies_to ?? []).length > 0)).toBe(true);
+    expect(questions.every((item) => item.question.trim().length > 20)).toBe(true);
+  });
+
+  it("builds a broad quick test from the curated bank instead of one category cluster", () => {
+    const selected = selectAssessmentQuestions(curatedQuestions(), 15, "quick-regression");
+    const categories = new Set(selected.map((item) => item.question_categories?.name));
+    const risks = new Set(selected.map((item) => item.risk_level));
+
+    expect(selected).toHaveLength(15);
+    expect(categories.size).toBeGreaterThanOrEqual(12);
+    expect(categories.has("Consent")).toBe(true);
+    expect(categories.has("Boundaries")).toBe(true);
+    expect(categories.has("Communication")).toBe(true);
+    expect(categories.has("Safety Practices")).toBe(true);
+    expect(
+      categories.has("Dominant Skills") || categories.has("Submissive Skills"),
+    ).toBe(true);
+    expect(risks.has("critical")).toBe(true);
+    expect(risks.has("high")).toBe(true);
+  });
+
+  it("builds a broad 50-question test from the curated bank", () => {
+    const selected = selectAssessmentQuestions(curatedQuestions(), 50, "full-regression");
+    const counts = selected.reduce<Record<string, number>>((acc, item) => {
+      const name = item.question_categories?.name ?? "Other";
+      acc[name] = (acc[name] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    expect(selected).toHaveLength(50);
+    expect(Object.keys(counts).length).toBeGreaterThanOrEqual(18);
+    expect(counts.Consent).toBeGreaterThanOrEqual(3);
+    expect(counts.Boundaries).toBeGreaterThanOrEqual(3);
+    expect(counts.Communication).toBeGreaterThanOrEqual(3);
+    expect(counts["Safety Practices"]).toBeGreaterThanOrEqual(3);
+    expect(counts["Red Flags"]).toBeLessThanOrEqual(4);
+  });
+
+  it("keeps role-specific skill questions off the wrong broad side", () => {
+    const questions = curatedQuestions();
+    const dominantPack = questions.filter((item) => {
+      const roles = item.applies_to ?? [];
+      return roles.includes("Dominant") && item.question_categories?.name !== "Submissive Skills";
+    });
+    const submissivePack = questions.filter((item) => {
+      const roles = item.applies_to ?? [];
+      return roles.includes("submissive") && item.question_categories?.name !== "Dominant Skills";
+    });
+
+    expect(dominantPack).toHaveLength(95);
+    expect(submissivePack).toHaveLength(95);
+    expect(dominantPack.some((item) => item.question_categories?.name === "Dominant Skills")).toBe(
+      true,
+    );
+    expect(
+      submissivePack.some((item) => item.question_categories?.name === "Submissive Skills"),
+    ).toBe(true);
+    expect(dominantPack.some((item) => item.question_categories?.name === "Submissive Skills")).toBe(
+      false,
+    );
+    expect(submissivePack.some((item) => item.question_categories?.name === "Dominant Skills")).toBe(
+      false,
+    );
+  });
+
+  it("uses archetype-specific tags for specialist roles", () => {
+    const questions = curatedQuestions();
+    const allTags = new Set(questions.flatMap((item) => item.applies_to ?? []));
+
+    for (const role of [
+      "Master",
+      "sadist",
+      "rope top",
+      "service top",
+      "degradation giver",
+      "slave",
+      "brat",
+      "little",
+      "pet",
+      "masochist",
+      "rope bottom",
+      "service bottom",
+      "degradation receiver",
+      "primal",
+      "caregiver",
+      "exhibitionist",
+      "voyeur",
+    ]) {
+      expect(allTags.has(role)).toBe(true);
+    }
+  });
+
+  it("does not count safe red-flag answers as red-flag score", () => {
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain('case "red":');
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain("if (s < 0) redRaw += Math.abs(s);");
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).not.toContain("if (s > 0) redRaw += s");
   });
 
   it("applies branch skips consistently", () => {

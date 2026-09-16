@@ -423,7 +423,6 @@ export const completeAssessment = createServerFn({ method: "POST" })
     let safetyRaw = 0,
       compatibilityRaw = 0,
       redRaw = 0,
-      redLegacy = 0,
       greenRaw = 0,
       experienceRaw = 0;
     for (const row of rows) {
@@ -458,8 +457,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
           if (s < 0) redRaw += Math.abs(s);
           break;
         case "red":
-          if (s > 0) redRaw += s;
-          else if (s < 0) redLegacy += Math.abs(s);
+          if (s < 0) redRaw += Math.abs(s);
           break;
       }
     }
@@ -468,7 +466,7 @@ export const completeAssessment = createServerFn({ method: "POST" })
     const safety = scoreDimension(safetyRaw, maxes.safety);
     const compatibility = scoreDimension(compatibilityRaw, maxes.compatibility);
     const experience = scoreDimension(experienceRaw, maxes.experience);
-    const red = maxes.red > 0 ? scoreDimension(redRaw, maxes.red) : Math.min(100, redLegacy);
+    const red = scoreDimension(redRaw, maxes.red);
 
     const { error: resultError } = await supabaseAdmin.from("results").upsert(
       {
