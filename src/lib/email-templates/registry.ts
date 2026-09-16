@@ -2,6 +2,7 @@ import type { ElementType } from 'react'
 import { template as journeyInviteTemplate } from './journey-invite'
 import { template as assessmentCompleteTemplate } from './assessment-complete'
 import { template as supportRequestTemplate } from './support-request'
+import { template as welcomeTemplate } from './welcome'
 
 export interface TemplateEntry {
   component: ElementType
@@ -20,4 +21,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'journey-invite': journeyInviteTemplate,
   'assessment-complete': assessmentCompleteTemplate,
   'support-request': supportRequestTemplate,
+  'welcome': welcomeTemplate,
 }

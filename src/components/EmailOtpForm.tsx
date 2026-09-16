@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { queueWelcomeEmail } from "@/lib/email.functions";
 
 type EmailOtpFormProps = {
   mode: "login" | "register" | "admin";
@@ -29,6 +31,7 @@ export function EmailOtpForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submittedToken = useRef<string | null>(null);
+  const sendWelcomeEmail = useServerFn(queueWelcomeEmail);
   const canRequestCode =
     email.trim().includes("@") && !(mode === "register" && !registrationAcknowledged);
 
@@ -69,6 +72,13 @@ export function EmailOtpForm({
       setLoading(false);
       setError("That code is invalid or has expired. Request a new one and try again.");
       return;
+    }
+    if (mode === "register") {
+      void sendWelcomeEmail().catch((welcomeError) => {
+        console.error("[welcome-email] request failed", {
+          name: welcomeError instanceof Error ? welcomeError.name : "unknown",
+        });
+      });
     }
     try {
       await onAuthenticated?.();
