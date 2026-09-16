@@ -13,6 +13,14 @@ const ASSESSMENT_FUNCTIONS_SOURCE = readFileSync(
   "utf8",
 );
 
+const LEGACY_REACTIVATION_MIGRATION = readFileSync(
+  new URL(
+    "../../supabase/migrations/20260916143000_reactivate_curated_legacy_question_pool.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
 function curatedQuestions(): AssessmentQuestion[] {
   const migration = readFileSync(
     new URL("../../supabase/migrations/20260915203000_curated_assessment_bank.sql", import.meta.url),
@@ -251,6 +259,19 @@ describe("assessment question integrity", () => {
     expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain('case "red":');
     expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain("if (s < 0) redRaw += Math.abs(s);");
     expect(ASSESSMENT_FUNCTIONS_SOURCE).not.toContain("if (s > 0) redRaw += s");
+  });
+
+  it("reactivates only a vetted legacy extension pool", () => {
+    const values = Array.from(
+      LEGACY_REACTIVATION_MIGRATION.matchAll(/\('((?:[^']|'')*)'\)(?:,| --)/g),
+      (match) => match[1].replaceAll("''", "'"),
+    );
+
+    expect(values).toHaveLength(71);
+    expect(LEGACY_REACTIVATION_MIGRATION).toContain("SET active = true");
+    const selectedText = values.join("\n");
+    expect(selectedText).not.toMatch(/my partner|does your partner/i);
+    expect(selectedText).not.toMatch(/loan or credit card|missed a utility bill/i);
   });
 
   it("applies branch skips consistently", () => {
