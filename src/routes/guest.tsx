@@ -238,6 +238,7 @@ function PartnerLinkView({
   const claimFn = useServerFn(claimAnonymousJourney);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [claimed, setClaimed] = useState(false);
+  const [claimEmailStarted, setClaimEmailStarted] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -465,6 +466,7 @@ function PartnerLinkView({
             <EmailOtpForm
               mode="register"
               emailAutoComplete="off"
+              onEmailChange={(email) => setClaimEmailStarted(email.trim().length > 0)}
               onAuthenticated={async () => {
                 try {
                   const result = await claimFn({ data: { ownerCode: journeyCode } });
@@ -493,7 +495,7 @@ function PartnerLinkView({
 
         {journeyCode && (
           <section className="glass rounded-3xl p-6 sm:p-7 space-y-4 border border-primary/15">
-            {!claimed && (
+            {!claimed && !claimEmailStarted && (
               <p className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
                 <span className="font-semibold text-foreground">Rather not register?</span> You can
                 wait for your partner to complete the questionnaire, then come back and check using the same journey code below.

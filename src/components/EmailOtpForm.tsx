@@ -9,6 +9,7 @@ type EmailOtpFormProps = {
   metadata?: { name?: string; role?: string };
   registrationAcknowledged?: boolean;
   onAuthenticated?: () => Promise<void> | void;
+  onEmailChange?: (email: string) => void;
   emailAutoComplete?: string;
 };
 
@@ -19,6 +20,7 @@ export function EmailOtpForm({
   metadata,
   registrationAcknowledged = true,
   onAuthenticated,
+  onEmailChange,
   emailAutoComplete = "email",
 }: EmailOtpFormProps) {
   const [email, setEmail] = useState("");
@@ -150,7 +152,10 @@ export function EmailOtpForm({
           inputMode="email"
           autoComplete={emailAutoComplete}
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            onEmailChange?.(event.target.value);
+          }}
           required
         />
       </label>
