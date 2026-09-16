@@ -66,7 +66,7 @@ export const createGuestJourney = createServerFn({ method: "POST" })
       .from("journeys")
       .insert({
         creator_id: null,
-        title: data.isSelf ? "Self-assessment" : "Guest assessment",
+        title: data.isSelf ? "Self assessment" : "Partner assessment",
         participant_type: data.partnerType,
         invite_code: code,
         guest_phone: data.guestPhone,

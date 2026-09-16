@@ -103,12 +103,14 @@ function JourneyTracker() {
   const effectiveStatus = isExpired && journey.status !== "completed" ? "expired" : journey.status;
   const url = journey.invite_url ?? "";
   const isOwnerSide = journey.pair_side === "owner";
-  const shouldShowSelfAssessment =
-    !isOwnerSide && !linkedOwnerJourney && effectiveStatus !== "completed";
+  const displayTitle = displayJourneyTitle(journey.title);
+  const shouldShowSelfAssessment = !isOwnerSide && !linkedOwnerJourney;
+  const showPartnerLinkAgain =
+    !isOwnerSide && effectiveStatus !== "completed" && progress.answered === 0;
 
   const steps = buildSteps({
     createdAt: journey.created_at,
-    sentAt: null,
+    sentAt: progress.answered > 0 || invite?.completed_at ? journey.created_at : null,
     startedAt: progress.answered > 0 ? journey.updated_at : null,
     completedAt: invite?.completed_at ?? null,
     status: effectiveStatus,
@@ -156,7 +158,7 @@ function JourneyTracker() {
           <button
             type="button"
             onClick={() => {
-              const next = prompt("Rename this journey", journey.title);
+              const next = prompt("Rename this journey", displayTitle);
               const title = next?.trim();
               if (title && title !== journey.title) rename.mutate(title);
             }}
@@ -184,13 +186,20 @@ function JourneyTracker() {
         </div>
         <div>
           <h2 className="text-xl font-display font-semibold break-words">
-            "{journey.title}" is live
+            "{displayTitle}" is live
           </h2>
+          {!isOwnerSide && (
+            <p className="mt-2 text-xs uppercase tracking-wider text-primary">
+              Partner role: {journey.participant_type}
+            </p>
+          )}
           <p className="mt-1 text-sm text-muted-foreground">
             {isOwnerSide
               ? "This is your side of a paired assessment. Complete it so it can sit beside your partner journey."
               : effectiveStatus === "completed"
-                ? "Your assessment is complete. The report will be ready when both sides are finished."
+                ? linkedOwnerJourney
+                  ? "Your partner has completed their assessment. Your side is linked below."
+                  : "Your partner has completed the assessment. Take your own side now so we can compare both perspectives."
                 : "Share the link with your partner, then complete your own side while they answer theirs."}
           </p>
         </div>
@@ -219,22 +228,26 @@ function JourneyTracker() {
       {!isOwnerSide && linkedOwnerJourney && (
         <LinkedOwnerAssessmentCard journey={linkedOwnerJourney} />
       )}
-      {shouldShowSelfAssessment && <SelfAssessmentCard journey={journey} />}
+      {shouldShowSelfAssessment && (
+        <SelfAssessmentCard journey={journey} partnerComplete={effectiveStatus === "completed"} />
+      )}
 
       {/* Share & send */}
-      <section className="space-y-3">
-        <details className="group glass rounded-2xl p-4">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium">
-            <span>Need the partner link again?</span>
-            <span className="text-xs text-muted-foreground transition group-open:rotate-180">
-              ⌄
-            </span>
-          </summary>
-          <div className="mt-4">
-            <ShareCard url={url} code={journey.invite_code} />
-          </div>
-        </details>
-      </section>
+      {showPartnerLinkAgain && (
+        <section className="space-y-3">
+          <details className="group glass rounded-2xl p-4">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium">
+              <span>Need the partner link again?</span>
+              <span className="text-xs text-muted-foreground transition group-open:rotate-180">
+                ⌄
+              </span>
+            </summary>
+            <div className="mt-4">
+              <ShareCard url={url} code={journey.invite_code} />
+            </div>
+          </details>
+        </section>
+      )}
 
       {/* Timeline */}
       <section className="space-y-3">
@@ -248,7 +261,7 @@ function JourneyTracker() {
 
       {/* View results */}
       <section className="space-y-2">
-        {effectiveStatus === "completed" && (
+        {effectiveStatus === "completed" && linkedOwnerJourney && (
           <Link
             to="/results/$id"
             params={{ id: journey.id }}
@@ -282,7 +295,7 @@ function buildSteps(p: {
     },
     {
       label: "Invite sent",
-      desc: p.sentAt ? "Invite link delivered." : "Share the private link below.",
+      desc: p.sentAt ? "Partner opened the private link." : "Share the private link with your partner.",
       state: p.sentAt ? "done" : "active",
       at: p.sentAt,
     },
@@ -460,6 +473,7 @@ function ShareCard({ url, code }: { url: string; code: string }) {
 
 function SelfAssessmentCard({
   journey,
+  partnerComplete,
 }: {
   journey: {
     id: string;
@@ -469,6 +483,7 @@ function SelfAssessmentCard({
     category_ids: string[] | null;
     question_limit: number | null;
   };
+  partnerComplete: boolean;
 }) {
   const navigate = useNavigate();
   const createFn = useServerFn(createSelfAssessmentForJourney);
@@ -489,16 +504,20 @@ function SelfAssessmentCard({
   });
 
   return (
-    <section className="glass-strong rounded-3xl p-6 text-center space-y-4">
+    <section className="glass-strong rounded-3xl border border-primary/25 p-6 text-center space-y-4">
       <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-aurora-1 to-aurora-2">
         <UserCircle2 className="h-5 w-5 text-primary-foreground" />
       </div>
       <div>
         <h2 className="font-display text-lg font-semibold tracking-tight">
-          Take your own assessment too
+          {partnerComplete
+            ? "Your partner has completed their assessment — now take your own"
+            : "Take your own assessment too"}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add your perspective now — we’ll compare both sides in the final report.
+          {partnerComplete
+            ? "Add your perspective so the final report can compare both sides, not just your partner’s answers."
+            : "Add your perspective now — we’ll compare both sides in the final report."}
         </p>
       </div>
       <div className="text-left">
@@ -638,4 +657,8 @@ function formatDate(iso: string) {
   } catch {
     return "";
   }
+}
+
+function displayJourneyTitle(title: string) {
+  return title === "Guest assessment" ? "Partner assessment" : title;
 }

@@ -99,7 +99,7 @@ function Dashboard() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <h3 className="font-medium truncate">{j.title}</h3>
+                      <h3 className="font-medium truncate">{displayJourneyTitle(j.title)}</h3>
                       <PairBadge pairSide={j.pair_side} />
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
@@ -107,9 +107,7 @@ function Dashboard() {
                       View report
                     </p>
                   </div>
-                  <span className="shrink-0 text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">
-                    {j.participant_type}
-                  </span>
+                  <RoleBadge role={j.participant_type} variant="complete" />
                 </div>
               </Link>
             </motion.div>
@@ -135,7 +133,7 @@ function Dashboard() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <h3 className="font-medium truncate">{j.title}</h3>
+                      <h3 className="font-medium truncate">{displayJourneyTitle(j.title)}</h3>
                       <PairBadge pairSide={j.pair_side} />
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
@@ -145,9 +143,7 @@ function Dashboard() {
                       <span className="font-mono">{j.invite_code}</span>
                     </p>
                   </div>
-                  <span className="shrink-0 text-[10px] uppercase font-semibold px-2 py-1 rounded-full bg-white/5 text-muted-foreground">
-                    {j.participant_type}
-                  </span>
+                  <RoleBadge role={j.participant_type} />
                 </div>
               </Link>
             </motion.div>
@@ -165,6 +161,24 @@ function PairBadge({ pairSide }: { pairSide?: string | null }) {
       {pairSide === "owner" ? "My side" : "Partner"}
     </span>
   );
+}
+
+function RoleBadge({ role, variant = "default" }: { role: string; variant?: "default" | "complete" }) {
+  return (
+    <span
+      className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${
+        variant === "complete"
+          ? "bg-emerald-500/10 text-emerald-400"
+          : "bg-white/5 text-muted-foreground"
+      }`}
+    >
+      Role: {role}
+    </span>
+  );
+}
+
+function displayJourneyTitle(title: string) {
+  return title === "Guest assessment" ? "Partner assessment" : title;
 }
 
 function StatusIcon({ status }: { status: string }) {
