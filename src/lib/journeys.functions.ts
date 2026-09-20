@@ -6,6 +6,7 @@ import { loadEntitlement, DEFAULT_QUESTION_LIMIT } from "./entitlement.functions
 import { ALL_ROLES } from "./roles";
 import { buildInviteSms } from "./invite-message";
 import { throwPublicDataError } from "./public-data-error";
+import { CUSTOM_QUESTIONS_PER_CATEGORY } from "./assessment-questions";
 
 const CreateJourneySchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -48,7 +49,7 @@ export const createJourney = createServerFn({ method: "POST" })
       ent.canDeepDive && data.categoryIds && data.categoryIds.length > 0 ? data.categoryIds : null;
     const entLimit = ent.questionLimit ?? DEFAULT_QUESTION_LIMIT;
     const questionLimit = categoryIds
-      ? null
+      ? Math.min(entLimit, categoryIds.length * CUSTOM_QUESTIONS_PER_CATEGORY)
       : data.questionLimit
         ? Math.min(data.questionLimit, entLimit)
         : entLimit;
@@ -276,7 +277,7 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
     const { data: journey, error } = await supabase
       .from("journeys")
       .select(
-        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, updated_at, creator_id, category_ids, question_limit, pair_id, pair_side",
+        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, updated_at, creator_id, category_ids, question_limit, assigned_question_ids, pair_id, pair_side",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -304,8 +305,9 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
         .eq("journey_id", journey.id),
     ]);
 
-    // Total questions = limit if set, otherwise count of relevant questions
-    let total = journey.question_limit ?? 0;
+    // Once assigned, the frozen set is authoritative (custom category pools can
+    // contain fewer eligible questions than their configured upper limit).
+    let total = journey.assigned_question_ids?.length ?? journey.question_limit ?? 0;
     if (!total) {
       let q = supabase
         .from("questions")

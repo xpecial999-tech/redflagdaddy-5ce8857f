@@ -21,9 +21,20 @@ const LEGACY_REACTIVATION_MIGRATION = readFileSync(
   "utf8",
 );
 
+const QUESTION_ASSIGNMENT_MIGRATION = readFileSync(
+  new URL(
+    "../../supabase/migrations/20260920211500_persist_assessment_question_sets.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
 function curatedQuestions(): AssessmentQuestion[] {
   const migration = readFileSync(
-    new URL("../../supabase/migrations/20260915203000_curated_assessment_bank.sql", import.meta.url),
+    new URL(
+      "../../supabase/migrations/20260915203000_curated_assessment_bank.sql",
+      import.meta.url,
+    ),
     "utf8",
   );
   const rowPattern =
@@ -151,6 +162,69 @@ describe("assessment question integrity", () => {
     expect(counts["Experience"]).toBeGreaterThanOrEqual(1);
   });
 
+  it("balances custom journeys evenly across selected categories with unequal pool sizes", () => {
+    const questions = [
+      ...Array.from({ length: 30 }, (_, index) =>
+        question(`a-${index}`, {
+          category_id: "category-a",
+          question_categories: { name: "Consent" },
+          order_index: index,
+        }),
+      ),
+      ...Array.from({ length: 12 }, (_, index) =>
+        question(`b-${index}`, {
+          category_id: "category-b",
+          question_categories: { name: "Communication" },
+          order_index: 100 + index,
+        }),
+      ),
+      ...Array.from({ length: 8 }, (_, index) =>
+        question(`c-${index}`, {
+          category_id: "category-c",
+          question_categories: { name: "Attachment Style" },
+          order_index: 200 + index,
+        }),
+      ),
+    ];
+
+    const selected = selectAssessmentQuestions(questions, 15, "custom-journey", "equal");
+    const counts = selected.reduce<Record<string, number>>((acc, item) => {
+      acc[item.category_id] = (acc[item.category_id] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    expect(selected).toHaveLength(15);
+    expect(counts).toEqual({
+      "category-a": 5,
+      "category-b": 5,
+      "category-c": 5,
+    });
+  });
+
+  it("varies the questions between journeys while remaining stable within one journey", () => {
+    const questions = Array.from({ length: 30 }, (_, index) =>
+      question(String(index + 1), {
+        category_id: index < 15 ? "category-a" : "category-b",
+      }),
+    );
+
+    const first = selectAssessmentQuestions(questions, 10, "journey-a", "equal");
+    const repeated = selectAssessmentQuestions(questions, 10, "journey-a", "equal");
+    const second = selectAssessmentQuestions(questions, 10, "journey-b", "equal");
+
+    expect(first.map(({ id }) => id)).toEqual(repeated.map(({ id }) => id));
+    expect(first.map(({ id }) => id)).not.toEqual(second.map(({ id }) => id));
+  });
+
+  it("persists and mirrors one exact question set for paired assessments", () => {
+    expect(QUESTION_ASSIGNMENT_MIGRATION).toContain("assigned_question_ids uuid[]");
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain('journeySettings.pair_side === "owner"');
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain('.select("partner_journey_id")');
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain("sourceSettings.assigned_question_ids");
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain("mirror paired question set");
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain("sourceSettings.id,");
+  });
+
   it("keeps the curated migration at exactly 100 active, tagged questions", () => {
     const questions = curatedQuestions();
     const categoryCounts = questions.reduce<Record<string, number>>((acc, item) => {
@@ -177,9 +251,7 @@ describe("assessment question integrity", () => {
     expect(categories.has("Boundaries")).toBe(true);
     expect(categories.has("Communication")).toBe(true);
     expect(categories.has("Safety Practices")).toBe(true);
-    expect(
-      categories.has("Dominant Skills") || categories.has("Submissive Skills"),
-    ).toBe(true);
+    expect(categories.has("Dominant Skills") || categories.has("Submissive Skills")).toBe(true);
     expect(risks.has("critical")).toBe(true);
     expect(risks.has("high")).toBe(true);
   });
@@ -220,12 +292,12 @@ describe("assessment question integrity", () => {
     expect(
       submissivePack.some((item) => item.question_categories?.name === "Submissive Skills"),
     ).toBe(true);
-    expect(dominantPack.some((item) => item.question_categories?.name === "Submissive Skills")).toBe(
-      false,
-    );
-    expect(submissivePack.some((item) => item.question_categories?.name === "Dominant Skills")).toBe(
-      false,
-    );
+    expect(
+      dominantPack.some((item) => item.question_categories?.name === "Submissive Skills"),
+    ).toBe(false);
+    expect(
+      submissivePack.some((item) => item.question_categories?.name === "Dominant Skills"),
+    ).toBe(false);
   });
 
   it("uses archetype-specific tags for specialist roles", () => {

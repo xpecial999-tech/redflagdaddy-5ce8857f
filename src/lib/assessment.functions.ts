@@ -13,6 +13,7 @@ import {
 import { expandRoleForFiltering, getBroadFamily } from "./roles";
 import { throwPublicDataError } from "./public-data-error";
 import { RateLimitError } from "./rate-limit.server";
+import { CUSTOM_QUESTIONS_PER_CATEGORY } from "./assessment-questions";
 
 const CodeSchema = z.object({ code: z.string().trim().min(4).max(64) });
 
@@ -85,35 +86,100 @@ async function loadAssignedQuestions(
   supabaseAdmin: import("@supabase/supabase-js").SupabaseClient,
   journey: { id: string; participant_type: string },
 ): Promise<AssessmentQuestion[]> {
+  const questionSelect =
+    "id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic, applies_to, question_categories(name)";
+  const settingsSelect =
+    "id, participant_type, status, category_ids, question_limit, creator_id, pair_id, pair_side, assigned_question_ids";
+
   const { data: journeySettings, error: settingsError } = await supabaseAdmin
     .from("journeys")
-    .select("category_ids, question_limit, creator_id")
+    .select(settingsSelect)
     .eq("id", journey.id)
     .maybeSingle();
   if (settingsError) throwPublicDataError(settingsError, "load assessment settings");
   if (!journeySettings) throw new Error("Journey not found.");
 
-  const storedCategoryIds = journeySettings.category_ids as string[] | null;
-  const categoryIds = storedCategoryIds && storedCategoryIds.length > 0 ? storedCategoryIds : null;
-  let limit = journeySettings.question_limit as number | null;
-
-  if (limit == null && journeySettings.creator_id) {
-    const { loadEntitlement } = await import("./entitlement.functions");
-    const entitlement = await loadEntitlement(journeySettings.creator_id as string);
-    if (!categoryIds) limit = entitlement.questionLimit;
-  } else if (limit == null && !categoryIds) {
-    limit = 15;
+  let sourceSettings = journeySettings;
+  if (journeySettings.pair_id && journeySettings.pair_side === "owner") {
+    const { data: pair, error: pairError } = await supabaseAdmin
+      .from("journey_pairs")
+      .select("partner_journey_id")
+      .eq("id", journeySettings.pair_id)
+      .maybeSingle();
+    if (pairError) throwPublicDataError(pairError, "load paired assessment source");
+    if (pair?.partner_journey_id) {
+      const { data: partnerSettings, error: partnerError } = await supabaseAdmin
+        .from("journeys")
+        .select(settingsSelect)
+        .eq("id", pair.partner_journey_id)
+        .maybeSingle();
+      if (partnerError) throwPublicDataError(partnerError, "load paired assessment settings");
+      if (partnerSettings) sourceSettings = partnerSettings;
+    }
   }
 
-  let query = supabaseAdmin
-    .from("questions")
-    .select(
-      "id, category_id, question, question_type, answer_options, weight, risk_level, order_index, branch_logic, applies_to, question_categories(name)",
-    )
-    .eq("active", true);
+  const loadStoredQuestions = async (ids: string[]) => {
+    const { data, error } = await supabaseAdmin
+      .from("questions")
+      .select(questionSelect)
+      .in("id", ids);
+    if (error) throwPublicDataError(error, "load assigned assessment questions");
+    const position = new Map(ids.map((id, index) => [id, index]));
+    return ((data ?? []) as unknown as AssessmentQuestion[]).sort(
+      (left, right) => (position.get(left.id) ?? 0) - (position.get(right.id) ?? 0),
+    );
+  };
 
-  if (journey.participant_type && journey.participant_type !== "any") {
-    const expanded = expandRoleForFiltering(journey.participant_type);
+  let assignedIds = sourceSettings.assigned_question_ids as string[] | null;
+  if ((!assignedIds || assignedIds.length === 0) && sourceSettings.status === "completed") {
+    const { data: completedResponses, error: responseError } = await supabaseAdmin
+      .from("responses")
+      .select("question_id, questions!inner(order_index)")
+      .eq("journey_id", sourceSettings.id);
+    if (responseError) throwPublicDataError(responseError, "recover completed question set");
+    assignedIds = (completedResponses ?? [])
+      .sort((left, right) => {
+        const leftQuestion = left.questions as unknown as { order_index?: unknown } | null;
+        const rightQuestion = right.questions as unknown as { order_index?: unknown } | null;
+        return Number(leftQuestion?.order_index ?? 0) - Number(rightQuestion?.order_index ?? 0);
+      })
+      .map(({ question_id }) => question_id);
+  }
+
+  if (assignedIds && assignedIds.length > 0) {
+    if (
+      journeySettings.id !== sourceSettings.id &&
+      JSON.stringify(journeySettings.assigned_question_ids ?? []) !== JSON.stringify(assignedIds)
+    ) {
+      const { error: mirrorError } = await supabaseAdmin
+        .from("journeys")
+        .update({ assigned_question_ids: assignedIds })
+        .eq("id", journeySettings.id);
+      if (mirrorError) throwPublicDataError(mirrorError, "mirror paired question set");
+    }
+    return loadStoredQuestions(assignedIds);
+  }
+
+  const storedCategoryIds = sourceSettings.category_ids as string[] | null;
+  const categoryIds = storedCategoryIds && storedCategoryIds.length > 0 ? storedCategoryIds : null;
+  let limit = sourceSettings.question_limit as number | null;
+
+  if (limit == null && sourceSettings.creator_id) {
+    const { loadEntitlement } = await import("./entitlement.functions");
+    const entitlement = await loadEntitlement(sourceSettings.creator_id as string);
+    limit = categoryIds
+      ? Math.min(entitlement.questionLimit, categoryIds.length * CUSTOM_QUESTIONS_PER_CATEGORY)
+      : entitlement.questionLimit;
+  } else if (limit == null && !categoryIds) {
+    limit = 15;
+  } else if (limit == null && categoryIds) {
+    limit = categoryIds.length * CUSTOM_QUESTIONS_PER_CATEGORY;
+  }
+
+  let query = supabaseAdmin.from("questions").select(questionSelect).eq("active", true);
+
+  if (sourceSettings.participant_type && sourceSettings.participant_type !== "any") {
+    const expanded = expandRoleForFiltering(sourceSettings.participant_type);
     query = query.or(expanded.map((role) => `applies_to.cs.{${role}}`).join(","));
   }
 
@@ -123,16 +189,30 @@ async function loadAssignedQuestions(
   });
   if (error) throwPublicDataError(error, "load assessment questions");
 
-  const broadFamily = getBroadFamily(journey.participant_type);
+  const broadFamily = getBroadFamily(sourceSettings.participant_type);
   const available = ((questions ?? []) as unknown as AssessmentQuestion[]).filter((question) => {
     const categoryName = question.question_categories?.name;
     if (broadFamily === "submissive" && categoryName === "Dominant Skills") return false;
     if (broadFamily === "Dominant" && categoryName === "Submissive Skills") return false;
     return true;
   });
-  return limit != null && !categoryIds
-    ? selectAssessmentQuestions(available, limit, journey.id)
-    : available;
+  const selected =
+    limit != null
+      ? selectAssessmentQuestions(
+          available,
+          limit,
+          sourceSettings.id,
+          categoryIds ? "equal" : "weighted",
+        )
+      : available;
+  const selectedIds = selected.map(({ id }) => id);
+  const journeyIds = Array.from(new Set([sourceSettings.id, journeySettings.id]));
+  const { error: assignmentError } = await supabaseAdmin
+    .from("journeys")
+    .update({ assigned_question_ids: selectedIds })
+    .in("id", journeyIds);
+  if (assignmentError) throwPublicDataError(assignmentError, "save assessment question set");
+  return selected;
 }
 
 function computeScore(

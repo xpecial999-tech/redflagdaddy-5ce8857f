@@ -38,6 +38,6 @@ describe("journey pair surface", () => {
     expect(journeyRoute).toContain('journey.pair_side === "owner"');
     expect(journeyRoute).toContain("const shouldShowSelfAssessment");
     expect(journeyRoute).toContain('effectiveStatus !== "completed"');
-    expect(journeyRoute).toContain("shouldShowSelfAssessment && <SelfAssessmentCard");
+    expect(journeyRoute).toMatch(/shouldShowSelfAssessment\s*&&\s*\(\s*<SelfAssessmentCard/);
   });
 });

@@ -20,6 +20,8 @@ export type AssessmentQuestion = {
 
 type BranchRule = { answer: string; goto_order: number };
 
+export const CUSTOM_QUESTIONS_PER_CATEGORY = 10;
+
 const RISK_RANK: Record<string, number> = {
   critical: 4,
   high: 3,
@@ -77,12 +79,19 @@ function seedFromString(value: string) {
 export function selectAssessmentQuestions<
   T extends Pick<AssessmentQuestion, "id" | "category_id" | "weight" | "risk_level"> &
     Partial<Pick<AssessmentQuestion, "question_categories" | "order_index">>,
->(questions: T[], limit: number, seedKey: string): T[] {
+>(
+  questions: T[],
+  limit: number,
+  seedKey: string,
+  balanceMode: "weighted" | "equal" = "weighted",
+): T[] {
   const byOrder = (left: T, right: T) =>
     (Number(left.order_index) || 0) - (Number(right.order_index) || 0) ||
     left.id.localeCompare(right.id);
 
-  if (questions.length <= limit) return [...questions].sort(byOrder);
+  if (questions.length <= limit && balanceMode === "weighted") {
+    return [...questions].sort(byOrder);
+  }
 
   const byCategory = new Map<string, T[]>();
   for (const question of questions) {
@@ -119,8 +128,7 @@ export function selectAssessmentQuestions<
         const rightName = right[1][0]?.question_categories?.name;
         return (
           (rightName ? (CATEGORY_BALANCE[rightName] ?? 0) : 0) -
-            (leftName ? (CATEGORY_BALANCE[leftName] ?? 0) : 0) ||
-          left[0].localeCompare(right[0])
+            (leftName ? (CATEGORY_BALANCE[leftName] ?? 0) : 0) || left[0].localeCompare(right[0])
         );
       })
       .slice(0, limit)
@@ -129,6 +137,7 @@ export function selectAssessmentQuestions<
   }
 
   const desiredCategoryShare = (categoryId: string) => {
+    if (balanceMode === "equal") return 1 / sortedByCategory.size;
     const categoryName = sortedByCategory.get(categoryId)?.[0]?.question_categories?.name;
     return categoryName ? (CATEGORY_BALANCE[categoryName] ?? 0) : 0;
   };
@@ -171,7 +180,11 @@ export function selectAssessmentQuestions<
   }
   while (allocated < limit) {
     const categoryId = planned
-      .filter(({ categoryId, capacity }) => (allocations.get(categoryId) ?? 0) < capacity)
+      .filter(({ categoryId, capacity, exact }) => {
+        const count = allocations.get(categoryId) ?? 0;
+        const ceiling = balanceMode === "equal" ? Math.ceil(exact) : capacity;
+        return count < capacity && count < ceiling;
+      })
       .sort((left, right) => {
         const leftDeficit = left.exact - (allocations.get(left.categoryId) ?? 0);
         const rightDeficit = right.exact - (allocations.get(right.categoryId) ?? 0);

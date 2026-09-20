@@ -41,6 +41,7 @@ import { toE164, isValidE164, formatPhone } from "@/lib/phone";
 import { captureMarketingEvent } from "@/lib/marketing-attribution";
 import { ConstructionPage } from "@/components/ConstructionPage";
 import { InternationalPhoneInput } from "@/components/InternationalPhoneInput";
+import { CUSTOM_QUESTIONS_PER_CATEGORY } from "@/lib/assessment-questions";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({ meta: [{ title: "Create journey — RedFlagDaddy" }] }),
@@ -223,7 +224,7 @@ function Create() {
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
                       {canDeepDive
-                        ? "Pick categories — get every question in them."
+                        ? `Pick categories — get up to ${CUSTOM_QUESTIONS_PER_CATEGORY} randomized questions from each.`
                         : "Upgrade to unlock."}
                     </div>
                   </div>
