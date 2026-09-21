@@ -105,21 +105,13 @@ function AssessmentPage() {
 
   const completeMutation = useMutation({
     mutationFn: () => completeFn({ data: { code } }),
-    onSuccess: async (res) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["assessment", code] });
-      const { data: sess } = await supabase.auth.getSession();
-      if (sess.session) {
-        try {
-          const claimed = await claimFn({ data: { code } });
-          navigate({ to: "/results/$id", params: { id: claimed.journeyId } });
-          return;
-        } catch (claimFailure) {
-          setSignedIn(true);
-          setClaimError(
-            claimFailure instanceof Error ? claimFailure.message : "We couldn't save this journey.",
-          );
-        }
-      }
+      // Completion and account ownership are separate actions. In particular,
+      // another account may already have a session in this browser. Silently
+      // claiming and navigating in that case can land the respondent on a
+      // protected report they do not own. Always show the completion screen;
+      // saving the journey remains an explicit action below.
       setSubmitted(true);
     },
   });

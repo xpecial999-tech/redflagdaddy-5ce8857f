@@ -445,7 +445,10 @@ function PartnerLinkView({
                 I've sent it, what next?
               </h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-xs leading-relaxed text-muted-foreground">
-                <li>Complete your own matching assessment while your partner answers theirs.</li>
+                <li>
+                  Save this journey to your account below to complete your own matching assessment
+                  while your partner answers theirs.
+                </li>
                 <li>
                   Enter your email address below and we’ll let you know when both sides are ready to
                   compare.

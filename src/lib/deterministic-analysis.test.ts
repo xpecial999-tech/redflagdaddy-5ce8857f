@@ -1,8 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { parseAnalysisPayload } from "@/lib/analysis.functions";
+import { formatDigestAnswer, parseAnalysisPayload } from "@/lib/analysis.functions";
 import { buildDeterministicAnalysis } from "@/lib/deterministic-analysis";
 
 describe("deterministic analysis", () => {
+  it("uses human answer labels and preserves numeric slider values", () => {
+    expect(
+      formatDigestAnswer("sanitize_after", [
+        { value: "sanitize_after", label: "Clean and sanitize toys after every use" },
+      ]),
+    ).toBe("Clean and sanitize toys after every use");
+    expect(formatDigestAnswer(10, [])).toBe(10);
+  });
+
   it("builds a complete report payload without an external model", () => {
     const analysis = buildDeterministicAnalysis(
       {

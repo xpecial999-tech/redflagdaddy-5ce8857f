@@ -17,10 +17,24 @@ type AnswerDigestRow = {
   score: number | null;
   questions: {
     question: string;
+    answer_options: unknown;
     risk_level: string;
     question_categories: { name: string } | null;
   } | null;
 };
+
+type DigestAnswerOption = { label?: unknown; value?: unknown };
+
+export function formatDigestAnswer(answer: unknown, answerOptions: unknown): unknown {
+  const options = Array.isArray(answerOptions) ? (answerOptions as DigestAnswerOption[]) : [];
+  const labelFor = (value: unknown) => {
+    const match = options.find((option) => option.value === value);
+    return typeof match?.label === "string" && match.label.trim() ? match.label.trim() : value;
+  };
+
+  if (Array.isArray(answer)) return answer.map(labelFor);
+  return labelFor(answer);
+}
 
 export type AnalysisSection = {
   title: string;
@@ -185,7 +199,9 @@ export async function buildAnswerDigest(
 ) {
   const { data: rows } = await supabaseAdmin
     .from("responses")
-    .select("answer, score, questions!inner(question, risk_level, question_categories!inner(name))")
+    .select(
+      "answer, score, questions!inner(question, answer_options, risk_level, question_categories!inner(name))",
+    )
     .eq("journey_id", journeyId);
 
   const byCat: Record<
@@ -199,7 +215,7 @@ export async function buildAnswerDigest(
     const score = Number(r.score) || 0;
     const risk = r.questions?.risk_level ?? "low";
     if (Math.abs(score) >= 3 || risk === "critical" || risk === "high") {
-      const rawA = r.answer;
+      const rawA = formatDigestAnswer(r.answer, r.questions?.answer_options);
       const safeA =
         typeof rawA === "string"
           ? rawA.slice(0, 500)

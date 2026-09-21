@@ -44,6 +44,7 @@ function readinessLabel(value: number): AnalysisPayload["dynamic_readiness"]["la
 
 function cleanText(value: unknown, fallback = "the selected answer"): string {
   if (typeof value === "string") return value.trim().slice(0, 160) || fallback;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (Array.isArray(value)) {
     const text = value
       .map((item) => cleanText(item, ""))
