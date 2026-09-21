@@ -2,11 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getAssessment,
-  saveResponse,
-  completeAssessment,
-} from "@/lib/assessment.functions";
+import { getAssessment, saveResponse, completeAssessment } from "@/lib/assessment.functions";
 import {
   hasAssessmentAnswer,
   visibleAssessmentQuestions,
@@ -25,28 +21,13 @@ import { claimCompletedInviteJourney } from "@/lib/guest.functions";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Save,
-  AlertTriangle,
-  Sparkles,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Save, AlertTriangle, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/assessment/$code")({
   head: () => ({ meta: [{ name: "robots", content: "noindex,nofollow,noarchive" }] }),
   component: AssessmentPage,
-  errorComponent: ({ error }) => (
-    
-      <ErrorCard message={error.message} />
-    
-  ),
-  notFoundComponent: () => (
-    
-      <ErrorCard message="Assessment not found." />
-    
-  ),
+  errorComponent: ({ error }) => <ErrorCard message={error.message} />,
+  notFoundComponent: () => <ErrorCard message="Assessment not found." />,
 });
 
 function AssessmentPage() {
@@ -72,6 +53,7 @@ function AssessmentPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
 
   const [submitted, setSubmitted] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const [claimError, setClaimError] = useState<string | null>(null);
   const hydrated = useRef(false);
   const saveSequence = useRef(0);
@@ -79,13 +61,15 @@ function AssessmentPage() {
   // Hydrate answers when data first loads
   useEffect(() => {
     if (!data) return;
+    if (data.invite.completed_at) setSubmitted(true);
     const initial: Record<string, unknown> = {};
     for (const r of data.responses) initial[r.question_id] = r.answer;
     setAnswers(initial);
     if (!hydrated.current) {
       hydrated.current = true;
       const ordered = [...(data.questions ?? [])].sort(
-        (a, b) => (a as { order_index: number }).order_index - (b as { order_index: number }).order_index,
+        (a, b) =>
+          (a as { order_index: number }).order_index - (b as { order_index: number }).order_index,
       ) as unknown as Question[];
       const firstUnanswered = ordered.findIndex(
         (q) => initial[q.id] === undefined || initial[q.id] === "",
@@ -95,6 +79,12 @@ function AssessmentPage() {
     }
   }, [data]);
 
+  useEffect(() => {
+    if (!submitted) return;
+    void supabase.auth.getSession().then(({ data: sessionData }) => {
+      setSignedIn(Boolean(sessionData.session));
+    });
+  }, [submitted]);
 
   const questions = useMemo(() => (data?.questions ?? []) as unknown as Question[], [data]);
 
@@ -105,9 +95,7 @@ function AssessmentPage() {
 
   const current = visible[cursor];
   const total = visible.length;
-  const answeredCount = visible.filter((q) =>
-    hasAssessmentAnswer(answers[q.id]),
-  ).length;
+  const answeredCount = visible.filter((q) => hasAssessmentAnswer(answers[q.id])).length;
   const progress = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
 
   const saveMutation = useMutation({
@@ -120,11 +108,33 @@ function AssessmentPage() {
     onSuccess: async (res) => {
       qc.invalidateQueries({ queryKey: ["assessment", code] });
       const { data: sess } = await supabase.auth.getSession();
-      if (sess.session) navigate({ to: "/results/$id", params: { id: res.journeyId } });
-      else setSubmitted(true);
+      if (sess.session) {
+        try {
+          const claimed = await claimFn({ data: { code } });
+          navigate({ to: "/results/$id", params: { id: claimed.journeyId } });
+          return;
+        } catch (claimFailure) {
+          setSignedIn(true);
+          setClaimError(
+            claimFailure instanceof Error ? claimFailure.message : "We couldn't save this journey.",
+          );
+        }
+      }
+      setSubmitted(true);
     },
   });
 
+  const claimExistingAccount = useMutation({
+    mutationFn: () => claimFn({ data: { code } }),
+    onSuccess: (result) => {
+      navigate({ to: "/journeys/$id", params: { id: result.journeyId } });
+    },
+    onError: (claimFailure) => {
+      setClaimError(
+        claimFailure instanceof Error ? claimFailure.message : "We couldn't save this journey.",
+      );
+    },
+  });
 
   function recordAnswer(answer: unknown, options?: { autoAdvance?: boolean }) {
     if (!current) return;
@@ -139,7 +149,11 @@ function AssessmentPage() {
     saveMutation
       .mutateAsync({ questionId, answer })
       .then(() => {
-        if (options?.autoAdvance && sequence === saveSequence.current && questionIndex < total - 1) {
+        if (
+          options?.autoAdvance &&
+          sequence === saveSequence.current &&
+          questionIndex < total - 1
+        ) {
           setCursor((prev) => (prev === questionIndex ? Math.min(prev + 1, total - 1) : prev));
         }
       })
@@ -196,8 +210,8 @@ function AssessmentPage() {
           transition={{ duration: 0.35, delay: 0.38 }}
           className="text-sm sm:text-base text-muted-foreground leading-relaxed"
         >
-          Thank you. Your answers are saved and the report is being generated — it will be shared with
-          the person who invited you.
+          Thank you. Your answers are saved and the report is being generated — it will be shared
+          with the person who invited you.
         </motion.p>
         <motion.p
           initial={{ opacity: 0 }}
@@ -223,21 +237,33 @@ function AssessmentPage() {
               invited to, and create your own journeys later.
             </p>
           </div>
-          <EmailOtpForm
-            mode="register"
-            emailAutoComplete="off"
-            onAuthenticated={async () => {
-              try {
-                const result = await claimFn({ data: { code } });
-                navigate({ to: "/journeys/$id", params: { id: result.journeyId } });
-              } catch (error) {
-                setClaimError(
-                  error instanceof Error ? error.message : "We couldn't save this journey.",
-                );
-                throw error;
-              }
-            }}
-          />
+          {signedIn ? (
+            <button
+              type="button"
+              onClick={() => claimExistingAccount.mutate()}
+              disabled={claimExistingAccount.isPending}
+              className="w-full rounded-xl bg-primary py-3 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            >
+              {claimExistingAccount.isPending ? "Saving…" : "Save to my account"}
+            </button>
+          ) : (
+            <EmailOtpForm
+              mode="register"
+              emailAutoComplete="off"
+              onAuthenticated={async () => {
+                setSignedIn(true);
+                try {
+                  const result = await claimFn({ data: { code } });
+                  navigate({ to: "/journeys/$id", params: { id: result.journeyId } });
+                } catch (error) {
+                  setClaimError(
+                    error instanceof Error ? error.message : "We couldn't save this journey.",
+                  );
+                  throw error;
+                }
+              }}
+            />
+          )}
           {claimError && (
             <p role="alert" className="text-xs text-destructive">
               {claimError}
@@ -254,155 +280,137 @@ function AssessmentPage() {
 
   if (isLoading) {
     return (
-      
-        <div className="glass rounded-2xl p-8 max-w-xl mx-auto text-center text-sm text-muted-foreground">
-          Loading your assessment…
-        </div>
-      
+      <div className="glass rounded-2xl p-8 max-w-xl mx-auto text-center text-sm text-muted-foreground">
+        Loading your assessment…
+      </div>
     );
   }
   if (error) {
-    return (
-      
-        <ErrorCard message={error.message} />
-      
-    );
+    return <ErrorCard message={error.message} />;
   }
   if (!current) {
-    return (
-      
-        <ErrorCard message="No questions available." />
-      
-    );
+    return <ErrorCard message="No questions available." />;
   }
 
   const isLast = cursor === total - 1;
   const hasAnswer = hasAssessmentAnswer(answers[current.id]);
 
   return (
-    
-      <div className="max-w-2xl mx-auto">
-        {/* Progress */}
-        <div className="mb-5">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-            <span>
-              Question {cursor + 1} of {total}
-            </span>
-            <span className="flex items-center gap-1">
-              {savingId === current.id ? (
-                <>
-                  <Save className="w-3 h-3 animate-pulse" /> Saving…
-                </>
-              ) : (
-                <>{progress}% complete</>
-              )}
-            </span>
-          </div>
-          <Progress value={progress} className="h-1.5" />
+    <div className="max-w-2xl mx-auto">
+      {/* Progress */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+          <span>
+            Question {cursor + 1} of {total}
+          </span>
+          <span className="flex items-center gap-1">
+            {savingId === current.id ? (
+              <>
+                <Save className="w-3 h-3 animate-pulse" /> Saving…
+              </>
+            ) : (
+              <>{progress}% complete</>
+            )}
+          </span>
         </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current.id}
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="glass-strong rounded-3xl p-6 sm:p-8"
-          >
-            <div className="text-xs uppercase tracking-wider text-aurora-2 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3" />
-              {prettyType(current.question_type)}
-            </div>
-            <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight mt-2">
-              {current.question}
-            </h2>
-
-            <div className="mt-6">
-              <QuestionInput
-                question={current}
-                value={answers[current.id]}
-                onChange={recordAnswer}
-              />
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Nav */}
-        <div className="mt-6 grid grid-cols-2 items-center gap-3 sm:grid-cols-3">
-          <Button variant="ghost" onClick={goPrev} disabled={cursor === 0}>
-            <ArrowLeft className="w-4 h-4 mr-1" /> Back
-          </Button>
-
-          <Link
-            to="/journey/$code"
-            params={{ code }}
-            className="order-3 col-span-2 text-center text-xs text-muted-foreground transition hover:text-foreground sm:order-none sm:col-span-1"
-          >
-            Save & exit
-          </Link>
-
-          {isLast ? (
-            <Button
-              onClick={() => completeMutation.mutate()}
-              disabled={
-                !hasAnswer ||
-                saveMutation.isPending ||
-                completeMutation.isPending
-              }
-              className="justify-self-end"
-            >
-              {saveMutation.isPending
-                ? "Saving…"
-                : completeMutation.isPending
-                  ? "Submitting…"
-                  : "Submit"}
-              <CheckCircle2 className="w-4 h-4 ml-1" />
-            </Button>
-          ) : (
-            <Button
-              onClick={goNext}
-              disabled={!hasAnswer || saveMutation.isPending}
-              className="justify-self-end"
-            >
-              {saveMutation.isPending ? "Saving…" : "Next"}{" "}
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
-          )}
-        </div>
-
-        {saveMutation.error && (
-          <p className="text-sm text-destructive mt-3 text-center">
-            {(saveMutation.error as Error).message}
-          </p>
-        )}
-
-        {completeMutation.error && (
-          <p className="text-sm text-destructive mt-3 text-center">
-            {(completeMutation.error as Error).message}
-          </p>
-        )}
-
-        <p className="text-xs text-muted-foreground text-center mt-6">
-          Your progress is saved automatically. You can close this page and return via your invite link.
-        </p>
+        <Progress value={progress} className="h-1.5" />
       </div>
-    
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current.id}
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -24 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="glass-strong rounded-3xl p-6 sm:p-8"
+        >
+          <div className="text-xs uppercase tracking-wider text-aurora-2 flex items-center gap-1.5">
+            <Sparkles className="w-3 h-3" />
+            {prettyType(current.question_type)}
+          </div>
+          <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight mt-2">
+            {current.question}
+          </h2>
+
+          <div className="mt-6">
+            <QuestionInput question={current} value={answers[current.id]} onChange={recordAnswer} />
+          </div>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Nav */}
+      <div className="mt-6 grid grid-cols-2 items-center gap-3 sm:grid-cols-3">
+        <Button variant="ghost" onClick={goPrev} disabled={cursor === 0}>
+          <ArrowLeft className="w-4 h-4 mr-1" /> Back
+        </Button>
+
+        <Link
+          to="/journey/$code"
+          params={{ code }}
+          className="order-3 col-span-2 text-center text-xs text-muted-foreground transition hover:text-foreground sm:order-none sm:col-span-1"
+        >
+          Save & exit
+        </Link>
+
+        {isLast ? (
+          <Button
+            onClick={() => completeMutation.mutate()}
+            disabled={!hasAnswer || saveMutation.isPending || completeMutation.isPending}
+            className="justify-self-end"
+          >
+            {saveMutation.isPending
+              ? "Saving…"
+              : completeMutation.isPending
+                ? "Submitting…"
+                : "Submit"}
+            <CheckCircle2 className="w-4 h-4 ml-1" />
+          </Button>
+        ) : (
+          <Button
+            onClick={goNext}
+            disabled={!hasAnswer || saveMutation.isPending}
+            className="justify-self-end"
+          >
+            {saveMutation.isPending ? "Saving…" : "Next"} <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+        )}
+      </div>
+
+      {saveMutation.error && (
+        <p className="text-sm text-destructive mt-3 text-center">
+          {(saveMutation.error as Error).message}
+        </p>
+      )}
+
+      {completeMutation.error && (
+        <p className="text-sm text-destructive mt-3 text-center">
+          {(completeMutation.error as Error).message}
+        </p>
+      )}
+
+      <p className="text-xs text-muted-foreground text-center mt-6">
+        Your progress is saved automatically. You can close this page and return via your invite
+        link.
+      </p>
+    </div>
   );
 }
 
 function prettyType(t: string) {
   return (
-    {
-      single_choice: "Single choice",
-      multi_choice: "Multi-select",
-      boolean: "Yes / No",
-      scale: "Scale 1–10",
-      slider: "Slider",
-      text: "Open response",
-      scenario: "Scenario",
-    } as Record<string, string>
-  )[t] ?? t;
+    (
+      {
+        single_choice: "Single choice",
+        multi_choice: "Multi-select",
+        boolean: "Yes / No",
+        scale: "Scale 1–10",
+        slider: "Slider",
+        text: "Open response",
+        scenario: "Scenario",
+      } as Record<string, string>
+    )[t] ?? t
+  );
 }
 
 function QuestionInput({
@@ -563,7 +571,9 @@ function RangeInput({
 }) {
   const rawCfg = Array.isArray(question.answer_options)
     ? (question.answer_options[0] as { min?: unknown; max?: unknown; step?: unknown } | undefined)
-    : (question.answer_options as unknown as { min?: unknown; max?: unknown; step?: unknown } | undefined);
+    : (question.answer_options as unknown as
+        | { min?: unknown; max?: unknown; step?: unknown }
+        | undefined);
   const toNum = (x: unknown, fallback: number) => {
     const n = typeof x === "number" ? x : typeof x === "string" ? parseFloat(x) : NaN;
     return Number.isFinite(n) ? n : fallback;

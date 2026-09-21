@@ -99,14 +99,18 @@ function JourneyTracker() {
     );
   }
 
-  const { journey, invite, progress, isExpired, linkedOwnerJourney } = data;
+  const { journey, invite, progress, isExpired, linkedOwnerJourney, viewerRelation } = data;
+  const isParticipantViewer = viewerRelation === "participant";
   const effectiveStatus = isExpired && journey.status !== "completed" ? "expired" : journey.status;
   const url = journey.invite_url ?? "";
   const isOwnerSide = journey.pair_side === "owner";
   const displayTitle = displayJourneyTitle(journey.title);
-  const shouldShowSelfAssessment = !isOwnerSide && !linkedOwnerJourney;
+  const shouldShowSelfAssessment = !isParticipantViewer && !isOwnerSide && !linkedOwnerJourney;
   const showPartnerLinkAgain =
-    !isOwnerSide && effectiveStatus !== "completed" && progress.answered === 0;
+    !isParticipantViewer &&
+    !isOwnerSide &&
+    effectiveStatus !== "completed" &&
+    progress.answered === 0;
 
   const steps = buildSteps({
     createdAt: journey.created_at,
@@ -132,22 +136,24 @@ function JourneyTracker() {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} /> Refresh
           </button>
-          <button
-            onClick={() => {
-              if (confirm("Delete this journey and all responses? This cannot be undone.")) {
-                remove.mutate();
-              }
-            }}
-            disabled={remove.isPending}
-            className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
-          >
-            {remove.isPending ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="w-3.5 h-3.5" />
-            )}
-            Delete
-          </button>
+          {!isParticipantViewer && (
+            <button
+              onClick={() => {
+                if (confirm("Delete this journey and all responses? This cannot be undone.")) {
+                  remove.mutate();
+                }
+              }}
+              disabled={remove.isPending}
+              className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
+            >
+              {remove.isPending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-3.5 h-3.5" />
+              )}
+              Delete
+            </button>
+          )}
         </div>
       </div>
 
@@ -155,23 +161,25 @@ function JourneyTracker() {
         <p className="text-xs uppercase tracking-wider text-muted-foreground">All set</p>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-3xl font-display font-semibold">Journey ready</h1>
-          <button
-            type="button"
-            onClick={() => {
-              const next = prompt("Rename this journey", displayTitle);
-              const title = next?.trim();
-              if (title && title !== journey.title) rename.mutate(title);
-            }}
-            disabled={rename.isPending}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-input px-3 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-foreground disabled:opacity-60"
-          >
-            {rename.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Pencil className="h-3.5 w-3.5" />
-            )}
-            Rename
-          </button>
+          {!isParticipantViewer && (
+            <button
+              type="button"
+              onClick={() => {
+                const next = prompt("Rename this journey", displayTitle);
+                const title = next?.trim();
+                if (title && title !== journey.title) rename.mutate(title);
+              }}
+              disabled={rename.isPending}
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-input px-3 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-foreground disabled:opacity-60"
+            >
+              {rename.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Pencil className="h-3.5 w-3.5" />
+              )}
+              Rename
+            </button>
+          )}
         </div>
       </header>
 
@@ -194,13 +202,15 @@ function JourneyTracker() {
             </p>
           )}
           <p className="mt-1 text-sm text-muted-foreground">
-            {isOwnerSide
-              ? "This is your side of a paired assessment. Complete it so it can sit beside your partner journey."
-              : effectiveStatus === "completed"
-                ? linkedOwnerJourney
-                  ? "Your partner has completed their assessment. Your side is linked below."
-                  : "Your partner has completed the assessment. Take your own side now so we can compare both perspectives."
-                : "Share the link with your partner, then complete your own side while they answer theirs."}
+            {isParticipantViewer
+              ? "Your completed assessment is saved to your account. You can return here to view its report."
+              : isOwnerSide
+                ? "This is your side of a paired assessment. Complete it so it can sit beside your partner journey."
+                : effectiveStatus === "completed"
+                  ? linkedOwnerJourney
+                    ? "Your partner has completed their assessment. Your side is linked below."
+                    : "Your partner has completed the assessment. Take your own side now so we can compare both perspectives."
+                  : "Share the link with your partner, then complete your own side while they answer theirs."}
           </p>
         </div>
         <div className="flex justify-center">
@@ -261,7 +271,7 @@ function JourneyTracker() {
 
       {/* View results */}
       <section className="space-y-2">
-        {effectiveStatus === "completed" && linkedOwnerJourney && (
+        {effectiveStatus === "completed" && (linkedOwnerJourney || isParticipantViewer) && (
           <Link
             to="/results/$id"
             params={{ id: journey.id }}
@@ -295,7 +305,9 @@ function buildSteps(p: {
     },
     {
       label: "Invite sent",
-      desc: p.sentAt ? "Partner opened the private link." : "Share the private link with your partner.",
+      desc: p.sentAt
+        ? "Partner opened the private link."
+        : "Share the private link with your partner.",
       state: p.sentAt ? "done" : "active",
       at: p.sentAt,
     },

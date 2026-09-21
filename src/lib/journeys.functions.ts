@@ -250,7 +250,7 @@ export const listJourneys = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("journeys")
       .select(
-        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, pair_id, pair_side",
+        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, creator_id, participant_user_id, pair_id, pair_side",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -259,6 +259,8 @@ export const listJourneys = createServerFn({ method: "GET" })
       journeys: (data ?? []).map((journey) => ({
         ...journey,
         invite_url: publicInviteUrl(journey.invite_code),
+        viewer_relation:
+          journey.creator_id === context.userId ? ("creator" as const) : ("participant" as const),
       })),
     };
   });
@@ -277,13 +279,14 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
     const { data: journey, error } = await supabase
       .from("journeys")
       .select(
-        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, updated_at, creator_id, category_ids, question_limit, assigned_question_ids, pair_id, pair_side",
+        "id, title, invite_code, invite_url, recipient_email, status, participant_type, created_at, updated_at, creator_id, participant_user_id, category_ids, question_limit, assigned_question_ids, pair_id, pair_side",
       )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!journey) throw new Error("Journey not found");
-    if (journey.creator_id !== userId) {
+    const isParticipantViewer = journey.participant_user_id === userId;
+    if (journey.creator_id !== userId && !isParticipantViewer) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: adminRow } = await supabaseAdmin
         .from("admin_users")
@@ -293,13 +296,14 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
       if (!adminRow) throw new Error("Not authorized");
     }
 
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: invite }, { count: responseCount }] = await Promise.all([
-      supabase
+      supabaseAdmin
         .from("invites")
         .select("id, expires_at, completed_at, created_at")
         .eq("journey_id", journey.id)
         .maybeSingle(),
-      supabase
+      supabaseAdmin
         .from("responses")
         .select("id", { count: "exact", head: true })
         .eq("journey_id", journey.id),
@@ -333,14 +337,14 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
       invite_code: string;
     } | null = null;
 
-    if (journey.pair_id && journey.pair_side === "partner") {
-      const { data: pair } = await (supabase as any)
+    if (!isParticipantViewer && journey.pair_id && journey.pair_side === "partner") {
+      const { data: pair } = await (supabaseAdmin as any)
         .from("journey_pairs")
         .select("owner_journey_id")
         .eq("id", journey.pair_id)
         .maybeSingle();
       if (pair?.owner_journey_id) {
-        const { data: ownerJourney } = await supabase
+        const { data: ownerJourney } = await supabaseAdmin
           .from("journeys")
           .select("id, title, status, participant_type, invite_code")
           .eq("id", pair.owner_journey_id)
@@ -356,6 +360,7 @@ export const getJourneyStatus = createServerFn({ method: "POST" })
       progress: { answered, total, percent: progress },
       isExpired,
       linkedOwnerJourney,
+      viewerRelation: isParticipantViewer ? ("participant" as const) : ("creator" as const),
     };
   });
 

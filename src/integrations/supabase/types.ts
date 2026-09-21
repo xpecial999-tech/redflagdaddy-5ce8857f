@@ -233,6 +233,7 @@ export type Database = {
           participant_type: Database["public"]["Enums"]["participant_type"];
           pair_id: string | null;
           pair_side: string | null;
+          participant_user_id: string | null;
           question_limit: number | null;
           recipient_email: string | null;
           status: Database["public"]["Enums"]["journey_status"];
@@ -255,6 +256,7 @@ export type Database = {
           participant_type?: Database["public"]["Enums"]["participant_type"];
           pair_id?: string | null;
           pair_side?: string | null;
+          participant_user_id?: string | null;
           question_limit?: number | null;
           recipient_email?: string | null;
           status?: Database["public"]["Enums"]["journey_status"];
@@ -277,6 +279,7 @@ export type Database = {
           participant_type?: Database["public"]["Enums"]["participant_type"];
           pair_id?: string | null;
           pair_side?: string | null;
+          participant_user_id?: string | null;
           question_limit?: number | null;
           recipient_email?: string | null;
           status?: Database["public"]["Enums"]["journey_status"];

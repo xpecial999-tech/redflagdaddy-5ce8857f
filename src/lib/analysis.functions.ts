@@ -3,7 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isAiAnalysisEnabled } from "@/lib/ai-analysis-config";
 import { callStructuredAi, type StructuredAiTool } from "@/lib/ai-provider";
 import { buildDeterministicAnalysis } from "@/lib/deterministic-analysis";
-import { buildPairAnalysis, type PairAnalysisPayload, type PairSideSummary } from "@/lib/pair-analysis";
+import {
+  buildPairAnalysis,
+  type PairAnalysisPayload,
+  type PairSideSummary,
+} from "@/lib/pair-analysis";
 import { z } from "zod";
 
 const IdSchema = z.object({ journeyId: z.string().uuid() });
@@ -132,7 +136,15 @@ const PairAnalysisSchema = z.object({
       prompt: z.string(),
       severity: z.enum(["strength", "watch", "concern"]),
       dimension: z
-        .enum(["safety", "consent", "communication", "compatibility", "green_flags", "red_flags", "experience"])
+        .enum([
+          "safety",
+          "consent",
+          "communication",
+          "compatibility",
+          "green_flags",
+          "red_flags",
+          "experience",
+        ])
         .optional(),
     }),
   ),
@@ -176,8 +188,11 @@ export async function buildAnswerDigest(
     .select("answer, score, questions!inner(question, risk_level, question_categories!inner(name))")
     .eq("journey_id", journeyId);
 
-  const byCat: Record<string, { total: number; topRisk: Array<{ q: string; a: unknown; risk: string; score: number }> }> = {};
-  for (const r of ((rows ?? []) as unknown as AnswerDigestRow[])) {
+  const byCat: Record<
+    string,
+    { total: number; topRisk: Array<{ q: string; a: unknown; risk: string; score: number }> }
+  > = {};
+  for (const r of (rows ?? []) as unknown as AnswerDigestRow[]) {
     const cat = r.questions?.question_categories?.name ?? "Other";
     if (!byCat[cat]) byCat[cat] = { total: 0, topRisk: [] };
     byCat[cat].total += 1;
@@ -286,7 +301,9 @@ export async function buildPairAnalysisInternal(pairId: string) {
 
   const { data: responseRows, error: responseError } = await supabaseAdmin
     .from("responses")
-    .select("journey_id, question_id, answer, score, questions!inner(question, risk_level, question_categories!inner(name))")
+    .select(
+      "journey_id, question_id, answer, score, questions!inner(question, risk_level, question_categories!inner(name))",
+    )
     .in("journey_id", [owner.journeyId, partner.journeyId]);
   if (responseError) throw new Error(responseError.message);
 
@@ -386,21 +403,38 @@ async function callGateway(scores: ScoreBundle, digest: unknown): Promise<Analys
             type: "object",
             properties: {
               score: { type: "number" },
-              label: { type: "string", enum: ["Not ready", "Early stage", "Developing", "Ready", "Strongly ready"] },
+              label: {
+                type: "string",
+                enum: ["Not ready", "Early stage", "Developing", "Ready", "Strongly ready"],
+              },
               rationale: { type: "string" },
               strengths: { type: "array", items: { type: "string" } },
               risks: { type: "array", items: { type: "string" } },
               missing_information: { type: "array", items: { type: "string" } },
               concerns: { type: "array", items: { type: "string" } },
             },
-            required: ["score", "label", "rationale", "strengths", "risks", "missing_information", "concerns"],
+            required: [
+              "score",
+              "label",
+              "rationale",
+              "strengths",
+              "risks",
+              "missing_information",
+              "concerns",
+            ],
             additionalProperties: false,
           },
           overall_note: { type: "string" },
         },
         required: [
-          "safety", "compatibility", "red_flags", "green_flags",
-          "communication", "consent", "dynamic_readiness", "overall_note",
+          "safety",
+          "compatibility",
+          "red_flags",
+          "green_flags",
+          "communication",
+          "consent",
+          "dynamic_readiness",
+          "overall_note",
         ],
         additionalProperties: false,
       },
@@ -452,17 +486,26 @@ export async function runAnalysisInternal(journeyId: string) {
   return { ok: true as const, analysis };
 }
 
-async function assertJourneyOwner(userId: string, journeyId: string) {
+async function assertJourneyAccess(
+  userId: string,
+  journeyId: string,
+  options?: { ownerOnly?: boolean },
+) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: journey, error } = await supabaseAdmin
     .from("journeys")
-    .select("id, title, participant_type, status, creator_id, pair_id, pair_side")
+    .select(
+      "id, title, participant_type, status, creator_id, participant_user_id, pair_id, pair_side",
+    )
     .eq("id", journeyId)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!journey) throw new Error("Journey not found.");
 
-  if (journey.creator_id !== userId) {
+  const hasDirectAccess =
+    journey.creator_id === userId ||
+    (!options?.ownerOnly && journey.participant_user_id === userId);
+  if (!hasDirectAccess) {
     // Allow admins to view
     const { data: admin } = await supabaseAdmin
       .from("admin_users")
@@ -478,7 +521,7 @@ export const runAnalysis = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => IdSchema.parse(d))
   .handler(async ({ data, context }) => {
-    await assertJourneyOwner(context.userId, data.journeyId);
+    await assertJourneyAccess(context.userId, data.journeyId);
     return runAnalysisInternal(data.journeyId);
   });
 
@@ -486,7 +529,7 @@ export const getResults = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => IdSchema.parse(d))
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin, journey } = await assertJourneyOwner(context.userId, data.journeyId);
+    const { supabaseAdmin, journey } = await assertJourneyAccess(context.userId, data.journeyId);
 
     const { data: result } = await supabaseAdmin
       .from("results")
@@ -496,7 +539,11 @@ export const getResults = createServerFn({ method: "POST" })
 
     let analysis: AnalysisPayload | null = null;
     if (result?.ai_summary) {
-      try { analysis = parseAnalysisPayload(result.ai_summary); } catch { analysis = null; }
+      try {
+        analysis = parseAnalysisPayload(result.ai_summary);
+      } catch {
+        analysis = null;
+      }
     }
     let pairAnalysis: PairAnalysisPayload | null = null;
     if (journey.pair_id) {
@@ -506,7 +553,11 @@ export const getResults = createServerFn({ method: "POST" })
         .eq("id", journey.pair_id)
         .maybeSingle();
       if (pair?.comparison_summary) {
-        try { pairAnalysis = parsePairAnalysisPayload(pair.comparison_summary); } catch { pairAnalysis = null; }
+        try {
+          pairAnalysis = parsePairAnalysisPayload(pair.comparison_summary);
+        } catch {
+          pairAnalysis = null;
+        }
       }
       if (!pairAnalysis) {
         try {
@@ -550,7 +601,9 @@ export const toggleShareReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => ShareSchema.parse(d))
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await assertJourneyOwner(context.userId, data.journeyId);
+    const { supabaseAdmin } = await assertJourneyAccess(context.userId, data.journeyId, {
+      ownerOnly: true,
+    });
 
     const { data: existing } = await supabaseAdmin
       .from("results")
@@ -610,10 +663,16 @@ export const getSharedReport = createServerFn({ method: "POST" })
 
     let analysis: AnalysisPayload | null = null;
     if (result.ai_summary) {
-      try { analysis = parseAnalysisPayload(result.ai_summary); } catch { analysis = null; }
+      try {
+        analysis = parseAnalysisPayload(result.ai_summary);
+      } catch {
+        analysis = null;
+      }
     }
 
-    const j = (result as { journeys: { title: string; participant_type: string; pair_id: string | null } }).journeys;
+    const j = (
+      result as { journeys: { title: string; participant_type: string; pair_id: string | null } }
+    ).journeys;
     let pairAnalysis: PairAnalysisPayload | null = null;
     if (j.pair_id) {
       const { data: pair } = await (supabaseAdmin as any)
@@ -622,7 +681,11 @@ export const getSharedReport = createServerFn({ method: "POST" })
         .eq("id", j.pair_id)
         .maybeSingle();
       if (pair?.comparison_summary) {
-        try { pairAnalysis = parsePairAnalysisPayload(pair.comparison_summary); } catch { pairAnalysis = null; }
+        try {
+          pairAnalysis = parsePairAnalysisPayload(pair.comparison_summary);
+        } catch {
+          pairAnalysis = null;
+        }
       }
     }
     return {

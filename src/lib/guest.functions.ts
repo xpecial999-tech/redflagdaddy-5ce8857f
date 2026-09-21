@@ -143,28 +143,53 @@ export const claimCompletedInviteJourney = createServerFn({ method: "POST" })
 
     const { data: journey, error: journeyError } = await supabaseAdmin
       .from("journeys")
-      .select("id, creator_id, invite_code")
+      .select("id, title, creator_id, participant_user_id, invite_code")
       .eq("id", invite.journey_id)
       .eq("invite_code", code)
       .maybeSingle();
     if (journeyError) throwPublicDataError(journeyError, "load completed journey");
     if (!journey) throw new Error("This journey code is invalid.");
-    if (journey.creator_id) {
-      if (journey.creator_id === context.userId) return { journeyId: journey.id };
-      throw new Error("This journey is already saved to another account.");
+    if (journey.creator_id === context.userId || journey.participant_user_id === context.userId) {
+      return { journeyId: journey.id };
+    }
+    if (journey.participant_user_id) {
+      throw new Error("This completed assessment is already saved to another account.");
     }
 
-    const { error: updateError } = await supabaseAdmin
+    // A self assessment belongs to the person completing it. An invited
+    // partner assessment keeps its initiator as creator and links the
+    // respondent separately, even when the initiator is still anonymous.
+    const claimAsCreator = journey.title === "Self assessment" && !journey.creator_id;
+    const { data: claimedJourney, error: updateError } = await supabaseAdmin
       .from("journeys")
-      .update({
-        creator_id: context.userId,
-        anonymous_no_contact: false,
-        anonymous_owner_code_hash: null,
-        anonymous_owner_expires_at: null,
-      })
+      .update(
+        claimAsCreator
+          ? {
+              creator_id: context.userId,
+              anonymous_no_contact: false,
+              anonymous_owner_code_hash: null,
+              anonymous_owner_expires_at: null,
+            }
+          : { participant_user_id: context.userId },
+      )
       .eq("id", journey.id)
-      .is("creator_id", null);
+      .is(claimAsCreator ? "creator_id" : "participant_user_id", null)
+      .select("id")
+      .maybeSingle();
     if (updateError) throwPublicDataError(updateError, "claim completed journey");
+    if (!claimedJourney) {
+      const { data: current } = await supabaseAdmin
+        .from("journeys")
+        .select("creator_id, participant_user_id")
+        .eq("id", journey.id)
+        .maybeSingle();
+      if (
+        current?.creator_id !== context.userId &&
+        current?.participant_user_id !== context.userId
+      ) {
+        throw new Error("This completed assessment is already saved to another account.");
+      }
+    }
 
     return { journeyId: journey.id };
   });

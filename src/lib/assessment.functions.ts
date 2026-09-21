@@ -54,7 +54,7 @@ const SaveSchema = z.object({
 
 const CompleteSchema = z.object({ code: z.string().trim().min(4).max(64) });
 
-async function loadInviteContext(rawCode: string) {
+async function loadInviteContext(rawCode: string, options?: { allowCompleted?: boolean }) {
   const code = normalizeCode(rawCode);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -74,7 +74,9 @@ async function loadInviteContext(rawCode: string) {
     .maybeSingle();
   if (iErr) throwPublicDataError(iErr, "load assessment invite");
   if (!invite) throw new Error("Invite not found.");
-  if (invite.completed_at) throw new Error("This invite has already been completed.");
+  if (invite.completed_at && !options?.allowCompleted) {
+    throw new Error("This invite has already been completed.");
+  }
   if (invite.expires_at && new Date(invite.expires_at).getTime() < Date.now()) {
     throw new Error("This invite has expired.");
   }
@@ -355,7 +357,9 @@ export const getAssessment = createServerFn({ method: "POST" })
         maxEvents: 120,
       },
     ]);
-    const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code);
+    const { supabaseAdmin, journey, invite } = await loadInviteContext(data.code, {
+      allowCompleted: true,
+    });
     const questions = await loadAssignedQuestions(supabaseAdmin, journey);
     const assignedIds = questions.map(({ id }) => id);
 

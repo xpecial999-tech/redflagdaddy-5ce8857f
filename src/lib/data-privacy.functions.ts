@@ -19,11 +19,7 @@ export const exportMyData = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
 
     const [profileRes, prefsRes, journeysRes, paymentsRes] = await Promise.all([
-      supabase
-        .from("users")
-        .select(PROFILE_EXPORT_FIELDS)
-        .eq("id", userId)
-        .maybeSingle(),
+      supabase.from("users").select(PROFILE_EXPORT_FIELDS).eq("id", userId).maybeSingle(),
       supabase
         .from("user_preferences")
         .select(PREFERENCES_EXPORT_FIELDS)
@@ -32,7 +28,7 @@ export const exportMyData = createServerFn({ method: "GET" })
       supabase
         .from("journeys")
         .select(JOURNEY_EXPORT_FIELDS)
-        .eq("creator_id", userId)
+        .or(`creator_id.eq.${userId},participant_user_id.eq.${userId}`)
         .order("created_at", { ascending: false }),
       supabase
         .from("payments")
@@ -52,17 +48,9 @@ export const exportMyData = createServerFn({ method: "GET" })
       EXPORT_FAILURE_MESSAGE,
     );
     const journeys =
-      requirePrivacyResult(
-        journeysRes,
-        "load journeys for export",
-        EXPORT_FAILURE_MESSAGE,
-      ) ?? [];
+      requirePrivacyResult(journeysRes, "load journeys for export", EXPORT_FAILURE_MESSAGE) ?? [];
     const payments =
-      requirePrivacyResult(
-        paymentsRes,
-        "load payments for export",
-        EXPORT_FAILURE_MESSAGE,
-      ) ?? [];
+      requirePrivacyResult(paymentsRes, "load payments for export", EXPORT_FAILURE_MESSAGE) ?? [];
     const journeyIds = journeys.map((j) => j.id);
 
     let results: unknown[] = [];
@@ -70,27 +58,12 @@ export const exportMyData = createServerFn({ method: "GET" })
 
     if (journeyIds.length > 0) {
       const [resRes, iRes] = await Promise.all([
-        supabase
-          .from("results")
-          .select(RESULT_EXPORT_FIELDS)
-          .in("journey_id", journeyIds),
-        supabase
-          .from("invites")
-          .select(INVITE_EXPORT_FIELDS)
-          .in("journey_id", journeyIds),
+        supabase.from("results").select(RESULT_EXPORT_FIELDS).in("journey_id", journeyIds),
+        supabase.from("invites").select(INVITE_EXPORT_FIELDS).in("journey_id", journeyIds),
       ]);
       results =
-        requirePrivacyResult(
-          resRes,
-          "load results for export",
-          EXPORT_FAILURE_MESSAGE,
-        ) ?? [];
-      invites =
-        requirePrivacyResult(
-          iRes,
-          "load invites for export",
-          EXPORT_FAILURE_MESSAGE,
-        ) ?? [];
+        requirePrivacyResult(resRes, "load results for export", EXPORT_FAILURE_MESSAGE) ?? [];
+      invites = requirePrivacyResult(iRes, "load invites for export", EXPORT_FAILURE_MESSAGE) ?? [];
     }
 
     const payload = {
@@ -135,11 +108,8 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
       .select("id")
       .eq("creator_id", userId);
     const journeys =
-      requirePrivacyResult(
-        journeysResult,
-        "load journeys for deletion",
-        DELETE_FAILURE_MESSAGE,
-      ) ?? [];
+      requirePrivacyResult(journeysResult, "load journeys for deletion", DELETE_FAILURE_MESSAGE) ??
+      [];
     const journeyIds = (journeys ?? []).map((j) => j.id);
 
     // Clean up journey-related data first
@@ -148,53 +118,27 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
         .from("responses")
         .delete()
         .in("journey_id", journeyIds);
-      requirePrivacyResult(
-        { data: null, error: rErr },
-        "delete responses",
-        DELETE_FAILURE_MESSAGE,
-      );
+      requirePrivacyResult({ data: null, error: rErr }, "delete responses", DELETE_FAILURE_MESSAGE);
 
       const { error: resErr } = await supabaseAdmin
         .from("results")
         .delete()
         .in("journey_id", journeyIds);
-      requirePrivacyResult(
-        { data: null, error: resErr },
-        "delete results",
-        DELETE_FAILURE_MESSAGE,
-      );
+      requirePrivacyResult({ data: null, error: resErr }, "delete results", DELETE_FAILURE_MESSAGE);
 
       const { error: iErr } = await supabaseAdmin
         .from("invites")
         .delete()
         .in("journey_id", journeyIds);
-      requirePrivacyResult(
-        { data: null, error: iErr },
-        "delete invites",
-        DELETE_FAILURE_MESSAGE,
-      );
+      requirePrivacyResult({ data: null, error: iErr }, "delete invites", DELETE_FAILURE_MESSAGE);
 
-      const { error: jErr } = await supabaseAdmin
-        .from("journeys")
-        .delete()
-        .in("id", journeyIds);
-      requirePrivacyResult(
-        { data: null, error: jErr },
-        "delete journeys",
-        DELETE_FAILURE_MESSAGE,
-      );
+      const { error: jErr } = await supabaseAdmin.from("journeys").delete().in("id", journeyIds);
+      requirePrivacyResult({ data: null, error: jErr }, "delete journeys", DELETE_FAILURE_MESSAGE);
     }
 
     // Clean up user-scoped tables
-    const { error: pErr } = await supabaseAdmin
-      .from("payments")
-      .delete()
-      .eq("user_id", userId);
-    requirePrivacyResult(
-      { data: null, error: pErr },
-      "delete payments",
-      DELETE_FAILURE_MESSAGE,
-    );
+    const { error: pErr } = await supabaseAdmin.from("payments").delete().eq("user_id", userId);
+    requirePrivacyResult({ data: null, error: pErr }, "delete payments", DELETE_FAILURE_MESSAGE);
 
     const { error: prefsErr } = await supabaseAdmin
       .from("user_preferences")
@@ -206,10 +150,7 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
       DELETE_FAILURE_MESSAGE,
     );
 
-    const { error: aErr } = await supabaseAdmin
-      .from("admin_users")
-      .delete()
-      .eq("user_id", userId);
+    const { error: aErr } = await supabaseAdmin.from("admin_users").delete().eq("user_id", userId);
     requirePrivacyResult(
       { data: null, error: aErr },
       "delete admin membership",
