@@ -52,6 +52,18 @@ const SaveSchema = z.object({
   answer: AnswerSchema,
 });
 
+const SaveBatchSchema = z.object({
+  code: z.string().trim().min(4).max(64),
+  responses: z
+    .array(
+      z.object({
+        questionId: z.string().uuid(),
+        answer: AnswerSchema,
+      }),
+    )
+    .max(500),
+});
+
 const CompleteSchema = z.object({ code: z.string().trim().min(4).max(64) });
 
 async function loadInviteContext(rawCode: string, options?: { allowCompleted?: boolean }) {
@@ -435,6 +447,49 @@ export const saveResponse = createServerFn({ method: "POST" })
     }
 
     return { ok: true as const, score };
+  });
+
+export const saveResponses = createServerFn({ method: "POST" })
+  .validator((d: unknown) => SaveBatchSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin, journey } = await loadInviteContext(data.code);
+    const assignedQuestions = await loadAssignedQuestions(supabaseAdmin, journey);
+    const uniqueResponses = new Map(
+      data.responses.map((response) => [response.questionId, response]),
+    );
+
+    const rows = Array.from(uniqueResponses.values()).map(({ questionId, answer }) => {
+      const question = requireAssignedAssessmentQuestion(assignedQuestions, questionId);
+      validateAssessmentAnswer(question, answer);
+      return {
+        journey_id: journey.id,
+        question_id: questionId,
+        answer,
+        score: computeScore(
+          question.question_type,
+          (question.answer_options as AnswerOption[]) ?? [],
+          Number(question.weight) || 1,
+          answer,
+        ),
+      };
+    });
+
+    if (rows.length > 0) {
+      const { error } = await supabaseAdmin
+        .from("responses")
+        .upsert(rows, { onConflict: "journey_id,question_id" });
+      if (error) throwPublicDataError(error, "save assessment progress");
+    }
+
+    if (journey.status === "pending" && rows.length > 0) {
+      const { error } = await supabaseAdmin
+        .from("journeys")
+        .update({ status: "in_progress" })
+        .eq("id", journey.id);
+      if (error) throwPublicDataError(error, "start assessment journey");
+    }
+
+    return { ok: true as const, saved: rows.length };
   });
 
 export const completeAssessment = createServerFn({ method: "POST" })

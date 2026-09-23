@@ -13,6 +13,11 @@ const ASSESSMENT_FUNCTIONS_SOURCE = readFileSync(
   "utf8",
 );
 
+const ASSESSMENT_ROUTE_SOURCE = readFileSync(
+  new URL("../routes/assessment.$code.tsx", import.meta.url),
+  "utf8",
+);
+
 const LEGACY_REACTIVATION_MIGRATION = readFileSync(
   new URL(
     "../../supabase/migrations/20260916143000_reactivate_curated_legacy_question_pool.sql",
@@ -76,6 +81,16 @@ function question(id: string, overrides: Partial<AssessmentQuestion> = {}): Asse
 }
 
 describe("assessment question integrity", () => {
+  it("saves progress in an explicit batch instead of after every answer", () => {
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain("export const saveResponses");
+    expect(ASSESSMENT_FUNCTIONS_SOURCE).toContain(
+      '.upsert(rows, { onConflict: "journey_id,question_id" })',
+    );
+    expect(ASSESSMENT_ROUTE_SOURCE).toContain("saveAndExitMutation");
+    expect(ASSESSMENT_ROUTE_SOURCE).toContain("await saveFn");
+    expect(ASSESSMENT_ROUTE_SOURCE).not.toContain("saveMutation.mutateAsync");
+  });
+
   it("selects the same bounded set for the same journey", () => {
     const questions = Array.from({ length: 12 }, (_, index) =>
       question(String(index + 1), {

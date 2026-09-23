@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAssessment, saveResponse, completeAssessment } from "@/lib/assessment.functions";
+import { getAssessment, saveResponses, completeAssessment } from "@/lib/assessment.functions";
 import {
   hasAssessmentAnswer,
   visibleAssessmentQuestions,
@@ -36,7 +36,7 @@ function AssessmentPage() {
   const qc = useQueryClient();
 
   const getFn = useServerFn(getAssessment);
-  const saveFn = useServerFn(saveResponse);
+  const saveFn = useServerFn(saveResponses);
   const completeFn = useServerFn(completeAssessment);
   const claimFn = useServerFn(claimCompletedInviteJourney);
 
@@ -50,13 +50,11 @@ function AssessmentPage() {
   // Answers map by question id
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [cursor, setCursor] = useState(0);
-  const [savingId, setSavingId] = useState<string | null>(null);
 
   const [submitted, setSubmitted] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [claimError, setClaimError] = useState<string | null>(null);
   const hydrated = useRef(false);
-  const saveSequence = useRef(0);
 
   // Hydrate answers when data first loads
   useEffect(() => {
@@ -98,13 +96,24 @@ function AssessmentPage() {
   const answeredCount = visible.filter((q) => hasAssessmentAnswer(answers[q.id])).length;
   const progress = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
 
-  const saveMutation = useMutation({
-    mutationFn: ({ questionId, answer }: { questionId: string; answer: unknown }) =>
-      saveFn({ data: { code, questionId, answer } }),
+  const answeredResponses = () =>
+    visible
+      .filter((question) => hasAssessmentAnswer(answers[question.id]))
+      .map((question) => ({ questionId: question.id, answer: answers[question.id] }));
+
+  const saveAndExitMutation = useMutation({
+    mutationFn: () => saveFn({ data: { code, responses: answeredResponses() } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["assessment", code] });
+      navigate({ to: "/journey/$code", params: { code } });
+    },
   });
 
   const completeMutation = useMutation({
-    mutationFn: () => completeFn({ data: { code } }),
+    mutationFn: async () => {
+      await saveFn({ data: { code, responses: answeredResponses() } });
+      return completeFn({ data: { code } });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["assessment", code] });
       // Completion and account ownership are separate actions. In particular,
@@ -132,29 +141,10 @@ function AssessmentPage() {
     if (!current) return;
     const questionId = current.id;
     const questionIndex = cursor;
-    const sequence = saveSequence.current + 1;
-    saveSequence.current = sequence;
-
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
-    setSavingId(questionId);
-
-    saveMutation
-      .mutateAsync({ questionId, answer })
-      .then(() => {
-        if (
-          options?.autoAdvance &&
-          sequence === saveSequence.current &&
-          questionIndex < total - 1
-        ) {
-          setCursor((prev) => (prev === questionIndex ? Math.min(prev + 1, total - 1) : prev));
-        }
-      })
-      .catch(() => {
-        // Keep the user on the current question so they can retry the answer.
-      })
-      .finally(() => {
-        if (sequence === saveSequence.current) setSavingId(null);
-      });
+    if (options?.autoAdvance && questionIndex < total - 1) {
+      setCursor((prev) => (prev === questionIndex ? Math.min(prev + 1, total - 1) : prev));
+    }
   }
 
   function goNext() {
@@ -295,15 +285,7 @@ function AssessmentPage() {
           <span>
             Question {cursor + 1} of {total}
           </span>
-          <span className="flex items-center gap-1">
-            {savingId === current.id ? (
-              <>
-                <Save className="w-3 h-3 animate-pulse" /> Saving…
-              </>
-            ) : (
-              <>{progress}% complete</>
-            )}
-          </span>
+          <span>{progress}% complete</span>
         </div>
         <Progress value={progress} className="h-1.5" />
       </div>
@@ -337,41 +319,35 @@ function AssessmentPage() {
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </Button>
 
-        <Link
-          to="/journey/$code"
-          params={{ code }}
-          className="order-3 col-span-2 text-center text-xs text-muted-foreground transition hover:text-foreground sm:order-none sm:col-span-1"
+        <button
+          type="button"
+          onClick={() => saveAndExitMutation.mutate()}
+          disabled={saveAndExitMutation.isPending || completeMutation.isPending}
+          className="order-3 col-span-2 inline-flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground transition hover:text-foreground disabled:opacity-60 sm:order-none sm:col-span-1"
         >
-          Save & exit
-        </Link>
+          <Save className="h-3.5 w-3.5" />
+          {saveAndExitMutation.isPending ? "Saving…" : "Save & exit"}
+        </button>
 
         {isLast ? (
           <Button
             onClick={() => completeMutation.mutate()}
-            disabled={!hasAnswer || saveMutation.isPending || completeMutation.isPending}
+            disabled={!hasAnswer || completeMutation.isPending || saveAndExitMutation.isPending}
             className="justify-self-end"
           >
-            {saveMutation.isPending
-              ? "Saving…"
-              : completeMutation.isPending
-                ? "Submitting…"
-                : "Submit"}
+            {completeMutation.isPending ? "Saving & submitting…" : "Submit"}
             <CheckCircle2 className="w-4 h-4 ml-1" />
           </Button>
         ) : (
-          <Button
-            onClick={goNext}
-            disabled={!hasAnswer || saveMutation.isPending}
-            className="justify-self-end"
-          >
-            {saveMutation.isPending ? "Saving…" : "Next"} <ArrowRight className="w-4 h-4 ml-1" />
+          <Button onClick={goNext} disabled={!hasAnswer} className="justify-self-end">
+            Next <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         )}
       </div>
 
-      {saveMutation.error && (
+      {saveAndExitMutation.error && (
         <p className="text-sm text-destructive mt-3 text-center">
-          {(saveMutation.error as Error).message}
+          {(saveAndExitMutation.error as Error).message}
         </p>
       )}
 
@@ -382,8 +358,7 @@ function AssessmentPage() {
       )}
 
       <p className="text-xs text-muted-foreground text-center mt-6">
-        Your progress is saved automatically. You can close this page and return via your invite
-        link.
+        Answers stay on this screen until you choose Save &amp; exit or submit the assessment.
       </p>
     </div>
   );
